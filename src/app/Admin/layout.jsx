@@ -7,6 +7,7 @@ import React from "react";
 // Next Components
 import Image from "next/image";
 import Link from "next/link";
+import { SessionProvider } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
   MdOutlineDashboard,
@@ -23,9 +24,9 @@ import Logo from "../../../public/Logo/Website_Logo.png";
 
 // Assets - Icons
 import MyAssetsIcon from "../../../public/Icons/Admin/MyAssetsIcon";
-import MyRequestsIcon from "../../../public/Icons/Admin/MyRequestsIcon";
 import EmployeesIcon from "../../../public/Icons/Admin/EmployeesIcon";
 import DepartmentIcon from "../../../public/Icons/Admin/DepartmentIcon";
+import MyRequestsIcon from "../../../public/Icons/Admin/MyRequestsIcon";
 import CompanySettingsIcon from "../../../public/Icons/Admin/CompanySettingsIcon";
 
 // Shared Components
@@ -99,23 +100,43 @@ const AdminLayout = ({ children }) => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-linear-to-tr from-gray-100 via-white to-gray-200">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-2xl border-r border-gray-100 flex flex-col justify-between">
-        <div>
-          {/* Logo */}
-          <div className="mx-auto p-6 pb-4 border-b border-gray-100">
-            <Image src={Logo} alt="SAT Logo" className="w-full h-auto" priority />
+    <SessionProvider>
+      <div className="flex min-h-screen bg-linear-to-tr from-gray-100 via-white to-gray-200">
+        {/* Sidebar */}
+        <aside className="w-64 bg-white shadow-2xl border-r border-gray-100 flex flex-col justify-between">
+          <div>
+            {/* Logo */}
+            <div className="mx-auto p-6 pb-4 border-b border-gray-100">
+              <Image src={Logo} alt="SAT Logo" className="w-full h-auto" priority />
+            </div>
+
+            {/* Navigation */}
+            <ul className="px-3 mt-4 space-y-1">
+              {menuItems.map((item) => (
+                <Link key={item.name} href={item.href}>
+                  <li
+                    className={`flex items-center gap-4 px-4 py-2 text-gray-700 font-medium text-md rounded-xl cursor-pointer transition-colors
+                    ${pathname === item.href
+                        ? "bg-blue-100 text-blue-600"
+                        : "hover:bg-blue-50 hover:text-blue-600"
+                      }`}
+                  >
+                    {item.icon}
+                    <p>{item.name}</p>
+                  </li>
+                </Link>
+              ))}
+            </ul>
           </div>
 
-          {/* Navigation */}
-          <ul className="px-3 mt-4 space-y-1">
-            {menuItems.map((item) => (
+          {/* Bottom Section */}
+          <ul className="px-3 mb-4 space-y-1 border-t border-gray-100 pt-4">
+            {bottomItems.map((item) => (
               <Link key={item.name} href={item.href}>
                 <li
-                  className={`flex items-center gap-4 px-4 py-2 text-gray-700 font-medium text-md rounded-xl cursor-pointer transition-colors
-                    ${pathname === item.href
-                      ? "bg-blue-100 text-blue-600"
+                  className={`flex items-center gap-4 px-4 py-2 text-gray-700 font-medium text-lg rounded-xl cursor-pointer transition-colors
+                  ${item.name === "Logout"
+                      ? "hover:bg-red-50 hover:text-red-600"
                       : "hover:bg-blue-50 hover:text-blue-600"
                     }`}
                 >
@@ -125,33 +146,15 @@ const AdminLayout = ({ children }) => {
               </Link>
             ))}
           </ul>
-        </div>
+        </aside>
 
-        {/* Bottom Section */}
-        <ul className="px-3 mb-4 space-y-1 border-t border-gray-100 pt-4">
-          {bottomItems.map((item) => (
-            <Link key={item.name} href={item.href}>
-              <li
-                className={`flex items-center gap-4 px-4 py-2 text-gray-700 font-medium text-lg rounded-xl cursor-pointer transition-colors
-                  ${item.name === "Logout"
-                    ? "hover:bg-red-50 hover:text-red-600"
-                    : "hover:bg-blue-50 hover:text-blue-600"
-                  }`}
-              >
-                {item.icon}
-                <p>{item.name}</p>
-              </li>
-            </Link>
-          ))}
-        </ul>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        <Navbar />
-        {children}
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <Navbar />
+          {children}
+        </main>
+      </div>
+    </SessionProvider>
   );
 };
 

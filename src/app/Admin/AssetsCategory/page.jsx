@@ -4,6 +4,9 @@
 // React Components
 import React from 'react';
 
+// Next Components
+import { useSession } from 'next-auth/react';
+
 // Icons
 import { MdEdit } from 'react-icons/md';
 import { FaDisplay } from "react-icons/fa6";
@@ -12,9 +15,12 @@ import { FaEye, FaInbox, FaPlus, FaRegTrashAlt } from 'react-icons/fa';
 // Tooltip 
 import { Tooltip } from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css';
+
+// Shared Modal
 import AddAssetCategoryModal from '@/Shared/Modals/AssetCategory/AddAssetCategoryModal/AddAssetCategoryModal';
 
 const AssetsCategoryPage = () => {
+  const { data: session, status } = useSession();
   return (
     <div>
       {/* Header */}
@@ -140,7 +146,7 @@ const AssetsCategoryPage = () => {
 
       {/* Create New Request Modal */}
       <dialog id="Add_Asset_Category_Modal" className="modal">
-        <AddAssetCategoryModal />
+        <AddAssetCategoryModal UserEmail={session?.user} />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
