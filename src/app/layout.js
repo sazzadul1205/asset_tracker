@@ -1,3 +1,4 @@
+// layout.js
 import "./globals.css";
 
 // Fonts
@@ -24,10 +25,12 @@ export const metadata = {
   description: "A simple asset tracker app",
 };
 
+// Layout for the entire app
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>{children}</QueryProvider>

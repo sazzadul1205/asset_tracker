@@ -1,6 +1,7 @@
+"use client";
+
 // React components
 import { useState } from "react";
-
 
 // Tanstack components
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
