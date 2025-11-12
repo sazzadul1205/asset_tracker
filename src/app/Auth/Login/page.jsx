@@ -1,26 +1,122 @@
 // Auth/Login
-import Image from 'next/image';
-import React from 'react';
+"use client";
 
-import Logo from "../../../../public/Logo/Website_Logo.png"
+// Next Components
+import Image from "next/image";
+import Link from "next/link";
 
-const page = () => {
-    return (
-        <div >
-            {/* Logo */}
-            <div className="mx-auto pb-4 w-[300px]">
-                <Image
-                    src={Logo}
-                    alt="SAT Logo"
-                    className="w-full h-auto"
-                    priority
-                />
-            </div>
+// React
+import React from "react";
+import { useForm } from "react-hook-form";
 
+// Assets
+import Logo from "../../../../public/Logo/Website_Logo.png";
 
+// Shared Input
+import SharedInput from "../../../Shared/SharedInput/SharedInput";
 
+// Hooks
+import { useAuth } from "../../../Hooks/useAuth";
+
+const LoginPage = () => {
+  const { login, loading } = useAuth();
+
+  // React Hook Form Handlers
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  // Handle form submission
+  const onSubmit = async (data) => {
+    await login(data.email, data.password);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      {/* Logo */}
+      <div className="mx-auto pb-4 w-[200px]">
+        <Image src={Logo} alt="SAT Logo" className="w-full h-auto" priority />
+      </div>
+
+      {/* Card */}
+      <div className="card w-full max-w-md bg-white/90 backdrop-blur-md border border-gray-200 shadow-xl hover:-translate-y-1.5 transition-all p-6 space-y-5 rounded-2xl">
+        {/* Heading */}
+        <div className="text-center mb-5">
+          <h1 className="text-3xl font-extrabold text-gray-800 mt-4 tracking-tight">
+            Welcome Back
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            Please sign in to access your dashboard
+          </p>
         </div>
-    );
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-96">
+          {/* Email */}
+          <SharedInput
+            label="Email"
+            type="email"
+            placeholder="Enter your email"
+            name="email"
+            register={register}
+            rules={{
+              required: { value: true, message: "Email is required" },
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: "Invalid email address",
+              },
+            }}
+            error={errors.email}
+          />
+
+          {/* Password */}
+          <SharedInput
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
+            name="password"
+            register={register}
+            rules={{
+              required: { value: true, message: "Password is required" },
+              minLength: { value: 6, message: "Password must be at least 6 characters" },
+            }}
+            error={errors.password}
+          />
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className={`btn w-full h-11 font-semibold tracking-wide ${loading
+              ? "btn-disabled bg-blue-400 text-white cursor-not-allowed"
+              : "btn-primary bg-blue-600 hover:bg-blue-700 text-white transition-all"
+              }`}
+          >
+            {loading ? (
+              <span className="loading loading-spinner loading-sm"></span>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
+
+        {/* Create Account Link */}
+        <div className="text-center mt-4">
+          <p className="text-gray-500 text-sm">
+            Don’t have an account?{" "}
+            <Link
+              href="/Auth/Register"
+              className="text-blue-600 hover:underline font-medium"
+            >
+              Create Account
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default page;
+export default LoginPage;

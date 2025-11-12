@@ -1,2 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* Apply cursor-pointer to all buttons, but do not override existing cursor-* utilities */
+button {
+    cursor: pointer;
+}
