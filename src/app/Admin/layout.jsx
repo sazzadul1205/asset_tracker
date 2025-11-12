@@ -12,6 +12,11 @@ import {
 import Logo from "../../../public/Logo/Website_Logo.png";
 import MyAssetsIcon from "../../../public/Icons/Admin/MyAssetsIcon";
 import MyRequestsIcon from "../../../public/Icons/Admin/MyRequestsIcon";
+import { FaBox, FaInbox } from "react-icons/fa";
+import { GrTransaction } from "react-icons/gr";
+import EmployeesIcon from "../../../public/Icons/Admin/EmployeesIcon";
+import DepartmentIcon from "../../../public/Icons/Admin/DepartmentIcon";
+import CompanySettingsIcon from "../../../public/Icons/Admin/CompanySettingsIcon";
 
 const AdminLayout = ({ children }) => {
   const pathname = usePathname();
@@ -20,7 +25,7 @@ const AdminLayout = ({ children }) => {
   const menuItems = [
     {
       name: "Dashboard",
-      icon: <MdOutlineDashboard className="text-2xl" />,
+      icon: <MdOutlineDashboard className="text-xl" />,
       href: "/Admin/Dashboard",
     },
     {
@@ -33,18 +38,48 @@ const AdminLayout = ({ children }) => {
       icon: <MyRequestsIcon className="w-5 h-5" />,
       href: "/Admin/MyRequests",
     },
+    {
+      name: "Assets",
+      icon: <FaBox className="text-xl" />,
+      href: "/Admin/Assets",
+    },
+    {
+      name: "Asset Category",
+      icon: <FaInbox className="text-xl" />,
+      href: "/Admin/AssetsCategory",
+    },
+    {
+      name: "Transactions",
+      icon: <GrTransaction className="text-xl" />,
+      href: "/Admin/Transactions",
+    },
+    {
+      name: "Employees",
+      icon: <EmployeesIcon className="w-5 h-5" />,
+      href: "/Admin/Employees",
+    },
+    {
+      name: "Departments",
+      icon: <DepartmentIcon className="w-5 h-5" />,
+      href: "/Admin/Departments",
+    },
+    {
+      name: "Company Settings",
+      icon: <CompanySettingsIcon className="w-5 h-5" />,
+      href: "/Admin/CompanySettings",
+    },
   ];
 
   // Bottom (profile/logout) items
   const bottomItems = [
     {
       name: "Profile",
-      icon: <MdPersonOutline className="text-2xl" />,
+      icon: <MdPersonOutline className="text-xl" />,
       href: "/Admin/profile",
     },
     {
       name: "Logout",
-      icon: <MdLogout className="text-2xl text-red-600" />,
+      icon: <MdLogout className="text-xl text-red-600" />,
       href: "/logout",
     },
   ];
@@ -96,7 +131,9 @@ const AdminLayout = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+      <main className="flex-1 p-8 overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 };
