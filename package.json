@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.7",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "daisyui": "^5.5.0",
     "mongodb": "^7.0.0",
