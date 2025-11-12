@@ -2,12 +2,16 @@
 "use client";
 
 // Next Components
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // React
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+
+// Sweetalert
+import Swal from "sweetalert2";
 
 // Assets
 import Logo from "../../../../public/Logo/Website_Logo.png";
@@ -19,7 +23,10 @@ import SharedInput from "../../../Shared/SharedInput/SharedInput";
 import { useAuth } from "../../../Hooks/useAuth";
 
 const LoginPage = () => {
-  const { login, loading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, loading } = useAuth(true);
+  const message = searchParams.get("message");
 
   // React Hook Form Handlers
   const {
@@ -27,6 +34,29 @@ const LoginPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  // Show Swal if message exists
+  useEffect(() => {
+    if (message) {
+      Swal.fire({
+        toast: true,
+        position: "top",
+        icon: "info",
+        title: message,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        customClass: {
+          popup: "mx-auto",
+        },
+      });
+
+      // Clear message from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("message");
+      router.replace(url.toString(), { scroll: false });
+    }
+  }, [message, router]);
 
   // Handle form submission
   const onSubmit = async (data) => {
@@ -107,7 +137,7 @@ const LoginPage = () => {
           <p className="text-gray-500 text-sm">
             Don’t have an account?{" "}
             <Link
-              href="/Auth/Register"
+              href="/Auth/SignUp"
               className="text-blue-600 hover:underline font-medium"
             >
               Create Account
