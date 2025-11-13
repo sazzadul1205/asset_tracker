@@ -26,14 +26,16 @@ import Loading from '@/Shared/Loading/Loading';
 // Shared Modal
 import AddAssetCategoryModal from '@/Shared/Modals/AssetCategory/AddAssetCategoryModal/AddAssetCategoryModal';
 import ViewAssetCategoryModal from '@/Shared/Modals/AssetCategory/ViewAssetCategoryModal/ViewAssetCategoryModal';
+import EditAssetCategoryModal from '@/Shared/Modals/AssetCategory/EditAssetCategoryModal/EditAssetCategoryModal';
 
 // Hooks
+import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-
 
 const AssetsCategoryPage = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
+  const { success, error, confirm } = useToast();
 
   // States
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -65,6 +67,35 @@ const AssetsCategoryPage = () => {
   // Refetch all
   const RefetchAll = () => {
     AssetsCategoryRefetch();
+  };
+
+  // Delete Category Handler
+  const handleDeleteCategory = async (categoryId) => {
+    // Confirm
+    const isConfirmed = await confirm(
+      "Are you sure?",
+      "This action will permanently delete the asset category!",
+      "Yes, Delete",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      const res = await axiosPublic.delete(`/AssetCategory/${categoryId}`);
+      if (res.status === 200) {
+        AssetsCategoryRefetch();
+        RefetchAll();
+        success("Asset category deleted successfully!");
+      } else {
+        error("Failed to delete the asset category.");
+      }
+    } catch (err) {
+      console.error(err);
+      error(err?.response?.data?.error || "Something went wrong!"); // fix error path
+    }
   };
 
   return (
@@ -191,6 +222,10 @@ const AssetsCategoryPage = () => {
                       <button
                         data-tooltip-id={`edit-tooltip-${category._id}`}
                         data-tooltip-content="Edit Asset Category"
+                        onClick={() => {
+                          setSelectedCategory(category);
+                          document.getElementById("Edit_Asset_Category_Modal").showModal();
+                        }}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
                       >
                         <MdEdit className="text-sm" />
@@ -198,8 +233,9 @@ const AssetsCategoryPage = () => {
 
                       {/* Delete */}
                       <button
-                        data-tooltip-id={`delete-tooltip-${category._id}`}
                         data-tooltip-content="Delete Asset Category"
+                        data-tooltip-id={`delete-tooltip-${category._id}`}
+                        onClick={() => handleDeleteCategory(category._id)}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
                       >
                         <FaRegTrashAlt className="text-sm" />
@@ -244,6 +280,19 @@ const AssetsCategoryPage = () => {
         <AddAssetCategoryModal
           UserEmail={session?.user?.email}
           RefetchAll={RefetchAll}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Edit Asset Category Modal */}
+      <dialog id="Edit_Asset_Category_Modal" className="modal">
+        <EditAssetCategoryModal
+          RefetchAll={RefetchAll}
+          UserEmail={session?.user?.email}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
