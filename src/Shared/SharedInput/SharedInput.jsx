@@ -79,23 +79,26 @@ const SharedInput = ({
       ) : type === "select" ? (
         <select
           {...(register ? register(name, rules) : {})}
-          className={baseClasses}
+          className={`${baseClasses} cursor-pointer`}
           defaultValue={defaultValue || ""}
           disabled={disabled || readOnly}
         >
-          {/* Placeholder option */}
-          <option value="" disabled>
+          <option
+            value=""
+            disabled
+          >
             {placeholder || "Select an option"}
           </option>
 
-          {/* Options */}
           {options.map((opt) => (
-            <option key={opt.value || opt} value={opt.value ?? opt}>
+            <option
+              key={opt.value ?? opt}
+              value={opt.value ?? opt}
+            >
               {opt.label ?? opt}
             </option>
           ))}
         </select>
-
       ) : type === "date" && control ? (
         <Controller
           control={control}
@@ -108,10 +111,11 @@ const SharedInput = ({
             else if (dateLimit === "future") dateProps.minDate = new Date();
 
             return (
-              <div className="relative text-black">
+              <div className="relative w-full text-black">
                 {/* Calendar Icon */}
                 <FaCalendarAlt
-                  className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-black" : "text-blue-500"}`}
+                  className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-gray-400" : "text-blue-500"
+                    }`}
                   size={18}
                 />
 
@@ -127,14 +131,14 @@ const SharedInput = ({
                   yearDropdownItemNumber={100}
                   scrollableYearDropdown
                   disabled={disabled || readOnly}
-                  className={`pl-10 ${baseClasses}`}
+                  className={`pl-10 w-full ${baseClasses}`}
+                  wrapperClassName="w-full"
                   {...dateProps}
                 />
               </div>
             );
           }}
         />
-
       ) : (
         <div className="relative">
           <input
