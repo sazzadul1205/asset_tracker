@@ -10,32 +10,32 @@ import { ImCross } from "react-icons/im";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 import SharedImageInput from "@/Shared/SharedImageInput/SharedImageInput";
+
+// Hooks
+import { useToast } from "@/Hooks/Toasts";
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
 import { useImageUpload } from "@/Hooks/useImageUpload";
 
-const AddAssetCategoryModal = ({ UserEmail }) => {
-  const {
-    uploadImage,
-    loading: uploadingImage,
-    error: imageUploadError
-  } = useImageUpload();
-
-  // Hooks
+const AddAssetCategoryModal = ({
+  UserEmail,
+  RefetchAll,
+}) => {
+  const { success } = useToast();
   const imageInputRef = useRef();
+  const axiosPublic = useAxiosPublic();
+  const { uploadImage } = useImageUpload();
 
-  // States
-  const [error, setError] = useState(null);
+  // States 
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Image & Color States
   const [iconImage, setIconImage] = useState(null);
+  const [formError, setFormError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedColor, setSelectedColor] = useState("#ffffff");
 
-  // Placeholder Icon
-  const placeholderIcon =
-    "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
+  // Default Icon
+  const placeholderIcon = "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
 
-  // React Hook Form
+  // Form Handlers
   const {
     reset,
     register,
@@ -43,54 +43,59 @@ const AddAssetCategoryModal = ({ UserEmail }) => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Handle close
+  // Handle Close
   const handleClose = () => {
     reset();
-    setError(null);
-    setIsOpen(false);
+    setFormError(null);
+    setIconImage(null);
     setSelectedColor("#ffffff");
-    imageInputRef.current?.resetToDefault();
+    imageInputRef.current?.resetToDefault?.();
     document.getElementById("Add_Asset_Category_Modal")?.close();
   };
 
-  // Handle submit
+  // Handle Submit
   const onSubmit = async (data) => {
-    setError(null);
+    setFormError(null);
     setIsLoading(true);
 
+    // Upload Icon
     try {
-      // Ensure user is logged in
       if (!UserEmail) {
-        setError("User email not found. Please log in.");
-        throw new Error("User email not found. Please log in.");
+        setFormError("User email not found. Please log in.");
+        return;
       }
 
-      let uploadedImageUrl = null;
+      let uploadedImageUrl = placeholderIcon;
 
-      // Upload image if selected
       if (iconImage) {
-        uploadedImageUrl = await uploadImage(iconImage);
-        if (!uploadedImageUrl) {
-          setError("Failed to upload icon image.");
+        const url = await uploadImage(iconImage);
+        if (!url) {
+          setFormError("Failed to upload icon image.");
           return;
         }
+        uploadedImageUrl = url;
       }
 
-      // Prepare payload with uploaded image URL and color
       const payload = {
         ...data,
         selectedColor,
-        iconImage: uploadedImageUrl || placeholderIcon,
+        iconImage: uploadedImageUrl,
+        depreciation_rate: Number(data.depreciation_rate),
+        warranty: Number(data.warranty),
       };
 
-      console.log("Payload ready for API:", payload);
+      const response = await axiosPublic.post("/AssetCategory", payload);
 
-      // TODO: send payload to your API
-      // await axios.post("/api/asset-categories", payload);
-
+      if (response.status === 201 || response.status === 200) {
+        success("Asset category created successfully!");
+        RefetchAll?.();
+        handleClose();
+      } else {
+        setFormError(response.data?.message || "Failed to create category");
+      }
     } catch (err) {
       console.error("Error submitting form:", err);
-      setError("Failed to submit form. Please try again.");
+      setFormError(err.response?.data?.message || "Failed to submit form");
     } finally {
       setIsLoading(false);
     }
@@ -113,10 +118,10 @@ const AddAssetCategoryModal = ({ UserEmail }) => {
         </button>
       </div>
 
-      {/* Error */}
-      {error && (
+      {/* form Error */}
+      {formError && (
         <div className="py-3 bg-red-100 border border-red-400 rounded-lg mb-4">
-          <p className="text-red-500 font-semibold text-center">{error}</p>
+          <p className="text-red-500 font-semibold text-center">{formError}</p>
         </div>
       )}
 
@@ -241,34 +246,39 @@ const AddAssetCategoryModal = ({ UserEmail }) => {
 
         {/* Buttons */}
         <div className="flex items-center justify-end gap-3 mt-6">
+          {/* Cancel */}
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting || isLoading}
-            className={`px-5 h-11 font-semibold rounded-lg border transition-all duration-200
+            className={`px-5 h-11 font-semibold rounded-lg border transition-all duration-200 
               ${isSubmitting || isLoading
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed pointer-events-none"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:scale-[0.98]"
               }`}
           >
             Cancel
           </button>
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200
+            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
               ${isSubmitting || isLoading
                 ? "bg-blue-400 cursor-not-allowed pointer-events-none"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98] shadow-blue-200"
               }`}
           >
-            {isSubmitting || isLoading ? (
-              <span className="loading loading-spinner loading-sm"></span>
-            ) : (
-              "Create Asset Category"
-            )}
+            <span className="flex items-center justify-center w-48">
+              {isSubmitting || isLoading ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                "Create Asset Category"
+              )}
+            </span>
           </button>
+
         </div>
       </form>
     </div>
