@@ -6,9 +6,7 @@ import { generateId } from "../../../Utils/generateId";
 // Helper to get current UTC timestamp
 const getTimestamp = () => new Date().toISOString();
 
-/**
- * POST Method - Add a new asset category
- */
+//  POST Method - Add a new asset category
 export const POST = async (request) => {
   try {
     const data = await request.json();
@@ -90,28 +88,55 @@ export const POST = async (request) => {
   }
 };
 
-// GET Method - Fetch all asset categories
-export const GET = async () => {
+// GET Method - Fetch Asset Categories with pagination & optional filters
+export const GET = async (request) => {
   try {
     const db = await connectDB();
     const collection = db.collection("AssetCategory");
 
+    // Parse query parameters
+    const {
+      search,
+      page = 1,
+      limit = 10,
+    } = Object.fromEntries(new URL(request.url).searchParams.entries());
+
+    // Build filters
+    const filters = {};
+    if (search) {
+      filters.category_name = { $regex: search, $options: "i" }; // case-insensitive
+    }
+
+    // Get total count
+    const total = await collection.countDocuments(filters);
+
+    // Fetch categories with pagination
     const categories = await collection
-      .find({})
+      .find(filters)
       .sort({ created_at: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit))
       .toArray();
 
     return NextResponse.json(
-      { success: true, data: categories },
+      {
+        success: true,
+        data: categories,
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+      },
       { status: 200 }
     );
-  } catch (err) {
-    console.error("GET /AssetCategory error:", err);
+  } catch (error) {
+    console.error("Error fetching asset categories:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Internal Server Error",
-        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+        message: "Internal Server Error while fetching asset categories",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
       { status: 500 }
     );
