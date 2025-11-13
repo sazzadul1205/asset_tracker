@@ -10,7 +10,8 @@ import { useSession } from 'next-auth/react';
 
 // Icons
 import { MdEdit } from 'react-icons/md';
-import { FaBoxOpen, FaEye, FaInbox, FaPlus, FaRegTrashAlt } from 'react-icons/fa';
+import { FiSearch } from "react-icons/fi";
+import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaEye, FaPlus, FaRegTrashAlt } from 'react-icons/fa';
 
 // Tooltip 
 import { Tooltip } from "react-tooltip";
@@ -38,7 +39,12 @@ const AssetsCategoryPage = () => {
   const { success, error, confirm } = useToast();
 
   // States
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Pagination States
+  const itemsPerPage = 8;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch AssetsCategory
   const {
@@ -47,17 +53,22 @@ const AssetsCategoryPage = () => {
     refetch: AssetsCategoryRefetch,
     isLoading: AssetsCategoryIsLoading,
   } = useQuery({
-    queryKey: ["AssetsCategoryData"],
+    queryKey: ["AssetsCategoryData", currentPage, itemsPerPage, searchTerm],
     queryFn: () =>
-      axiosPublic.get(`/AssetCategory`).then((res) => res.data.data),
+      axiosPublic.get(`/AssetCategory`, {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchTerm || undefined,
+        },
+      }).then((res) => res.data),
     keepPreviousData: true,
   });
 
-  // Handle Loading
-  if (
-    AssetsCategoryIsLoading ||
-    status === "loading"
-  ) return <Loading />;
+  // Destructure AssetsCategory data
+  const Categories = AssetsCategoryData?.data || [];
+  const totalItems = AssetsCategoryData?.total || 0;
+  const totalPages = AssetsCategoryData?.totalPages || 1;
 
   // Handle errors
   if (AssetsCategoryError) {
@@ -94,40 +105,57 @@ const AssetsCategoryPage = () => {
       }
     } catch (err) {
       console.error(err);
-      error(err?.response?.data?.error || "Something went wrong!"); // fix error path
+      error(err?.response?.data?.error || "Something went wrong!");
     }
   };
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 ">
+      <div className="bg-white border border-gray-200 flex items-center justify-between px-6 py-4 mx-2 mt-4 ">
         {/* Left: Title */}
         <div className="flex items-center gap-3">
-          <FaInbox className="text-2xl text-blue-600" />
-          <h3 className="text-xl font-bold text-gray-800">
+          <h3 className="text-xl font-semibold text-gray-800">
             Asset Categories
           </h3>
         </div>
 
         {/* Right: Add Button */}
-        <button
-          onClick={() => { document.getElementById("Add_Asset_Category_Modal").showModal() }}
-          className="flex items-center gap-2 font-semibold text-white px-4 py-2 bg-blue-600 rounded-lg shadow-md 
+        <div className="flex items-center gap-3" >
+          {/* Search Input */}
+          <div className="relative w-[400px]">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search Asset Categories..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 placeholder-gray-400 
+               focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200"
+            />
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={() => { document.getElementById("Add_Asset_Category_Modal").showModal() }}
+            className=" gap-2 font-semibold text-white  py-2 bg-blue-600 rounded-lg shadow-md 
                hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 
                active:translate-y-px active:shadow-md"
-        >
-          <FaPlus className="text-sm" />
-          Add New Category
-        </button>
+          >
+            <div className='flex items-center w-52 justify-between px-5' >
+              <FaPlus className="text-sm" />
+              Add New Category
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Assets Table */}
-      <div className="overflow-x-auto mt-4 relative px-2">
+      <div className="overflow-x-auto relative px-2 mb-16">
         {/* Table */}
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
           {/* Table Header */}
-          <thead className="bg-white">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {[
                 { label: "Category", align: "left" },
@@ -148,8 +176,18 @@ const AssetsCategoryPage = () => {
 
           {/* Table Body */}
           <tbody>
-            {AssetsCategoryData?.length > 0 ? (
-              AssetsCategoryData.map((category) => (
+            {AssetsCategoryIsLoading || status === "loading" ? (
+              // Loading
+              <tr>
+                <td colSpan={6} className="py-12 text-center">
+                  <Loading
+                    height='min-h-[500px]'
+                    background_color='bg-white'
+                  />
+                </td>
+              </tr>
+            ) : Categories?.length > 0 ? (
+              Categories.map((category) => (
                 <tr
                   key={category._id}
                   className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
@@ -272,6 +310,50 @@ const AssetsCategoryPage = () => {
             )}
           </tbody>
 
+          {/* Table footer with dynamic pagination */}
+          <tfoot>
+            <tr>
+              <td colSpan={6} className="px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-black">
+                  <div>
+                    <p className="text-sm">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+                    </p>
+                    <p className="text-xs font-semibold text-gray-500">Asset Categories</p>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-end space-x-2 mt-4">
+                    {/* Previous Button */}
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    >
+                      <FaAngleLeft /> Prev
+                    </button>
+
+                    {/* Page Number Display */}
+                    <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
+                      Page {currentPage} of {totalPages}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    >
+                      Next <FaAngleRight />
+                    </button>
+                  </div>
+
+                </div>
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
