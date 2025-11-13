@@ -17,8 +17,8 @@ import Logo from "../../../../public/Logo/Website_Logo.png";
 import SharedInput from "../../../Shared/SharedInput/SharedInput";
 
 // Hooks
-import { useToast } from "@/Hooks/Toasts";
 import { useAuth } from "../../../Hooks/useAuth";
+import { useToast } from "@/Hooks/Toasts";
 
 const LoginPage = () => {
   const router = useRouter();
