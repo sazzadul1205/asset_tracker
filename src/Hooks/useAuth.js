@@ -1,31 +1,21 @@
 // hooks/useAuth.js
 "use client";
 
-// React Components
 import { useEffect, useState } from "react";
-
-// Next Components
 import { useRouter } from "next/navigation";
 import { signIn, getSession, signOut } from "next-auth/react";
-
-// Hooks
 import useAxiosPublic from "./useAxiosPublic";
-
-// Toasts
 import { useToast } from "./Toasts";
 
 export const useAuth = (redirectIfAuthenticated = false) => {
-  // Router for navigation
   const router = useRouter();
-
-  // Axios instance
   const axiosPublic = useAxiosPublic();
-
-  // Loading state
   const [loading, setLoading] = useState(false);
-
-  // Toast hooks
   const { confirm, success, error, info } = useToast();
+
+  // Skip showing "Already logged in!" if user is actively logging in
+  const [skipAlreadyLoggedInToast, setSkipAlreadyLoggedInToast] =
+    useState(false);
 
   // Session check for pages like Login/SignUp
   useEffect(() => {
@@ -34,10 +24,10 @@ export const useAuth = (redirectIfAuthenticated = false) => {
     const checkSession = async () => {
       const session = await getSession();
       if (session) {
-        // Already logged in
-        info("Already logged in!");
+        if (!skipAlreadyLoggedInToast) {
+          info("Already logged in!"); // Only show if not skipping
+        }
 
-        // Redirect based on role
         const role = session.user.role || "Employee";
         switch (role) {
           case "Admin":
@@ -53,37 +43,32 @@ export const useAuth = (redirectIfAuthenticated = false) => {
     };
 
     checkSession();
-  }, [info, redirectIfAuthenticated, router]);
+  }, [redirectIfAuthenticated, router, info, skipAlreadyLoggedInToast]);
 
   // Login function
   const login = async (email, password) => {
-    // Set loading
     setLoading(true);
+    setSkipAlreadyLoggedInToast(true); // prevent the "Already logged in" toast during manual login
 
     try {
-      // Sign in
       const res = await signIn("credentials", {
         redirect: false,
         email,
         password,
       });
 
-      // Check for errors
       if (res?.error) {
         error(res.error || "Login failed");
         setLoading(false);
         return false;
       }
 
-      // Check for success
       if (res?.ok) {
         success("Login successful!", 1500);
 
-        // Check user role
         const session = await getSession();
         const role = session?.user?.role || "Employee";
 
-        // Redirect based on role
         switch (role) {
           case "Admin":
             router.push("/Admin/Dashboard");
@@ -95,7 +80,6 @@ export const useAuth = (redirectIfAuthenticated = false) => {
             router.push("/Employee/Dashboard");
         }
 
-        // Set loading
         setLoading(false);
         return true;
       }
@@ -111,24 +95,21 @@ export const useAuth = (redirectIfAuthenticated = false) => {
     setLoading(true);
 
     try {
-      // Check confirm password inside hook
       if (data.password !== data.confirmPassword) {
         error("Passwords do not match");
         setLoading(false);
         return false;
       }
 
-      // Sign up
       await axiosPublic.post("/Users/CreateAccount", {
         name: data.name,
         email: data.email,
         password: data.password,
       });
 
-      // Show success
       success("Account created successfully!", 2000);
 
-      // Auto-login after sign-up
+      // Auto-login after signup
       await login(data.email, data.password);
     } catch (err) {
       error(err.response?.data?.message || err.message || "Sign up failed");
@@ -147,6 +128,12 @@ export const useAuth = (redirectIfAuthenticated = false) => {
       if (!confirmed) return;
 
       await signOut({ redirect: false });
+
+      // Clear URL messages
+      const url = new URL(window.location.href);
+      url.searchParams.delete("message");
+      router.replace(url.toString(), { scroll: false });
+
       success("Logged out successfully!", 1500);
       router.push("/Auth/Login");
     } catch (err) {
@@ -154,6 +141,5 @@ export const useAuth = (redirectIfAuthenticated = false) => {
     }
   };
 
-  // Return functions
   return { login, signUp, logout, loading };
 };
