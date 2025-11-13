@@ -10,9 +10,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
-// Sweetalert
-import Swal from "sweetalert2";
-
 // Assets
 import Logo from "../../../../public/Logo/Website_Logo.png";
 
@@ -20,6 +17,7 @@ import Logo from "../../../../public/Logo/Website_Logo.png";
 import SharedInput from "../../../Shared/SharedInput/SharedInput";
 
 // Hooks
+import { useToast } from "@/Hooks/Toasts";
 import { useAuth } from "../../../Hooks/useAuth";
 
 const SignUpPage = () => {
@@ -27,6 +25,9 @@ const SignUpPage = () => {
   const searchParams = useSearchParams();
   const { signUp, loading } = useAuth(true);
   const message = searchParams.get("message");
+
+  // Toast hooks
+  const { info } = useToast();
 
   // React Hook Form Handlers
   const {
@@ -37,26 +38,17 @@ const SignUpPage = () => {
 
   // Show Swal if message exists
   useEffect(() => {
+    if (!message) return;
+
     if (message) {
-      Swal.fire({
-        toast: true,
-        position: "top",
-        icon: "info",
-        title: message,
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        customClass: {
-          popup: "mx-auto",
-        },
-      });
+      info(message, 3000); // Use toast hook for consistency
 
       // Clear message from URL
       const url = new URL(window.location.href);
       url.searchParams.delete("message");
       router.replace(url.toString(), { scroll: false });
     }
-  }, [message, router]);
+  }, [info, message, router]);
 
   // Handle form submission
   const onSubmit = async (data) => {

@@ -8,11 +8,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, getSession, signOut } from "next-auth/react";
 
-// Sweetalert
-import Swal from "sweetalert2";
-
 // Hooks
 import useAxiosPublic from "./useAxiosPublic";
+
+// Toasts
+import { useToast } from "./Toasts";
 
 export const useAuth = (redirectIfAuthenticated = false) => {
   // Router for navigation
@@ -24,21 +24,8 @@ export const useAuth = (redirectIfAuthenticated = false) => {
   // Loading state
   const [loading, setLoading] = useState(false);
 
-  // Helper for showing toast
-  const showToast = (icon, title, timer = 2000) => {
-    Swal.fire({
-      toast: true,
-      position: "top",
-      icon,
-      title,
-      showConfirmButton: false,
-      timer,
-      timerProgressBar: true,
-      customClass: {
-        popup: "mx-auto",
-      },
-    });
-  };
+  // Toast hooks
+  const { confirm, success, error, info } = useToast();
 
   // Session check for pages like Login/SignUp
   useEffect(() => {
@@ -48,8 +35,9 @@ export const useAuth = (redirectIfAuthenticated = false) => {
       const session = await getSession();
       if (session) {
         // Already logged in
-        showToast("info", "Already logged in!");
+        info("Already logged in!");
 
+        // Redirect based on role
         const role = session.user.role || "Employee";
         switch (role) {
           case "Admin":
@@ -65,7 +53,7 @@ export const useAuth = (redirectIfAuthenticated = false) => {
     };
 
     checkSession();
-  }, [redirectIfAuthenticated, router]);
+  }, [info, redirectIfAuthenticated, router]);
 
   // Login function
   const login = async (email, password) => {
@@ -82,14 +70,14 @@ export const useAuth = (redirectIfAuthenticated = false) => {
 
       // Check for errors
       if (res?.error) {
-        showToast("error", res.error);
+        error(res.error || "Login failed");
         setLoading(false);
         return false;
       }
 
       // Check for success
       if (res?.ok) {
-        showToast("success", "Login successful!", 1500);
+        success("Login successful!", 1500);
 
         // Check user role
         const session = await getSession();
@@ -112,8 +100,7 @@ export const useAuth = (redirectIfAuthenticated = false) => {
         return true;
       }
     } catch (err) {
-      // Show error
-      showToast("error", err.message || "Unexpected error");
+      error(err.message || "Unexpected error");
       setLoading(false);
       return false;
     }
@@ -126,7 +113,7 @@ export const useAuth = (redirectIfAuthenticated = false) => {
     try {
       // Check confirm password inside hook
       if (data.password !== data.confirmPassword) {
-        showToast("error", "Passwords do not match");
+        error("Passwords do not match");
         setLoading(false);
         return false;
       }
@@ -139,15 +126,12 @@ export const useAuth = (redirectIfAuthenticated = false) => {
       });
 
       // Show success
-      showToast("success", "Account created successfully!", 2000);
+      success("Account created successfully!", 2000);
 
       // Auto-login after sign-up
       await login(data.email, data.password);
     } catch (err) {
-      showToast(
-        "error",
-        err.response?.data?.message || err.message || "Sign up failed"
-      );
+      error(err.response?.data?.message || err.message || "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -156,13 +140,17 @@ export const useAuth = (redirectIfAuthenticated = false) => {
   // Logout function
   const logout = async () => {
     try {
-      // Sign out
+      const confirmed = await confirm(
+        "Are you sure?",
+        "You will be logged out."
+      );
+      if (!confirmed) return;
+
       await signOut({ redirect: false });
-      showToast("success", "Logged out successfully!", 1500);
+      success("Logged out successfully!", 1500);
       router.push("/Auth/Login");
     } catch (err) {
-      // Show error
-      showToast("error", err.message || "Logout failed");
+      error(err.message || "Logout failed");
     }
   };
 
