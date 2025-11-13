@@ -32,9 +32,14 @@ import CompanySettingsIcon from "../../../public/Icons/Admin/CompanySettingsIcon
 // Shared Components
 import Navbar from "@/Shared/Navbar/Navbar";
 
+// Hooks
+import { useAuth } from "@/Hooks/useAuth";
+
 const AdminLayout = ({ children }) => {
   // Hooks
+  const { logout } = useAuth();
   const pathname = usePathname();
+
 
   // Menu Items -- Top Menu
   const menuItems = [
@@ -95,7 +100,7 @@ const AdminLayout = ({ children }) => {
     {
       name: "Logout",
       icon: <MdLogout className="text-xl text-red-600" />,
-      href: "/logout"
+      action: logout,
     },
   ];
 
@@ -104,6 +109,7 @@ const AdminLayout = ({ children }) => {
       <div className="flex min-h-screen bg-linear-to-tr from-gray-100 via-white to-gray-200">
         {/* Sidebar */}
         <aside className="w-64 bg-white shadow-2xl border-r border-gray-100 flex flex-col justify-between">
+          {/* Top Section */}
           <div>
             {/* Logo */}
             <div className="mx-auto p-6 pb-4 border-b border-gray-100">
@@ -131,20 +137,36 @@ const AdminLayout = ({ children }) => {
 
           {/* Bottom Section */}
           <ul className="px-3 mb-4 space-y-1 border-t border-gray-100 pt-4">
-            {bottomItems.map((item) => (
-              <Link key={item.name} href={item.href}>
+            {bottomItems?.map((item) => {
+              const isActive = pathname === item.href;
+              const isLogout = item.name === "Logout";
+
+              return isLogout ? (
+                // Logout Button
                 <li
-                  className={`flex items-center gap-4 px-4 py-2 text-gray-700 font-medium text-lg rounded-xl cursor-pointer transition-colors
-                  ${item.name === "Logout"
-                      ? "hover:bg-red-50 hover:text-red-600"
-                      : "hover:bg-blue-50 hover:text-blue-600"
+                  key={item.name}
+                  onClick={item.action}
+                  className="flex items-center gap-3 cursor-pointer rounded-xl py-2.5 px-3 transition-colors text-red-500 hover:text-red-700 hover:bg-red-100"
+                >
+                  {item.icon}
+                  {item.name}
+                </li>
+              ) : (
+                // Normal Link Navigation
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-xl py-2.5 px-3 transition-colors 
+                    ${isActive
+                      ? "bg-blue-100 text-blue-700 font-semibold"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                     }`}
                 >
                   {item.icon}
-                  <p>{item.name}</p>
-                </li>
-              </Link>
-            ))}
+                  {item.name}
+                </Link>
+              );
+            })}
           </ul>
         </aside>
 

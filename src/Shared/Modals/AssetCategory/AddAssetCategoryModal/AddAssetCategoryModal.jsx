@@ -1,17 +1,25 @@
 // React Components
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
 
 // React Hook Form
-import { useForm } from 'react-hook-form';
-
-// Shared Components
-import SharedInput from '@/Shared/SharedInput/SharedInput';
-import SharedImageInput from '@/Shared/SharedImageInput/SharedImageInput';
+import { useForm } from "react-hook-form";
 
 // Icons
 import { ImCross } from "react-icons/im";
 
-const AddAssetCategoryModal = () => {
+// Shared Components
+import SharedInput from "@/Shared/SharedInput/SharedInput";
+import SharedImageInput from "@/Shared/SharedImageInput/SharedImageInput";
+import { useImageUpload } from "@/Hooks/useImageUpload";
+
+const AddAssetCategoryModal = ({ UserEmail }) => {
+  const {
+    uploadImage,
+    loading: uploadingImage,
+    error: imageUploadError
+  } = useImageUpload();
+
+  // Hooks
   const imageInputRef = useRef();
 
   // States
@@ -22,37 +30,70 @@ const AddAssetCategoryModal = () => {
   // Image & Color States
   const [iconImage, setIconImage] = useState(null);
   const [selectedColor, setSelectedColor] = useState("#ffffff");
-  const [clearImageInput, setClearImageInput] = useState(false);
 
+  // Placeholder Icon
+  const placeholderIcon =
+    "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
 
   // React Hook Form
   const {
     reset,
     register,
-    isSubmitting,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isSubmitting },
   } = useForm();
 
-  // Handle close function
+  // Handle close
   const handleClose = () => {
     reset();
     setError(null);
     setIsOpen(false);
-    handleImageReset();
-    setClearImageInput(null);
     setSelectedColor("#ffffff");
-    document.getElementById("Add_Asset_Category_Modal").close();
+    imageInputRef.current?.resetToDefault();
+    document.getElementById("Add_Asset_Category_Modal")?.close();
   };
 
-  // Handle submit function
-  const onSubmit = (data) => {
-    console.log(data);
-  };
+  // Handle submit
+  const onSubmit = async (data) => {
+    setError(null);
+    setIsLoading(true);
 
+    try {
+      // Ensure user is logged in
+      if (!UserEmail) {
+        setError("User email not found. Please log in.");
+        throw new Error("User email not found. Please log in.");
+      }
 
-  const handleImageReset = () => {
-    imageInputRef.current?.resetToDefault(); // reset to default
+      let uploadedImageUrl = null;
+
+      // Upload image if selected
+      if (iconImage) {
+        uploadedImageUrl = await uploadImage(iconImage);
+        if (!uploadedImageUrl) {
+          setError("Failed to upload icon image.");
+          return;
+        }
+      }
+
+      // Prepare payload with uploaded image URL and color
+      const payload = {
+        ...data,
+        selectedColor,
+        iconImage: uploadedImageUrl || placeholderIcon,
+      };
+
+      console.log("Payload ready for API:", payload);
+
+      // TODO: send payload to your API
+      // await axios.post("/api/asset-categories", payload);
+
+    } catch (err) {
+      console.error("Error submitting form:", err);
+      setError("Failed to submit form. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,12 +103,7 @@ const AddAssetCategoryModal = () => {
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        {/* Title and Icon */}
-        <div className="flex items-center gap-3">
-          <h3 className="text-xl font-bold text-gray-800" >Add New Asset Category</h3>
-        </div>
-
-        {/* Close Button */}
+        <h3 className="text-xl font-bold text-gray-800">Add New Asset Category</h3>
         <button
           type="button"
           onClick={handleClose}
@@ -84,7 +120,7 @@ const AddAssetCategoryModal = () => {
         </div>
       )}
 
-      <p className='bg-gray-200 h-[0.5px] mx-auto w-11/12 my-2' />
+      <hr className="my-3 border-gray-300" />
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -102,20 +138,19 @@ const AddAssetCategoryModal = () => {
         <SharedInput
           label="Category Description"
           name="category_description"
+          type="textarea"
           register={register}
-          type='textarea'
           placeholder="e.g. A category description"
           rules={{ required: "Category Description is required" }}
           error={errors.category_description}
         />
 
         {/* Depreciation & Warranty */}
-        <div className="grid grid-cols-2 gap-3" >
-          {/* Depreciation Rate (%)  */}
+        <div className="grid grid-cols-2 gap-3">
           <SharedInput
             label="Depreciation Rate (%)"
             name="depreciation_rate"
-            type='number'
+            type="number"
             register={register}
             placeholder="e.g. 5%"
             rules={{
@@ -129,8 +164,6 @@ const AddAssetCategoryModal = () => {
             }}
             error={errors.depreciation_rate}
           />
-
-          {/* Default Warranty (Months) */}
           <SharedInput
             label="Default Warranty (Months)"
             name="warranty"
@@ -141,7 +174,7 @@ const AddAssetCategoryModal = () => {
           />
         </div>
 
-        {/* Asset Category Icon (Optional) */}
+        {/* Asset Category Icon Drawer */}
         <div className="mt-6">
           {/* Header / Toggle */}
           <button
@@ -165,44 +198,36 @@ const AddAssetCategoryModal = () => {
             className={`overflow-hidden transition-all duration-500 ${isOpen ? "max-h-96 mt-4" : "max-h-0"
               }`}
           >
-            <div className="mx-auto justify-center flex flex-wrap items-center gap-6">
-              {/* Icon Preview & Upload */}
+            <div className="mx-auto flex flex-wrap items-center gap-6 justify-center">
+              {/* Icon Upload */}
               <div
-                className="relative flex items-center justify-center w-20 h-20 border border-gray-300 rounded-xl shadow-sm transition-all hover:shadow-md cursor-pointer"
-                style={{ backgroundColor: selectedColor || "#ffffff" }}
+                className="relative flex items-center justify-center w-20 h-20 border border-gray-300 rounded-xl shadow-sm hover:shadow-md cursor-pointer"
+                style={{ backgroundColor: selectedColor }}
               >
                 <SharedImageInput
+                  ref={imageInputRef}
                   hint=""
                   label=""
                   width={64}
                   height={64}
                   rounded="xl"
-                  ref={imageInputRef}
                   enableCrop={false}
-                  clear={clearImageInput}
                   onChange={setIconImage}
-                  defaultImage={
-                    "https://i.ibb.co/9996NVtk/info-removebg-preview.png"
-                  }
+                  defaultImage={placeholderIcon}
                 />
               </div>
 
-              {/* Color Picker */}
+              {/* Background Color Picker */}
               <div className="flex flex-col items-center gap-3">
-                <label
-                  htmlFor="iconColor"
-                  className="text-gray-700 font-medium text-sm"
-                >
+                <label htmlFor="iconColor" className="text-gray-700 font-medium text-sm">
                   Icon Background:
                 </label>
-
                 <div className="flex items-center gap-2">
                   <input
                     id="iconColor"
                     type="color"
-                    value={selectedColor || "#ffffff"}
+                    value={selectedColor}
                     onChange={(e) => setSelectedColor(e.target.value)}
-                    title="Select icon background color"
                     className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
                   />
                   <span className="text-sm text-gray-600 font-mono">
@@ -214,13 +239,11 @@ const AddAssetCategoryModal = () => {
           </div>
         </div>
 
-
-        {/* Buttons  */}
+        {/* Buttons */}
         <div className="flex items-center justify-end gap-3 mt-6">
-          {/* Cancel Button */}
           <button
             type="button"
-            onClick={() => document.getElementById("Add_Asset_Category_Modal").close()}
+            onClick={handleClose}
             disabled={isSubmitting || isLoading}
             className={`px-5 h-11 font-semibold rounded-lg border transition-all duration-200
               ${isSubmitting || isLoading
@@ -231,7 +254,6 @@ const AddAssetCategoryModal = () => {
             Cancel
           </button>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
