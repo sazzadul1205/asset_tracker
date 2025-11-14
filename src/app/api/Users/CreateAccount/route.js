@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 // Bcrypt
 import bcrypt from "bcrypt";
 
+// POST - Create a new user
 export async function POST(req) {
   try {
     // Connect to MongoDB
