@@ -1,5 +1,5 @@
 // React Components
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 
 // React Hook Form
 import { useForm } from "react-hook-form";
@@ -13,28 +13,19 @@ import SharedInput from "@/Shared/SharedInput/SharedInput";
 // Hooks
 import { useToast } from "@/Hooks/Toasts";
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
-import { useImageUpload } from "@/Hooks/useImageUpload";
 
 const AddEmployeeModal = ({
   UserEmail,
   RefetchAll,
 }) => {
   const { success } = useToast();
-  const imageInputRef = useRef();
   const axiosPublic = useAxiosPublic();
-  const { uploadImage } = useImageUpload();
 
-  // States 
-  const [isOpen, setIsOpen] = useState(false);
-  const [iconImage, setIconImage] = useState(null);
+  // States
   const [formError, setFormError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedColor, setSelectedColor] = useState("#ffffff");
 
-  // Default Icon
-  const placeholderIcon = "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
-
-  // Form Handlers
+  // Form
   const {
     reset,
     control,
@@ -43,59 +34,48 @@ const AddEmployeeModal = ({
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Handle Close
+  // Close modal
   const handleClose = () => {
     reset();
     setFormError(null);
-    setIconImage(null);
-    setSelectedColor("#ffffff");
-    imageInputRef.current?.resetToDefault?.();
     document.getElementById("Add_Employee_Modal")?.close();
   };
 
-  // Handle Submit
+  // Submit handler (EMPLOYEE CREATION)
   const onSubmit = async (data) => {
     setFormError(null);
     setIsLoading(true);
 
-    // Upload Icon
     try {
       if (!UserEmail) {
-        setFormError("User email not found. Please log in.");
+        setFormError("Session error: User email missing.");
         return;
       }
 
-      let uploadedImageUrl = placeholderIcon;
-
-      if (iconImage) {
-        const url = await uploadImage(iconImage);
-        if (!url) {
-          setFormError("Failed to upload icon image.");
-          return;
-        }
-        uploadedImageUrl = url;
-      }
-
+      // Build employee payload
       const payload = {
         ...data,
-        selectedColor,
-        iconImage: uploadedImageUrl,
-        depreciation_rate: Number(data.depreciation_rate),
-        warranty: Number(data.warranty),
+        created_by: UserEmail,
       };
 
-      const response = await axiosPublic.post("/AssetCategory", payload);
+      const response = await axiosPublic.post("/Users/AddUser", payload);
 
       if (response.status === 201 || response.status === 200) {
-        success("Asset category created successfully!");
+        success("Employee created successfully.");
         RefetchAll?.();
         handleClose();
       } else {
-        setFormError(response.data?.message || "Failed to create category");
+        setFormError(response.data?.message || "Failed to create employee.");
       }
     } catch (err) {
-      console.error("Error submitting form:", err);
-      setFormError(err.response?.data?.message || "Failed to submit form");
+      console.error("Employee creation error:", err);
+
+      const serverError =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to create employee.";
+
+      setFormError(serverError);
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +127,7 @@ const AddEmployeeModal = ({
         {/* Email */}
         <SharedInput
           label="Email"
-          name="full_name"
+          name="email"
           type="email"
           register={register}
           placeholder="Enter Email Address"
@@ -286,7 +266,7 @@ const AddEmployeeModal = ({
               {isSubmitting || isLoading ? (
                 <span className="loading loading-spinner loading-sm"></span>
               ) : (
-                "Create Asset Category"
+                "Create New Employee"
               )}
             </span>
           </button>
