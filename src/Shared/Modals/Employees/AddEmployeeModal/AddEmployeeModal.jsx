@@ -58,7 +58,7 @@ const AddEmployeeModal = ({
         created_by: UserEmail,
       };
 
-      const response = await axiosPublic.post("/Users/AddUser", payload);
+      const response = await axiosPublic.post("/Users", payload);
 
       if (response.status === 201 || response.status === 200) {
         success("Employee created successfully.");
@@ -66,7 +66,7 @@ const AddEmployeeModal = ({
         handleClose();
       } else {
         setFormError(response.data?.message || "Failed to create employee.");
-      }
+      } 
     } catch (err) {
       console.error("Employee creation error:", err);
 

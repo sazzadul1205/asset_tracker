@@ -9,6 +9,7 @@ import { ImCross } from "react-icons/im";
 
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
+import MultiFieldInput from "@/Shared/MultiFieldInput/MultiFieldInput";
 import SharedImageInput from "@/Shared/SharedImageInput/SharedImageInput";
 
 // Hooks
@@ -16,9 +17,11 @@ import { useToast } from "@/Hooks/Toasts";
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 import { useImageUpload } from "@/Hooks/useImageUpload";
 
+
 const AddDepartmentModal = ({
   UserEmail,
   RefetchAll,
+  BasicUserInfoData,
 }) => {
   const { success } = useToast();
   const imageInputRef = useRef();
@@ -35,9 +38,18 @@ const AddDepartmentModal = ({
   // Default Icon
   const placeholderIcon = "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
 
+  // Department Managers Data Destructure
+  const managersList = BasicUserInfoData
+    .filter(user => user && user.employee_id && user.full_name)
+    .map(user => ({
+      value: user.employee_id,
+      label: user.full_name,
+    }));
+
   // Form Handlers
   const {
     reset,
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -58,40 +70,33 @@ const AddDepartmentModal = ({
     setFormError(null);
     setIsLoading(true);
 
-    // Upload Icon
     try {
       if (!UserEmail) {
         setFormError("User email not found. Please log in.");
         return;
       }
 
-      let uploadedImageUrl = placeholderIcon;
+      // Lookup full manager info by selected value
+      const selectedManager = BasicUserInfoData.find(
+        user => user.employee_id === data.department_manager.value
+      );
 
-      if (iconImage) {
-        const url = await uploadImage(iconImage);
-        if (!url) {
-          setFormError("Failed to upload icon image.");
-          return;
-        }
-        uploadedImageUrl = url;
-      }
-
+      // Prepare payload
       const payload = {
         ...data,
-        iconImage: uploadedImageUrl,
+        created_by: UserEmail,
+        manager: selectedManager,
       };
 
-      // const response = await axiosPublic.post("/AssetCategory", payload);
-      console.log(payload);
-      const response = { status: 201, }
-
+      // send payload
+      const response = await axiosPublic.post("/Departments", payload);
 
       if (response.status === 201 || response.status === 200) {
-        success("Asset category created successfully!");
-        RefetchAll?.();
         handleClose();
+        RefetchAll?.();
+        success("Department created successfully!");
       } else {
-        setFormError(response.data?.message || "Failed to create category");
+        setFormError(response.data?.message || "Failed to create department");
       }
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -104,7 +109,7 @@ const AddDepartmentModal = ({
   return (
     <div
       id="Add_Department_Modal"
-      className="modal-box w-full max-w-xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
+      className="modal-box w-full max-w-xl mx-auto max-h-[90vh] overflow-y-auto scrollbar-none bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -154,10 +159,12 @@ const AddDepartmentModal = ({
         <SharedInput
           label="Manager"
           name="department_manager"
-          register={register}
-          placeholder="e.g. John Doe"
+          type="select"
+          control={control}
+          placeholder="Select Manager"
+          options={managersList}
           rules={{ required: "Manager is required" }}
-          error={errors.department_manager}
+          searchable={true}
         />
 
         {/* Budget */}
@@ -176,6 +183,27 @@ const AddDepartmentModal = ({
           }}
           error={errors.department_budget}
           min={5001}
+        />
+
+        {/* Position(s) */}
+        <MultiFieldInput
+          register={register}
+          control={control}
+          errors={errors}
+          fieldName="positions"
+          title="Position(s)"
+          minRows={1} // always at least 1 row
+          showIndex={false} // optional: hide row index
+          fieldsConfig={[
+            {
+              type: "text",
+              name: "position_name",
+              label: "Position",
+              placeholder: "Enter position",
+              widthClass: "flex-1",
+              rules: { required: "Position is required" }
+            },
+          ]}
         />
 
         {/* Asset Department Icon Drawer */}
