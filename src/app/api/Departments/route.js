@@ -124,14 +124,16 @@ export const POST = async (request) => {
     // Normalize payload (remove department_manager)
     const newDepartment = {
       dept_id: uniqueDeptId,
-      department_name: data.department_name.trim(),
-      department_description: data.department_description?.trim() || "",
-      department_budget: Number(data.department_budget),
-      positions: data.positions || [],
-      manager: data.manager, // only manager object
-      created_by: data.created_by,
+      manager: data.manager,
+      iconImage: data.iconImage,
       created_at: getTimestamp(),
       updated_at: getTimestamp(),
+      created_by: data.created_by,
+      positions: data.positions || [],
+      selectedColor: data.selectedColor,
+      department_name: data.department_name.trim(),
+      department_budget: Number(data.department_budget),
+      department_description: data.department_description?.trim() || "",
     };
 
     const result = await collection.insertOne(newDepartment);

@@ -46,7 +46,7 @@ const AssetsCategoryPage = () => {
   const itemsPerPage = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch AssetsCategory
+  // Fetch Assets Category
   const {
     data: AssetsCategoryData,
     error: AssetsCategoryError,

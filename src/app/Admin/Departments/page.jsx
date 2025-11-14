@@ -41,7 +41,30 @@ const DepartmentPage = () => {
 
   // States
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+
+  // Pagination States
+  const itemsPerPage = 8;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch Departments
+  const {
+    data: DepartmentsData,
+    error: DepartmentsError,
+    refetch: DepartmentsRefetch,
+    isLoading: DepartmentsIsLoading,
+  } = useQuery({
+    queryKey: ["DepartmentsData", currentPage, itemsPerPage, searchTerm],
+    queryFn: () =>
+      axiosPublic.get(`/Departments`, {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchTerm || undefined,
+        },
+      }).then((res) => res.data),
+    keepPreviousData: true,
+  });
 
   // Fetch BasicUserInfo
   const {
@@ -56,17 +79,24 @@ const DepartmentPage = () => {
     keepPreviousData: true,
   });
 
+  // Destructure Departments Data
+  const Departments = DepartmentsData?.data || [];
+  const totalItems = DepartmentsData?.total || 0;
+  const totalPages = DepartmentsData?.totalPages || 1;
+
+  // Handle loading
   if (BasicUserInfoIsLoading) {
     return <Loading />;
   }
 
   // Handle errors
-  if (BasicUserInfoError) {
-    return <Error errors={[BasicUserInfoError]} />;
+  if (BasicUserInfoError || DepartmentsError) {
+    return <Error errors={[BasicUserInfoError, DepartmentsError]} />;
   }
 
   // Refetch all
   const RefetchAll = () => {
+    DepartmentsRefetch();
     BasicUserInfoRefetch();
   };
 
@@ -109,6 +139,214 @@ const DepartmentPage = () => {
             </div>
           </button>
         </div>
+      </div>
+
+      {/* Assets Table */}
+      <div className="overflow-x-auto relative px-2 mb-16">
+        {/* Table */}
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          {/* Table Header */}
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              {[
+                { label: "Department", align: "left" },
+                { label: "Manager", align: "left" },
+                { label: "Budget", align: "left" },
+                { label: "Created At ", align: "left" },
+                { label: "Actions", align: "center" },
+              ].map((col, idx) => (
+                <th
+                  key={idx}
+                  className={`px-6 py-4 text-xs font-medium text-gray-500 uppercase ${col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right"}`}
+                >
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          {/* Table Body */}
+          <tbody>
+            {DepartmentsIsLoading || status === "loading" ? (
+              // Loading
+              <tr>
+                <td colSpan={6} className="py-12 text-center">
+                  <Loading
+                    height='min-h-[500px]'
+                    background_color='bg-white'
+                  />
+                </td>
+              </tr>
+            ) : Departments?.length > 0 ? (
+              Departments.map((department) => (
+                <tr
+                  key={department._id}
+                  className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
+                >
+                  {/* Icon, name, and ID */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    <div className="flex items-center gap-4">
+                      {/* Icon container */}
+                      <div
+                        className="shrink-0 w-12 h-12 flex items-center justify-center rounded-lg"
+                        style={{ backgroundColor: department.selectedColor || "#e2e8f0" }}
+                      >
+                        <Image
+                          src={department.iconImage || "https://i.ibb.co/9996NVtk/info-removebg-preview.png"}
+                          alt={department.department_name}
+                          width={32} // 8 * 4 = 32px (matches w-8)
+                          height={32} // matches h-8
+                          className="object-contain"
+                        />
+                      </div>
+
+                      {/* Text content */}
+                      <div className="flex flex-col">
+                        <h3 className="font-semibold text-gray-800 text-sm md:text-base">
+                          {department.department_name}
+                        </h3>
+                        <p className="text-gray-500 text-xs md:text-sm">
+                          {department?.department_description}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Depreciation Rate */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {department?.manager?.full_name}
+                    <p className='text-xs text-gray-500' >{department?.manager?.email}</p>
+                  </td>
+
+                  {/* Warranty */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {Number(department.department_budget).toLocaleString("en-US")} Taka
+                  </td>
+
+                  {/* Created At */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {new Date(department.created_at).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="py-3 px-4 whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      {/* View */}
+                      <button
+                        data-tooltip-id={`view-tooltip-${department._id}`}
+                        data-tooltip-content="View Department Details"
+                        onClick={() => {
+                          setSelectedDepartment(department);
+                          document.getElementById("View_Department_Modal").showModal();
+                        }}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+                      >
+                        <FaEye className="text-sm" />
+                      </button>
+
+                      {/* Edit */}
+                      <button
+                        data-tooltip-id={`edit-tooltip-${department._id}`}
+                        data-tooltip-content="Edit Department Details"
+                        onClick={() => {
+                          setSelectedDepartment(department);
+                          document.getElementById("Edit_Department_Modal").showModal();
+                        }}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
+                      >
+                        <MdEdit className="text-sm" />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        data-tooltip-content="Delete Department"
+                        data-tooltip-id={`delete-tooltip-${department._id}`}
+                        onClick={() => handleDeleteDepartment(department._id)}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                      >
+                        <FaRegTrashAlt className="text-sm" />
+                      </button>
+                    </div>
+
+                    {/* Tooltip components with unique IDs */}
+                    <Tooltip id={`view-tooltip-${department._id}`} place="top" effect="solid" />
+                    <Tooltip id={`edit-tooltip-${department._id}`} place="top" effect="solid" />
+                    <Tooltip id={`delete-tooltip-${department._id}`} place="top" effect="solid" />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    {/* Icon */}
+                    <FaBoxOpen className="text-gray-400 w-12 h-12" />
+
+                    {/* Main message */}
+                    <p className="text-gray-500 text-lg font-semibold">
+                      No Departments Found
+                    </p>
+
+                    {/* Subtext for guidance */}
+                    <p className="text-gray-400 text-sm">
+                      Adjust your filters or add a new Department.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+            )}
+          </tbody>
+
+          {/* Table footer with dynamic pagination */}
+          <tfoot>
+            <tr>
+              <td colSpan={6} className="px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-black">
+                  <div>
+                    <p className="text-sm">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+                    </p>
+                    <p className="text-xs font-semibold text-gray-500">Department</p>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-end space-x-2 mt-4">
+                    {/* Previous Button */}
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    >
+                      <FaAngleLeft /> Prev
+                    </button>
+
+                    {/* Page Number Display */}
+                    <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
+                      Page {currentPage} of {totalPages}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    >
+                      Next <FaAngleRight />
+                    </button>
+                  </div>
+
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
 
