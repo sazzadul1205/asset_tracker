@@ -12,7 +12,14 @@ export const GET = async () => {
     const users = await collection
       .find(
         {},
-        { projection: { full_name: 1, email: 1, department: 1, position: 1 } }
+        {
+          projection: {
+            _id: 0,
+            email: 1,
+            full_name: 1,
+            employee_id: 1,
+          },
+        }
       )
       .toArray();
 

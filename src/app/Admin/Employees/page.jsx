@@ -33,6 +33,7 @@ import EditAssetCategoryModal from '@/Shared/Modals/AssetCategory/EditAssetCateg
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
 import AddEmployeeModal from '@/Shared/Modals/Employees/AddEmployeeModal/AddEmployeeModal';
+import EditEmployeeModal from '@/Shared/Modals/Employees/EditEmployeeModal/EditEmployeeModal';
 
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();

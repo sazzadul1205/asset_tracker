@@ -43,6 +43,33 @@ const DepartmentPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  // Fetch BasicUserInfo
+  const {
+    data: BasicUserInfoData,
+    error: BasicUserInfoError,
+    refetch: BasicUserInfoRefetch,
+    isLoading: BasicUserInfoIsLoading,
+  } = useQuery({
+    queryKey: ["BasicUserInfoData"],
+    queryFn: () =>
+      axiosPublic.get(`/Users/BasicInfo`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
+  if (BasicUserInfoIsLoading) {
+    return <Loading />;
+  }
+
+  // Handle errors
+  if (BasicUserInfoError) {
+    return <Error errors={[BasicUserInfoError]} />;
+  }
+
+  // Refetch all
+  const RefetchAll = () => {
+    BasicUserInfoRefetch();
+  };
+
   return (
     <div>
       {/* Header */}
@@ -88,8 +115,9 @@ const DepartmentPage = () => {
       {/* Add Department Modal */}
       <dialog id="Add_Department_Modal" className="modal">
         <AddDepartmentModal
+          RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
-          // RefetchAll={RefetchAll}
+          BasicUserInfoData={BasicUserInfoData}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
