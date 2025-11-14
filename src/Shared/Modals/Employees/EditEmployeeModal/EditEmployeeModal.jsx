@@ -205,6 +205,13 @@ const EditEmployeeModal = ({
 
       <hr className="my-3 border-gray-300" />
 
+      {/* Notice */}
+      <p className="text-red-500 text-sm pb-2">
+        The User ID and Password cannot be updated.
+        {selectedEmployee?.fixed && " This employee is fixed, so Department and Position cannot be changed."}
+        {selectedEmployee?.position === "Manager" && " This person is a Manager, so their position cannot be updated."}
+      </p>
+
       {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -260,6 +267,7 @@ const EditEmployeeModal = ({
         />
 
         {/* Department Select */}
+        {/* Department Select */}
         <SharedInput
           label="Department"
           name="department"
@@ -274,6 +282,7 @@ const EditEmployeeModal = ({
             }))
           ]}
           rules={{ required: "Department is required" }}
+          disabled={selectedEmployee?.fixed} // disable if fixed
         />
 
         {/* Position */}
@@ -283,10 +292,11 @@ const EditEmployeeModal = ({
           type="select"
           register={register}
           placeholder="Select Position"
-          options={positionOptions} // dynamically includes Unassigned
+          options={positionOptions}
           rules={{ required: "Position is required" }}
-          disabled={!positionOptions.length}
+          disabled={selectedEmployee?.fixed || !positionOptions.length} // disable if fixed or no positions
         />
+
 
         {/* Hire Date */}
         <SharedInput
@@ -326,8 +336,8 @@ const EditEmployeeModal = ({
           register={register}
           placeholder="Select Level"
           options={[
-            // { value: "admin", label: "Admin" },
-            // { value: "manager", label: "Manager" },
+            { value: "admin", label: "Admin" },
+            { value: "manager", label: "Manager" },
             { value: "employee", label: "Employee" },
             { value: "intern", label: "Intern" },
             { value: "guest", label: "Guest" },
@@ -335,6 +345,8 @@ const EditEmployeeModal = ({
           ]}
           rules={{ required: "Access Level is required" }}
           error={errors.access_level}
+          disabled={selectedEmployee?.fixed || !positionOptions.length} // disable if fixed or no positions
+
         />
 
         {/* Password */}

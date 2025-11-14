@@ -77,7 +77,6 @@ const EditDepartmentModal = ({
     setIconImage(null); // do NOT override existing icon
   }, [selectedDepartment, reset]);
 
-
   // Handle Close
   const handleClose = () => {
     reset();
@@ -149,26 +148,25 @@ const EditDepartmentModal = ({
       // ------------------------------------
       // 1) If manager changed → unassign old manager
       // ------------------------------------
-      if (managerChanged) {
-        await axiosPublic.put(`/Users/${oldManager.employee_id}`, {
-          fixed: false,
-          position: "UnAssigned",
-          access_level: "Employee",
-          department: "UnAssigned",
-        });
-      }
+      await axiosPublic.put(`/Users/${oldManager.employee_id}`, {
+        fixed: false,
+        position: "UnAssigned",
+        access_level: "Employee",
+        department: "UnAssigned",
+      });
+
+      // Use either the returned dept_id or the original
+      const deptId = selectedDepartment.dept_id;
 
       // ------------------------------------
       // 2) If manager changed → assign new manager
       // ------------------------------------
-      if (managerChanged) {
-        await axiosPublic.put(`/Users/${newManager.employee_id}`, {
-          fixed: true,
-          position: "Manager",
-          access_level: "Manager",
-          department: DepartmentPayload.department_name,
-        });
-      }
+      await axiosPublic.put(`/Users/${newManager?.employee_id}`, {
+        fixed: true,
+        position: "Manager",
+        access_level: "Manager",
+        department: deptId,
+      });
 
       // ------------------------------------
       // 3) Update department
@@ -194,8 +192,6 @@ const EditDepartmentModal = ({
       setIsLoading(false);
     }
   };
-
-
 
   return (
     <div

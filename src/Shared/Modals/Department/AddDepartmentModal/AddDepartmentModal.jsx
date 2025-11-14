@@ -113,18 +113,25 @@ const AddDepartmentModal = ({
         department_description: data.department_description?.trim() || "",
       };
 
+      // Send DepartmentPayload
+      const departmentResponse = await axiosPublic.post("/Departments", DepartmentPayload);
+
+      // Grab the dept_id from response
+      const deptId = departmentResponse.data?.dept_id;
+
+      if (!deptId) {
+        throw new Error("Failed to get department ID from response.");
+      }
+
       // Prepare User payload
       const UserPayload = {
         fixed: true,
         position: "Manager",
         access_level: "Manager",
-        department: data.department_name.trim(),
+        department: deptId, // use dept_id instead of name
       };
 
-      // send DepartmentPayload
-      const departmentResponse = await axiosPublic.post("/Departments", DepartmentPayload);
-
-      // send UserPayload
+      // Send UserPayload
       const userResponse = await axiosPublic.put(
         `/Users/${selectedManager.employee_id}`,
         UserPayload

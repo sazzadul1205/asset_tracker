@@ -98,6 +98,37 @@ const EmployeesPage = () => {
     DepartmentsBasicInfoRefetch();
   };
 
+  // Delete Employee Handler
+  const handleDeleteEmployee = async (employee) => {
+    const isConfirmed = await confirm(
+      "Are you sure?",
+      "This action will permanently delete the Employee!",
+      "Yes, Delete",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      // 1) Delete the Employee
+      const res = await axiosPublic.delete(`/Users/${employee.employee_id}`);
+
+      // 2) Check response
+      if (res.status === 200) {
+        RefetchAll?.();
+        success("Employee deleted successfully!");
+      } else {
+        error("Failed to delete the Employee.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      error(err?.response?.data?.error || "Something went wrong!");
+    }
+  };
+
   return (
     <div>
       {/* Header */}
@@ -287,7 +318,7 @@ const EmployeesPage = () => {
                       <button
                         data-tooltip-content="Delete Employee"
                         data-tooltip-id={`delete-tooltip-${users._id}`}
-                        onClick={() => handleDeleteCategory(users._id)}
+                        onClick={() => handleDeleteEmployee(users)}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
                       >
                         <FaRegTrashAlt className="text-sm" />

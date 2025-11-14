@@ -147,6 +147,7 @@ export const POST = async (request) => {
         success: true,
         message: "Department added successfully",
         departmentId: result.insertedId,
+        dept_id: uniqueDeptId,
         department: newDepartment,
       },
       { status: 201 }
