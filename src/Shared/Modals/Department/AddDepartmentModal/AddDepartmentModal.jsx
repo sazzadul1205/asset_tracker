@@ -71,6 +71,7 @@ const AddDepartmentModal = ({
     setIsLoading(true);
 
     try {
+      // Check if UserEmail is present
       if (!UserEmail) {
         setFormError("User email not found. Please log in.");
         return;
@@ -81,22 +82,65 @@ const AddDepartmentModal = ({
         user => user.employee_id === data.department_manager.value
       );
 
-      // Prepare payload
-      const payload = {
-        ...data,
+      // Check if selected manager is found
+      if (!selectedManager) {
+        setFormError("Selected manager not found.");
+        return;
+      }
+
+      // Upload Icon
+      let uploadedImageUrl = placeholderIcon;
+
+      // Upload only if a new image is selected
+      if (iconImage) {
+        const url = await uploadImage(iconImage);
+        if (!url) {
+          setFormError("Failed to upload icon image.");
+          return;
+        }
+        uploadedImageUrl = url;
+      }
+
+      // Prepare Department payload
+      const DepartmentPayload = {
+        selectedColor,
         created_by: UserEmail,
         manager: selectedManager,
+        iconImage: uploadedImageUrl,
+        positions: data.positions || [],
+        department_name: data.department_name.trim(),
+        department_budget: Number(data.department_budget),
+        department_description: data.department_description?.trim() || "",
       };
 
-      // send payload
-      const response = await axiosPublic.post("/Departments", payload);
+      // Prepare User payload
+      const UserPayload = {
+        fixed: true,
+        position: "Manager",
+        access_level: "Manager",
+        department: data.department_name.trim(),
+      };
 
-      if (response.status === 201 || response.status === 200) {
+      // send DepartmentPayload
+      const departmentResponse = await axiosPublic.post("/Departments", DepartmentPayload);
+
+      // send UserPayload
+      const userResponse = await axiosPublic.put(
+        `/Users/${selectedManager.employee_id}`,
+        UserPayload
+      );
+
+      if (
+        departmentResponse.status === 201 ||
+        departmentResponse.status === 200 ||
+        userResponse.status === 201 ||
+        userResponse.status === 200
+      ) {
         handleClose();
         RefetchAll?.();
         success("Department created successfully!");
       } else {
-        setFormError(response.data?.message || "Failed to create department");
+        setFormError(departmentResponse.data?.message || "Failed to create department");
       }
     } catch (err) {
       console.error("Error submitting form:", err);

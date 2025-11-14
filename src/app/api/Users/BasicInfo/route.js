@@ -2,28 +2,36 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
-// GET Method - Fetch Users Basic Info
-export const GET = async () => {
+export const GET = async (req) => {
   try {
     const db = await connectDB();
     const collection = db.collection("Users");
 
-    // Fetch only the selected fields
-    const users = await collection
-      .find(
-        {},
-        {
-          projection: {
-            _id: 0,
-            email: 1,
-            full_name: 1,
-            employee_id: 1,
-          },
-        }
-      )
-      .toArray();
+    const { searchParams } = new URL(req.url);
 
-    // Return as array
+    // Query params:
+    const includeFixed = searchParams.get("includeFixed") === "true";
+    const onlyFixed = searchParams.get("onlyFixed") === "true";
+
+    // Build MongoDB filter
+    let filter = {};
+
+    if (onlyFixed) {
+      filter.fixed = true; // return ONLY fixed
+    } else if (!includeFixed) {
+      filter.$or = [{ fixed: false }, { fixed: { $exists: false } }];
+    }
+
+    // Fields to return
+    const projection = {
+      _id: 0,
+      email: 1,
+      full_name: 1,
+      employee_id: 1,
+    };
+
+    const users = await collection.find(filter, { projection }).toArray();
+
     return NextResponse.json(
       {
         success: true,
