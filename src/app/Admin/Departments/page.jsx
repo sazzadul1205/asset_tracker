@@ -25,14 +25,13 @@ import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
 
 // Shared Modal
-import AddAssetCategoryModal from '@/Shared/Modals/AssetCategory/AddAssetCategoryModal/AddAssetCategoryModal';
-import ViewAssetCategoryModal from '@/Shared/Modals/AssetCategory/ViewAssetCategoryModal/ViewAssetCategoryModal';
-import EditAssetCategoryModal from '@/Shared/Modals/AssetCategory/EditAssetCategoryModal/EditAssetCategoryModal';
+import AddDepartmentModal from '@/Shared/Modals/Department/AddDepartmentModal/AddDepartmentModal';
+import EditDepartmentModal from '@/Shared/Modals/Department/EditDepartmentModal/EditDepartmentModal';
+import ViewDepartmentModal from '@/Shared/Modals/Department/ViewDepartmentModal/ViewDepartmentModal';
 
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import AddDepartmentModal from '@/Shared/Modals/Department/AddDepartmentModal/AddDepartmentModal';
 
 const DepartmentPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -98,6 +97,47 @@ const DepartmentPage = () => {
   const RefetchAll = () => {
     DepartmentsRefetch();
     BasicUserInfoRefetch();
+  };
+
+  // Delete Department Handler
+  const handleDeleteDepartment = async (department) => {
+    const isConfirmed = await confirm(
+      "Are you sure?",
+      "This action will permanently delete the Department!",
+      "Yes, Delete",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      // 1) Unassign the current manager (if exists)
+      if (department?.manager?.employee_id) {
+        await axiosPublic.put(`/Users/${department.manager.employee_id}`, {
+          fixed: false,
+          position: "UnAssigned",
+          access_level: "Employee",
+          department: "UnAssigned",
+        });
+      }
+
+      // 2) Delete the department
+      const res = await axiosPublic.delete(`/Departments/${department._id}`);
+
+      // 3) Check response
+      if (res.status === 200) {
+        RefetchAll?.();
+        success("Department deleted successfully!");
+      } else {
+        error("Failed to delete the Department.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      error(err?.response?.data?.error || "Something went wrong!");
+    }
   };
 
   return (
@@ -265,7 +305,7 @@ const DepartmentPage = () => {
                       <button
                         data-tooltip-content="Delete Department"
                         data-tooltip-id={`delete-tooltip-${department._id}`}
-                        onClick={() => handleDeleteDepartment(department._id)}
+                        onClick={() => handleDeleteDepartment(department)}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
                       >
                         <FaRegTrashAlt className="text-sm" />
@@ -349,13 +389,37 @@ const DepartmentPage = () => {
         </table>
       </div>
 
-
       {/* Add Department Modal */}
       <dialog id="Add_Department_Modal" className="modal">
         <AddDepartmentModal
           RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
           BasicUserInfoData={BasicUserInfoData}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Edit Department Modal */}
+      <dialog id="Edit_Department_Modal" className="modal">
+        <EditDepartmentModal
+          RefetchAll={RefetchAll}
+          UserEmail={session?.user?.email}
+          BasicUserInfoData={BasicUserInfoData}
+          selectedDepartment={selectedDepartment}
+          setSelectedDepartment={setSelectedDepartment}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* View Department Modal */}
+      <dialog id="View_Department_Modal" className="modal">
+        <ViewDepartmentModal
+          selectedDepartment={selectedDepartment}
+          setSelectedDepartment={setSelectedDepartment}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

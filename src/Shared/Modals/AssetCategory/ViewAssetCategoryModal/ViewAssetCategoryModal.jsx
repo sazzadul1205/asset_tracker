@@ -47,7 +47,7 @@ const ViewAssetCategoryModal = ({
               {selectedCategory?.category_name || "Category Name"}
             </h3>
             <p className="text-gray-500 text-xs md:text-sm">
-              ID: {selectedCategory?.ac_id || "N/A"}
+              Asset Category ID: {selectedCategory?.ac_id || "N/A"}
             </p>
           </div>
         </div>
