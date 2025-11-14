@@ -25,15 +25,12 @@ import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
 
 // Shared Modal
-import AddAssetCategoryModal from '@/Shared/Modals/AssetCategory/AddAssetCategoryModal/AddAssetCategoryModal';
-import ViewAssetCategoryModal from '@/Shared/Modals/AssetCategory/ViewAssetCategoryModal/ViewAssetCategoryModal';
-import EditAssetCategoryModal from '@/Shared/Modals/AssetCategory/EditAssetCategoryModal/EditAssetCategoryModal';
+import AddEmployeeModal from '@/Shared/Modals/Employees/AddEmployeeModal/AddEmployeeModal';
+import EditEmployeeModal from '@/Shared/Modals/Employees/EditEmployeeModal/EditEmployeeModal';
 
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import AddEmployeeModal from '@/Shared/Modals/Employees/AddEmployeeModal/AddEmployeeModal';
-import EditEmployeeModal from '@/Shared/Modals/Employees/EditEmployeeModal/EditEmployeeModal';
 
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -42,7 +39,7 @@ const EmployeesPage = () => {
 
   // States
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   // Pagination States
   const itemsPerPage = 8;
@@ -67,19 +64,38 @@ const EmployeesPage = () => {
     keepPreviousData: true,
   });
 
+  // Fetch Departments Basic Info
+  const {
+    data: DepartmentsBasicInfoData,
+    error: DepartmentsBasicInfoError,
+    refetch: DepartmentsBasicInfoRefetch,
+    isLoading: DepartmentsBasicInfoIsLoading,
+  } = useQuery({
+    queryKey: ["DepartmentsBasicInfoData"],
+    queryFn: () =>
+      axiosPublic.get(`/Departments/BasicInfo`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
   // Destructure AllUsers data
   const Users = AllUsersData?.data || [];
   const totalItems = AllUsersData?.total || 0;
   const totalPages = AllUsersData?.totalPages || 1;
 
+  // Handle loading
+  if (DepartmentsBasicInfoIsLoading) {
+    return <Loading />;
+  }
+
   // Handle errors
-  if (AllUsersError) {
-    return <Error errors={[AllUsersError]} />;
+  if (AllUsersError || DepartmentsBasicInfoError) {
+    return <Error errors={[AllUsersError, DepartmentsBasicInfoError]} />;
   }
 
   // Refetch all
   const RefetchAll = () => {
     AllUsersRefetch();
+    DepartmentsBasicInfoRefetch();
   };
 
   return (
@@ -246,7 +262,7 @@ const EmployeesPage = () => {
                         data-tooltip-id={`view-tooltip-${users._id}`}
                         data-tooltip-content="View Employee Details"
                         onClick={() => {
-                          setSelectedCategory(users);
+                          setSelectedEmployee(users);
                           document.getElementById("View_Asset_Category_Modal").showModal();
                         }}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
@@ -259,8 +275,8 @@ const EmployeesPage = () => {
                         data-tooltip-id={`edit-tooltip-${users._id}`}
                         data-tooltip-content="Edit Employee Details"
                         onClick={() => {
-                          setSelectedCategory(users);
-                          document.getElementById("Edit_Asset_Category_Modal").showModal();
+                          setSelectedEmployee(users);
+                          document.getElementById("Edit_Employee_Modal").showModal();
                         }}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
                       >
@@ -358,8 +374,9 @@ const EmployeesPage = () => {
       {/* Add Employee Modal */}
       <dialog id="Add_Employee_Modal" className="modal">
         <AddEmployeeModal
-          UserEmail={session?.user?.email}
           RefetchAll={RefetchAll}
+          UserEmail={session?.user?.email}
+          DepartmentsBasicInfoData={DepartmentsBasicInfoData}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
@@ -369,8 +386,11 @@ const EmployeesPage = () => {
       {/* Edit Employee Modal */}
       <dialog id="Edit_Employee_Modal" className="modal">
         <EditEmployeeModal
-          UserEmail={session?.user?.email}
           RefetchAll={RefetchAll}
+          UserEmail={session?.user?.email}
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+          DepartmentsBasicInfoData={DepartmentsBasicInfoData}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

@@ -69,9 +69,12 @@ const SharedInput = ({
   const inputType = type === "password" ? (showPassword ? "text" : "password") : type;
 
   // Classes for input
+  const isDisabledOrReadOnly = disabled || readOnly;
+
+  // Classes for input
   const baseClasses = `w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
-    ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"}
-    ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : "bg-white"}`;
+  ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"}
+  ${isDisabledOrReadOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : "bg-white"}`;
 
   return (
     <div className="w-full">
@@ -172,6 +175,7 @@ const SharedInput = ({
                 yearDropdownItemNumber={100}
                 scrollableYearDropdown
                 disabled={disabled || readOnly}
+                wrapperClassName="w-full"
                 className={`pl-10 w-full ${baseClasses}`}
               />
             </div>

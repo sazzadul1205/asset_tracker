@@ -1,5 +1,5 @@
 // React Components
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 // React Hook Form
 import { useForm } from "react-hook-form";
@@ -17,6 +17,7 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 const AddEmployeeModal = ({
   UserEmail,
   RefetchAll,
+  DepartmentsBasicInfoData,
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -25,19 +26,57 @@ const AddEmployeeModal = ({
   const [formError, setFormError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Form fields
+  const [positionOptions, setPositionOptions] = useState([]);
+
   // Form
   const {
     reset,
+    watch,
     control,
+    setValue,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
 
+  // Watchers
+  const watchedDepartment = watch("department", null); // default null
+
+  // Position Options
+  useEffect(() => {
+    if (watchedDepartment && watchedDepartment !== "unAssigned") {
+      const selectedDept = DepartmentsBasicInfoData.find(
+        (d) => d.dept_id === watchedDepartment
+      );
+
+      if (selectedDept && selectedDept.positions) {
+        setPositionOptions([
+          { label: "Unassigned", value: "unAssigned" },
+          ...selectedDept.positions
+            .filter((pos) => pos.position_name !== "Manager") // exclude Manager
+            .map((pos) => ({
+              label: pos.position_name,
+              value: pos.position_name,
+            })),
+        ]);
+      } else {
+        setPositionOptions([{ label: "Unassigned", value: "unAssigned" }]);
+      }
+
+      // Reset selected position when department changes
+      setValue("position", "unAssigned");
+    } else {
+      setPositionOptions([{ label: "Unassigned", value: "unAssigned" }]);
+      setValue("position", "unAssigned");
+    }
+  }, [watchedDepartment, DepartmentsBasicInfoData, setValue]);
+
   // Close modal
   const handleClose = () => {
     reset();
     setFormError(null);
+    setPositionOptions([]);
     document.getElementById("Add_Employee_Modal")?.close();
   };
 
@@ -54,19 +93,30 @@ const AddEmployeeModal = ({
 
       // Build employee payload
       const payload = {
-        ...data,
+        full_name: data.full_name,
+        email: data.email,
+        employee_id: data.employee_id,
+        phone: data.phone,
+        department: data.department || "unAssigned",
+        position: data.position || "unAssigned",
+        hire_date: data.hire_date,
+        status: data.status,
+        access_level: data.access_level || "unAssigned",
+        password: data.password,
         created_by: UserEmail,
       };
 
+      // Create employee
       const response = await axiosPublic.post("/Users", payload);
 
+      // Check response
       if (response.status === 201 || response.status === 200) {
         success("Employee created successfully.");
         RefetchAll?.();
         handleClose();
       } else {
         setFormError(response.data?.message || "Failed to create employee.");
-      } 
+      }
     } catch (err) {
       console.error("Employee creation error:", err);
 
@@ -131,8 +181,14 @@ const AddEmployeeModal = ({
           type="email"
           register={register}
           placeholder="Enter Email Address"
-          rules={{ required: "Email is required" }}
-          error={errors.full_name}
+          rules={{
+            required: "Email is required",
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: "Enter a valid email address",
+            },
+          }}
+          error={errors.email}
         />
 
         {/* Employee Id */}
@@ -156,24 +212,33 @@ const AddEmployeeModal = ({
           error={errors.phone}
         />
 
-        {/* Department */}
+        {/* Department Select */}
         <SharedInput
           label="Department"
           name="department"
+          type="select"
           register={register}
-          placeholder="Enter Department"
+          placeholder="Select Department"
+          options={[
+            { label: "Unassigned", value: "unAssigned" },
+            ...DepartmentsBasicInfoData.map(d => ({
+              label: d.department_name,
+              value: d.dept_id
+            }))
+          ]}
           rules={{ required: "Department is required" }}
-          error={errors.department}
         />
 
         {/* Position */}
         <SharedInput
           label="Position"
           name="position"
+          type="select"
           register={register}
-          placeholder="Enter Position"
+          placeholder="Select Position"
+          options={positionOptions} // dynamically includes Unassigned
           rules={{ required: "Position is required" }}
-          error={errors.position}
+          disabled={!positionOptions.length}
         />
 
         {/* Hire Date */}
@@ -214,8 +279,8 @@ const AddEmployeeModal = ({
           register={register}
           placeholder="Select Level"
           options={[
-            { value: "admin", label: "Admin" },
-            { value: "manager", label: "Manager" },
+            // { value: "admin", label: "Admin" },
+            // { value: "manager", label: "Manager" },
             { value: "employee", label: "Employee" },
             { value: "intern", label: "Intern" },
             { value: "guest", label: "Guest" },
