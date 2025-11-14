@@ -1,5 +1,5 @@
 // React Components
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // React Hook Form
 import { useForm } from "react-hook-form";
@@ -17,11 +17,12 @@ import { useToast } from "@/Hooks/Toasts";
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 import { useImageUpload } from "@/Hooks/useImageUpload";
 
-
-const AddDepartmentModal = ({
-  UserEmail,
+const EditDepartmentModal = ({
   RefetchAll,
+  UserEmail,
   BasicUserInfoData,
+  selectedDepartment,
+  setSelectedDepartment,
 }) => {
   const { success } = useToast();
   const imageInputRef = useRef();
@@ -36,7 +37,9 @@ const AddDepartmentModal = ({
   const [selectedColor, setSelectedColor] = useState("#ffffff");
 
   // Default Icon
-  const placeholderIcon = "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
+  const placeholderIcon = selectedDepartment?.iconImage
+    ? selectedDepartment.iconImage
+    : "https://i.ibb.co/9996NVtk/info-removebg-preview.png";
 
   // Department Managers Data Destructure
   const managersList = BasicUserInfoData
@@ -55,14 +58,35 @@ const AddDepartmentModal = ({
     formState: { errors, isSubmitting },
   } = useForm();
 
+  // Prefill form when selectedDepartment changes
+  useEffect(() => {
+    if (!selectedDepartment) return;
+
+    reset({
+      department_name: selectedDepartment.department_name || "",
+      department_description: selectedDepartment.department_description || "",
+      department_budget: selectedDepartment.department_budget || "",
+      department_manager: {
+        value: selectedDepartment.manager?.employee_id || "",
+        label: selectedDepartment.manager?.full_name || "",
+      },
+      positions: selectedDepartment.positions || [{ position_name: "" }],
+    });
+
+    setSelectedColor(selectedDepartment.selectedColor || "#ffffff");
+    setIconImage(null); // do NOT override existing icon
+  }, [selectedDepartment, reset]);
+
+
   // Handle Close
   const handleClose = () => {
     reset();
     setFormError(null);
     setIconImage(null);
+    setSelectedDepartment(null);
     setSelectedColor("#ffffff");
     imageInputRef.current?.resetToDefault?.();
-    document.getElementById("Add_Department_Modal")?.close();
+    document.getElementById("Edit_Department_Modal")?.close();
   };
 
   // Handle Submit
@@ -71,27 +95,33 @@ const AddDepartmentModal = ({
     setIsLoading(true);
 
     try {
-      // Check if UserEmail is present
       if (!UserEmail) {
         setFormError("User email not found. Please log in.");
         return;
       }
 
-      // Lookup full manager info by selected value
-      const selectedManager = BasicUserInfoData.find(
-        user => user.employee_id === data.department_manager.value
-      );
+      // ------------------------------------
+      // Detect manager change
+      // ------------------------------------
+      const oldManager = selectedDepartment.manager;
+      let newManager = null;
 
-      // Check if selected manager is found
-      if (!selectedManager) {
-        setFormError("Selected manager not found.");
-        return;
+      if (data.department_manager && data.department_manager.value) {
+        newManager = BasicUserInfoData.find(
+          (user) => user.employee_id === data.department_manager.value
+        );
       }
 
-      // Upload Icon
+      if (!newManager) newManager = oldManager; // fallback
+
+      const managerChanged =
+        newManager.employee_id !== oldManager.employee_id;
+
+      // ------------------------------------
+      // Handle icon upload
+      // ------------------------------------
       let uploadedImageUrl = placeholderIcon;
 
-      // Upload only if a new image is selected
       if (iconImage) {
         const url = await uploadImage(iconImage);
         if (!url) {
@@ -101,46 +131,61 @@ const AddDepartmentModal = ({
         uploadedImageUrl = url;
       }
 
-      // Prepare Department payload
+      // ------------------------------------
+      // Department payload
+      // ------------------------------------
       const DepartmentPayload = {
         selectedColor,
         created_by: UserEmail,
-        manager: selectedManager,
+        manager: newManager,
         iconImage: uploadedImageUrl,
         positions: data.positions || [],
         department_name: data.department_name.trim(),
         department_budget: Number(data.department_budget),
         department_description: data.department_description?.trim() || "",
+        updated_at: new Date().toISOString(),
       };
 
-      // Prepare User payload
-      const UserPayload = {
-        fixed: true,
-        position: "Manager",
-        access_level: "Manager",
-        department: data.department_name.trim(),
-      };
+      // ------------------------------------
+      // 1) If manager changed → unassign old manager
+      // ------------------------------------
+      if (managerChanged) {
+        await axiosPublic.put(`/Users/${oldManager.employee_id}`, {
+          fixed: false,
+          position: "UnAssigned",
+          access_level: "Employee",
+          department: "UnAssigned",
+        });
+      }
 
-      // send DepartmentPayload
-      const departmentResponse = await axiosPublic.post("/Departments", DepartmentPayload);
+      // ------------------------------------
+      // 2) If manager changed → assign new manager
+      // ------------------------------------
+      if (managerChanged) {
+        await axiosPublic.put(`/Users/${newManager.employee_id}`, {
+          fixed: true,
+          position: "Manager",
+          access_level: "Manager",
+          department: DepartmentPayload.department_name,
+        });
+      }
 
-      // send UserPayload
-      const userResponse = await axiosPublic.put(
-        `/Users/${selectedManager.employee_id}`,
-        UserPayload
+      // ------------------------------------
+      // 3) Update department
+      // ------------------------------------
+      const departmentResponse = await axiosPublic.put(
+        `/Departments/${selectedDepartment._id}`,
+        DepartmentPayload
       );
 
-      if (
-        departmentResponse.status === 201 ||
-        departmentResponse.status === 200 ||
-        userResponse.status === 201 ||
-        userResponse.status === 200
-      ) {
+      if (departmentResponse.status === 200 || departmentResponse.status === 201) {
         handleClose();
         RefetchAll?.();
-        success("Department created successfully!");
+        success("Department updated successfully!");
       } else {
-        setFormError(departmentResponse.data?.message || "Failed to create department");
+        setFormError(
+          departmentResponse.data?.message || "Failed to update department"
+        );
       }
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -150,15 +195,17 @@ const AddDepartmentModal = ({
     }
   };
 
+
+
   return (
     <div
-      id="Add_Department_Modal"
+      id="Edit_Department_Modal"
       className="modal-box w-full max-w-xl mx-auto max-h-[90vh] overflow-y-auto scrollbar-none bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-gray-800">
-          Add New Department
+          Update Department
         </h3>
         <button
           type="button"
@@ -347,7 +394,7 @@ const AddDepartmentModal = ({
               {isSubmitting || isLoading ? (
                 <span className="loading loading-spinner loading-sm"></span>
               ) : (
-                "Create Department"
+                "Edit Department"
               )}
             </span>
           </button>
@@ -358,4 +405,4 @@ const AddDepartmentModal = ({
   );
 };
 
-export default AddDepartmentModal;
+export default EditDepartmentModal;
