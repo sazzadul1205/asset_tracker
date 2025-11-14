@@ -1,8 +1,13 @@
-"use client";
+// React Components
+import React, { useCallback, useEffect } from "react";
 
-import React, { useEffect } from "react";
+// React Hook Form
 import { useFieldArray } from "react-hook-form";
+
+// Icons
 import { FaPlus, FaTrash } from "react-icons/fa";
+
+// Shared
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
 /**
@@ -51,7 +56,7 @@ const MultiFieldInput = ({
     const row = {};
     fieldsConfig.forEach(f => (row[f.name] = f.defaultValue || ""));
     return row;
-  });
+  }, [fieldsConfig]);
 
   // Ensure minimum rows exist
   useEffect(() => {
