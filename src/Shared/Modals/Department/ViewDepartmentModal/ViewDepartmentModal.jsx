@@ -18,16 +18,34 @@ import {
   FaMoneyBillWave,
 } from "react-icons/fa";
 
+// Hooks
+import useAxiosPublic from '@/Hooks/useAxiosPublic';
+import { useQuery } from '@tanstack/react-query';
+
 const ViewDepartmentModal = ({
   selectedDepartment,
   setSelectedDepartment,
 }) => {
+  const axiosPublic = useAxiosPublic();
 
   // Handle Close
   const handleClose = () => {
     setSelectedDepartment(null);
     document.getElementById("View_Department_Modal")?.close();
   };
+
+  const {
+    data: UserDepartmentCountData,
+  } = useQuery({
+    queryKey: ["UserDepartmentCountData", selectedDepartment?.dept_id],
+    queryFn: async () => {
+      if (!selectedDepartment?.dept_id) return null;
+      const res = await axiosPublic.get(`/Users/Count?department=${selectedDepartment.dept_id}`);
+      return res.data ?? null;
+    },
+    keepPreviousData: true,
+    enabled: !!selectedDepartment?.dept_id,
+  });
 
   return (
     <div
@@ -162,7 +180,7 @@ const ViewDepartmentModal = ({
               <div>
                 <p className="text-sm text-gray-500">Employee Count</p>
                 <p className="font-medium">
-                  {selectedDepartment?.count || "0"}
+                  {UserDepartmentCountData?.count || "0"}
                 </p>
                 <p className="text-xs text-gray-400">Total employees in department</p>
               </div>
@@ -193,7 +211,7 @@ const ViewDepartmentModal = ({
                     Employee
                   </span>
                   <span className='font-medium' >
-                    {selectedDepartment?.count || "0"}
+                    {UserDepartmentCountData?.count || "0"}
                   </span>
                 </div>
 
@@ -400,7 +418,7 @@ const ViewDepartmentModal = ({
               <div className='flex items-center gap-2' >
                 <FaUsers className="text-gray-500 w-4 h-4" />
                 <p className='text-gray-600'>
-                  {selectedDepartment?.count || "0"}
+                  {UserDepartmentCountData?.count || "0"}
                 </p>
               </div>
 
@@ -434,7 +452,7 @@ const ViewDepartmentModal = ({
               <FaUsers className="text-blue-500 w-5 h-5" />
             </div>
             <p className='text-2xl font-bold text-blue-800'>
-              {selectedDepartment?.count ? selectedDepartment.count : 0}
+              {UserDepartmentCountData?.count || 0}
             </p>
             <p className='text-sm text-blue-600'>Total employees in department</p>
           </div>
@@ -458,9 +476,9 @@ const ViewDepartmentModal = ({
               <FaUserTag className="text-purple-500 w-5 h-5" />
             </div>
             <p className='text-2xl font-bold text-purple-800'>
-              {selectedDepartment?.department_budget && selectedDepartment?.count > 0
+              {selectedDepartment?.department_budget && UserDepartmentCountData?.count > 0
                 ? Number(
-                  selectedDepartment.department_budget / selectedDepartment.count
+                  selectedDepartment.department_budget / UserDepartmentCountData?.count
                 ).toLocaleString("en-US") + " ৳"
                 : "0 ৳"}
             </p>
@@ -475,3 +493,4 @@ const ViewDepartmentModal = ({
 };
 
 export default ViewDepartmentModal;
+
