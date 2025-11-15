@@ -336,8 +336,8 @@ const EditEmployeeModal = ({
           register={register}
           placeholder="Select Level"
           options={[
-            { value: "admin", label: "Admin" },
-            { value: "manager", label: "Manager" },
+            // { value: "admin", label: "Admin" },
+            // { value: "manager", label: "Manager" },
             { value: "employee", label: "Employee" },
             { value: "intern", label: "Intern" },
             { value: "guest", label: "Guest" },

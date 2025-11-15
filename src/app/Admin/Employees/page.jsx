@@ -23,10 +23,12 @@ import { useQuery } from '@tanstack/react-query';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+import UserDepartmentView from '@/Shared/TableExtension/UserDepartmentView';
 
 // Shared Modal
 import AddEmployeeModal from '@/Shared/Modals/Employees/AddEmployeeModal/AddEmployeeModal';
 import EditEmployeeModal from '@/Shared/Modals/Employees/EditEmployeeModal/EditEmployeeModal';
+import ViewEmployeeModal from '@/Shared/Modals/Employees/ViewEmployeeModal/ViewEmployeeModal';
 
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
@@ -256,7 +258,8 @@ const EmployeesPage = () => {
 
                   {/* Department */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    {users.department}
+                    {/* {users.department} */}
+                    <UserDepartmentView department={users.department} />
                   </td>
 
                   {/* Position */}
@@ -294,7 +297,7 @@ const EmployeesPage = () => {
                         data-tooltip-content="View Employee Details"
                         onClick={() => {
                           setSelectedEmployee(users);
-                          document.getElementById("View_Asset_Category_Modal").showModal();
+                          document.getElementById("View_Employee_Modal").showModal();
                         }}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
                       >
@@ -428,6 +431,16 @@ const EmployeesPage = () => {
         </form>
       </dialog>
 
+      {/* View Employee Modal */}
+      <dialog id="View_Employee_Modal" className="modal">
+        <ViewEmployeeModal
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
   );
 };
