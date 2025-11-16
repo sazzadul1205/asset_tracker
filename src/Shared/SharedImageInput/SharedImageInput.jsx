@@ -28,6 +28,7 @@ const SharedImageInput = forwardRef(({
   maxSizeMB = 32,
   rounded = "full",
   enableCrop = true,
+  autoMx = "mx-auto",
   defaultImage = null,
   label = "Profile Image",
   hint = "Drag & drop or click to upload"
@@ -136,11 +137,12 @@ const SharedImageInput = forwardRef(({
   }));
 
   return (
-    <div className="w-full max-w-sm mx-auto space-y-2">
+    <div className={`w-full max-w-sm ${autoMx} space-y-2`}>
       {label && <label className="block text-gray-700 text-center font-semibold">{label}</label>}
 
       <div
-        className={`relative flex items-center justify-center border-2 border-dashed border-gray-400 hover:border-blue-500 cursor-pointer overflow-hidden mx-auto group rounded-${rounded} transition-all`}
+        className={`relative flex items-center justify-center border-2 border-dashed border-gray-400 hover:border-blue-500 cursor-pointer 
+          overflow-hidden ${autoMx} group rounded-${rounded} transition-all`}
         style={{ width, height }}
         onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
         onDragOver={(e) => e.preventDefault()}

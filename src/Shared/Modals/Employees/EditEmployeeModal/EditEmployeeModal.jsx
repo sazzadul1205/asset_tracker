@@ -267,7 +267,6 @@ const EditEmployeeModal = ({
         />
 
         {/* Department Select */}
-        {/* Department Select */}
         <SharedInput
           label="Department"
           name="department"
