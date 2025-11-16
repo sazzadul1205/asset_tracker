@@ -72,15 +72,15 @@ const SharedInput = ({
   const isDisabledOrReadOnly = disabled || readOnly;
 
   // Classes for input
-  const baseClasses = `w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
-  ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"}
+  const baseClasses = `w-full px-4 py-2 border rounded-md text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
+  ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"}
   ${isDisabledOrReadOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : "bg-white"}`;
 
   return (
     <div className="w-full">
       {/* Label */}
       {label && (
-        <label className="block mb-2 text-md font-semibold text-gray-700">
+        <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 block text-sm font-medium text-gray-700 mb-1">
           {label}
           {rules?.required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -96,12 +96,16 @@ const SharedInput = ({
           defaultValue={defaultValue}
           disabled={disabled}
           {...(register ? register(name, rules) : {})}
-          className={`${baseClasses} resize-none min-h-20 max-h-[300px] overflow-y-auto`}
+          className={`textarea w-full border border-gray-300 focus:border-blue-500 focus:ring-blue-100 rounded-md text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all  bg-white
+          ${error ? "textarea-error" : ""}  
+          ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : ""}
+          `}
           onInput={(e) => {
             e.target.style.height = "auto";
-            e.target.style.height = e.target.scrollHeight + "px";
+            e.target.style.height = `${e.target.scrollHeight}px`;
           }}
         />
+
       ) : type === "select" ? (
         searchable && control ? (
           <Controller
@@ -194,7 +198,7 @@ const SharedInput = ({
             max={type === "number" ? max : undefined}
             step={type === "number" ? step || "any" : undefined}
             {...(register ? register(name, rules) : {})}
-            className={baseClasses + (type === "password" ? " pr-11" : "")}
+            className={`${baseClasses + (type === "password" ? " pr-11" : "")} `}
           />
           {type === "password" && (
             // Show/hide password
