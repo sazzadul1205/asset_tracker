@@ -2,6 +2,7 @@
 import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
+// GET Method - Fetch Options for Asset Categories
 export const GET = async () => {
   try {
     const db = await connectDB();

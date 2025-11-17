@@ -1,16 +1,20 @@
-// src/app/middleware.js
+// src/app/middleware/route.js
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 // Define route access by role
 const roleAccess = {
-  "/Employee": ["Employee", "Manager", "Admin"], // Employees + higher can access
-  "/Manager": ["Manager", "Admin"], // Only Manager or Admin
-  "/Admin": ["Admin"], // Only Admin
+  "/Employee": ["Employee", "Manager", "Admin"],
+  "/Manager": ["Manager", "Admin"],
+  "/Admin": ["Admin"],
 };
 
-export const middleware = async (req) => {
-  const { pathname } = req.nextUrl;
+// Edge runtime
+export const runtime = "edge";
+
+export async function middleware(req) {
+  const url = new URL(req.url);
+  const pathname = url.pathname;
 
   // Skip static files & API routes & auth pages
   if (
@@ -30,7 +34,7 @@ export const middleware = async (req) => {
     secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
   });
 
-  // If no token or session expired, redirect to login
+  // If no token, redirect to login
   if (!token) {
     return NextResponse.redirect(
       new URL(
@@ -56,9 +60,9 @@ export const middleware = async (req) => {
   }
 
   return NextResponse.next();
-};
+}
 
-// Apply middleware to protected routes only
+// Apply to specific routes
 export const config = {
   matcher: ["/Employee/:path*", "/Manager/:path*", "/Admin/:path*"],
 };
