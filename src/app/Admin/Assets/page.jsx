@@ -37,6 +37,7 @@ import CategoryToIcon from './CategoryToIcon/CategoryToIcon';
 import Barcode from './Barcode/Barcode';
 import EditAssetModal from '@/Shared/Modals/Assets/EditAssetModal/EditAssetModal';
 import LocationToDepartment from './LocationToDepartment/LocationToDepartment';
+import ViewAssetModal from '@/Shared/Modals/Assets/ViewAssetModal/ViewAssetModal';
 
 const AssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -125,6 +126,38 @@ const AssetsPage = () => {
     DepartmentsOptionRefetch();
     AssetCategoryOptionRefetch();
   };
+
+  // Delete Assets Handler
+  const handleDeleteAsset = async (assets) => {
+    const isConfirmed = await confirm(
+      "Are you sure?",
+      "This action will permanently delete the Asset!",
+      "Yes, Delete",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      // 1) Delete the Assets
+      const res = await axiosPublic.delete(`/Assets/${assets?.asset_id}`);
+
+      // 2) Check response
+      if (res.status === 200) {
+        RefetchAll?.();
+        success("Asset Deleted Successfully!");
+      } else {
+        error("Failed to delete the Asset.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      error(err?.response?.data?.error || "Something went wrong!");
+    }
+  };
+
 
   return (
     <div>
@@ -243,7 +276,8 @@ const AssetsPage = () => {
                   </td>
 
                   {/* Assigned To */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                  <td className="py-3 px-4 text-sm text-left cursor-default">
+                    {assets?.assigned_to || "Unassigned"}
                     <LocationToDepartment location={assets?.location} />
                   </td>
 
@@ -297,7 +331,7 @@ const AssetsPage = () => {
                       <button
                         data-tooltip-content="Delete Asset"
                         data-tooltip-id={`delete-tooltip-${assets._id}`}
-                        onClick={() => handleDeleteAsset(assets._id)}
+                        onClick={() => handleDeleteAsset(assets)}
                         className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
                       >
                         <FaRegTrashAlt className="text-sm" />
@@ -386,6 +420,7 @@ const AssetsPage = () => {
         <AddAssetModal
           RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
+          AssignedTo={session?.user?.role || "System"}
           DepartmentOptionData={DepartmentsOptionData}
           AssetCategoryOptionData={AssetCategoryOptionData}
         />
@@ -401,8 +436,21 @@ const AssetsPage = () => {
           selectedAsset={selectedAsset}
           UserEmail={session?.user?.email}
           setSelectedAsset={setSelectedAsset}
+          AssignedTo={session?.user?.role || "System"}
           DepartmentOptionData={DepartmentsOptionData}
           AssetCategoryOptionData={AssetCategoryOptionData}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+
+      {/* View Asset Modal */}
+      <dialog id="View_Asset_Modal" className="modal">
+        <ViewAssetModal
+          selectedAsset={selectedAsset}
+          setSelectedAsset={setSelectedAsset}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

@@ -24,23 +24,13 @@ const LocationToDepartment = ({ location, showOnlyName = false }) => {
       ? error?.message || "Failed to load department"
       : data
         ? showOnlyName
-          ? data.department_name
-          :
-          <p>{data.department_name}</p>
+          ? data?.department_name
+          : data?.department_name
         : "Unknown";
 
-  // Determine background color (optional)
-  const backgroundColor = isLoading
-    ? "#f0f0f0"
-    : isError
-      ? "#f87171"
-      : data?.selectedColor || "#e2e8f0";
 
   return (
-    <div
-    >
-      <p className="text-sm font-medium text-gray-800">{displayText}</p>
-    </div>
+    <p className="text-sm font-medium text-gray-800">({displayText})</p>
   );
 };
 

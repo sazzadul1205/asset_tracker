@@ -11,7 +11,11 @@ import "react-tooltip/dist/react-tooltip.css";
 // Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
-const CategoryToIcon = ({ category, showOnlyName = false }) => {
+const CategoryToIcon = ({
+  category,
+  showOnlyName = false,
+  enableTooltip = true,  
+}) => {
   const axiosPublic = useAxiosPublic();
 
   // Fetch IndividualCategory
@@ -31,32 +35,34 @@ const CategoryToIcon = ({ category, showOnlyName = false }) => {
     : isError
       ? error?.message || "Failed to load category"
       : showOnlyName
-        ? data.category_name
-        : `${data.category_name} (${data.ac_id})`;
+        ? data?.category_name
+        : `${data?.category_name} (${data?.ac_id})`;
 
-  // Determine background color
+  // Background color
   const backgroundColor = isLoading
     ? "#f0f0f0"
     : isError
       ? "#f87171"
       : data?.selectedColor || "#e2e8f0";
 
+  const tooltipId = `category-tooltip-${category}`;
+
   return (
     <div>
       {showOnlyName ? (
-        // Only show text if directive is true
-        <div
-          className="px-2 py-1 rounded text-sm font-medium text-gray-800"
-        >
+        <div className="px-2 py-1 rounded text-sm font-medium text-gray-800">
           {displayText}
         </div>
       ) : (
-        // Show icon with tooltip if directive is false
         <div
           className="shrink-0 w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-200"
           style={{ backgroundColor }}
-          data-tooltip-id={`category-tooltip-${category}`}
-          data-tooltip-content={displayText}
+          {...(enableTooltip
+            ? {
+              "data-tooltip-id": tooltipId,
+              "data-tooltip-content": displayText,
+            }
+            : {})}
         >
           <Image
             src={
@@ -71,9 +77,9 @@ const CategoryToIcon = ({ category, showOnlyName = false }) => {
         </div>
       )}
 
-      {/* Tooltip only if not showing only name */}
-      {!showOnlyName && (
-        <Tooltip id={`category-tooltip-${category}`} place="top" effect="solid" />
+      {/* Tooltip render only if allowed */}
+      {!showOnlyName && enableTooltip && (
+        <Tooltip id={tooltipId} place="top" effect="solid" />
       )}
     </div>
   );

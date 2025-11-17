@@ -1,21 +1,31 @@
 // Barcode generator
 import Barcode from "react-barcode";
 
-const BarcodeGenerator = ({ number }) => {
+const BarcodeGenerator = ({
+  number,
+  showNumber = true,
+  barWidth = 1,     // default width
+  barHeight = 20,   // default height
+  numberBellow = 2,
+  numberText = "sm",
+  padding = 2,
+}) => {
   return (
-    <div className="flex flex-col items-center p-2">
-      {/* Barcode at the top */}
+    <div className={`flex flex-col items-center p-${padding}`}>
+      {/* Barcode */}
       <Barcode
-        value={number}                 // The actual number for barcode
-        displayValue={false}           // hide the number inside the barcode
+        value={number}
+        displayValue={false}
         lineColor="#000"
-        width={1}
-        height={20}
+        width={barWidth}
+        height={barHeight}
         margin={0}
       />
 
-      {/* Number displayed below */}
-      <p className="mt-2 font-mono text-sm text-center">{number}</p>
+      {/* Number below */}
+      {showNumber && (
+        <p className={`mt-${numberBellow} font-mono text-${numberText} text-center`}>{number}</p>
+      )}
     </div>
   );
 };
