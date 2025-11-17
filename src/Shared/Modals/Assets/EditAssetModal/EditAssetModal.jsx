@@ -36,7 +36,6 @@ const conditionRatingOptions = [
 
 const EditAssetModal = ({
   UserEmail,
-  AssignedTo,
   RefetchAll,
   selectedAsset,
   setSelectedAsset,
@@ -114,7 +113,6 @@ const EditAssetModal = ({
       const payload = {
         ...data,
         updated_by: UserEmail,
-        assigned_to: AssignedTo,
       };
 
       // UPDATE existing asset

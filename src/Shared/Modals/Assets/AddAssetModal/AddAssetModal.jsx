@@ -36,7 +36,6 @@ const conditionRatingOptions = [
 
 const AddAssetModal = ({
   UserEmail,
-  AssignedTo,
   RefetchAll,
   DepartmentOptionData,
   AssetCategoryOptionData,
@@ -82,7 +81,7 @@ const AddAssetModal = ({
       const payload = {
         ...data,
         created_by: UserEmail,
-        assigned_to: AssignedTo,
+        assigned_to: "UnAssigned",
       };
 
       // Create employee
