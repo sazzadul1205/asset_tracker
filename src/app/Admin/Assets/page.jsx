@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 // Next Components
-import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 
 // Icons
@@ -23,21 +22,20 @@ import { useQuery } from '@tanstack/react-query';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
-import UserDepartmentView from '@/Shared/TableExtension/UserDepartmentView';
 
 // Shared Modal
 import AddAssetModal from '@/Shared/Modals/Assets/AddAssetModal/AddAssetModal';
-import EditEmployeeModal from '@/Shared/Modals/Employees/EditEmployeeModal/EditEmployeeModal';
-import ViewEmployeeModal from '@/Shared/Modals/Employees/ViewEmployeeModal/ViewEmployeeModal';
+import EditAssetModal from '@/Shared/Modals/Assets/EditAssetModal/EditAssetModal';
+import ViewAssetModal from '@/Shared/Modals/Assets/ViewAssetModal/ViewAssetModal';
 
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import CategoryToIcon from './CategoryToIcon/CategoryToIcon';
+
+// Components
 import Barcode from './Barcode/Barcode';
-import EditAssetModal from '@/Shared/Modals/Assets/EditAssetModal/EditAssetModal';
-import LocationToDepartment from './LocationToDepartment/LocationToDepartment';
-import ViewAssetModal from '@/Shared/Modals/Assets/ViewAssetModal/ViewAssetModal';
+import AssignToRole from './AssignToRole/AssignToRole';
+import CategoryToIcon from './CategoryToIcon/CategoryToIcon';
 
 const AssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -49,7 +47,7 @@ const AssetsPage = () => {
   const [selectedAsset, setSelectedAsset] = useState(null);
 
   // Pagination States
-  const itemsPerPage = 6;
+  const itemsPerPage = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch Assets
@@ -157,7 +155,6 @@ const AssetsPage = () => {
       error(err?.response?.data?.error || "Something went wrong!");
     }
   };
-
 
   return (
     <div>
@@ -277,8 +274,7 @@ const AssetsPage = () => {
 
                   {/* Assigned To */}
                   <td className="py-3 px-4 text-sm text-left cursor-default">
-                    {assets?.assigned_to || "Unassigned"}
-                    <LocationToDepartment location={assets?.location} />
+                    <AssignToRole email={assets?.assigned_to} />
                   </td>
 
                   {/* Status */}
@@ -420,7 +416,6 @@ const AssetsPage = () => {
         <AddAssetModal
           RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
-          AssignedTo={session?.user?.role || "System"}
           DepartmentOptionData={DepartmentsOptionData}
           AssetCategoryOptionData={AssetCategoryOptionData}
         />
@@ -436,7 +431,6 @@ const AssetsPage = () => {
           selectedAsset={selectedAsset}
           UserEmail={session?.user?.email}
           setSelectedAsset={setSelectedAsset}
-          AssignedTo={session?.user?.role || "System"}
           DepartmentOptionData={DepartmentsOptionData}
           AssetCategoryOptionData={AssetCategoryOptionData}
         />
