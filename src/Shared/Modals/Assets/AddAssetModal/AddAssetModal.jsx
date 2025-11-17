@@ -58,7 +58,10 @@ const AddAssetModal = ({
 
   // Close modal
   const handleClose = () => {
-    reset();
+    reset({
+      purchase_date: "",
+      warranty_expiry: "",
+    });
     setFormError(null);
     document.getElementById("Add_Asset_Modal")?.close();
   };
@@ -83,7 +86,7 @@ const AddAssetModal = ({
       // Create employee
       console.log(payload);
 
-      // const response = await axiosPublic.post("/Assets", payload);
+      const response = await axiosPublic.post("/Assets", payload);
 
       // Check response
       if (response.status === 201 || response.status === 200) {
@@ -240,7 +243,7 @@ const AddAssetModal = ({
         {/* Supplier */}
         <SharedInput
           label="Supplier"
-          name="Supplier"
+          name="supplier"
           register={register}
           placeholder="e.g., Dell, HP, Lenovo"
           error={errors.Supplier}
@@ -249,7 +252,7 @@ const AddAssetModal = ({
         {/* Location */}
         <SharedInput
           label="Location"
-          name="Location"
+          name="location"
           register={register}
           placeholder="e.g., 2nd Floor, 3rd Building"
           error={errors.Location}
@@ -285,15 +288,14 @@ const AddAssetModal = ({
           />
         </div>
 
-
         {/* Description */}
         <SharedInput
           label="Description"
-          name="asset_model"
+          name="asset_description"
           type="textarea"
           register={register}
           placeholder="Enter asset description..."
-          error={errors.asset_model}
+          error={errors.asset_description}
         />
 
         {/* Notes */}

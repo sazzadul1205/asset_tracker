@@ -109,31 +109,33 @@ const SharedInput = ({
       ) : type === "select" ? (
         searchable && control ? (
           <Controller
-            name={name}
             control={control}
+            name={name}
             rules={rules}
-            defaultValue={defaultValue || ""}
+            defaultValue={defaultValue || null}
             render={({ field }) => (
-              <Select
-                {...field}
-                options={options}
-                placeholder={placeholder || "Select an option"}
-                isDisabled={disabled || readOnly}
-                onChange={(option) => field.onChange(option)}
-                getOptionLabel={(opt) => opt.label}
-                getOptionValue={(opt) => opt.value}
-                isSearchable={true}
-                styles={{
-                  control: (provided, state) => ({
-                    ...provided,
-                    cursor: disabled || readOnly ? "not-allowed" : "pointer", // sets pointer on the select box
-                  }),
-                  option: (provided, state) => ({
-                    ...provided,
-                    cursor: "pointer", // sets pointer on dropdown options
-                  }),
-                }}
-              />
+              <div className="relative w-full text-black">
+                <FaCalendarAlt
+                  className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-gray-400" : "text-blue-500"
+                    }`}
+                  size={18}
+                />
+
+                <DatePicker
+                  placeholderText={placeholder || "Select date"}
+                  selected={field.value}
+                  onChange={(date) => field.onChange(date)}
+                  dateFormat="dd/MMM/yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  yearDropdownItemNumber={100}
+                  scrollableYearDropdown
+                  disabled={disabled || readOnly}
+                  wrapperClassName="w-full"
+                  className={`pl-10 w-full ${baseClasses}`}
+                />
+              </div>
             )}
           />
         ) : (
