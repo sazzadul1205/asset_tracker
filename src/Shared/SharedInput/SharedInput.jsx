@@ -199,6 +199,11 @@ const SharedInput = ({
             min={type === "number" ? min : undefined}
             max={type === "number" ? max : undefined}
             step={type === "number" ? step || "any" : undefined}
+            autoComplete={
+              type === "password" ? "current-password" :
+                type === "email" ? "username" :
+                  undefined
+            }
             {...(register ? register(name, rules) : {})}
             className={`${baseClasses + (type === "password" ? " pr-11" : "")} `}
           />
