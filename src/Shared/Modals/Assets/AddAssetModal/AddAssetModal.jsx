@@ -1,5 +1,5 @@
 // React Components
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 // React Hook Form
 import { useForm } from "react-hook-form";
@@ -36,6 +36,8 @@ const conditionRatingOptions = [
 
 const AddAssetModal = ({
   UserEmail,
+  RefetchAll,
+  DepartmentOptionData,
   AssetCategoryOptionData,
 }) => {
   const { success } = useToast();
@@ -48,9 +50,7 @@ const AddAssetModal = ({
   // Form
   const {
     reset,
-    watch,
     control,
-    setValue,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -90,8 +90,9 @@ const AddAssetModal = ({
 
       // Check response
       if (response.status === 201 || response.status === 200) {
-        success("Asset created successfully.");
         handleClose();
+        RefetchAll?.();
+        success("Asset created successfully.");
       } else {
         setFormError(response.data?.message || "Failed to create asset.");
       }
@@ -140,7 +141,7 @@ const AddAssetModal = ({
       {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-2 grid grid-cols-2 gap-4"
+        className="space-y-1 grid grid-cols-2 gap-4"
       >
         {/* Asset Tag */}
         <SharedInput
@@ -249,14 +250,21 @@ const AddAssetModal = ({
           error={errors.Supplier}
         />
 
-        {/* Location */}
+        {/* Department / Location */}
         <SharedInput
           label="Location"
           name="location"
+          type="select"
           register={register}
-          placeholder="e.g., 2nd Floor, 3rd Building"
-          error={errors.Location}
+          placeholder="Select Department"
+          options={[
+            { label: "Unassigned", value: "" },
+            ...DepartmentOptionData,
+          ]}
+          rules={{ required: "Location is required" }}
+          error={errors.location}
         />
+
 
         {/* Status */}
         <SharedInput
