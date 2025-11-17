@@ -35,6 +35,8 @@ import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
 import CategoryToIcon from './CategoryToIcon/CategoryToIcon';
 import Barcode from './Barcode/Barcode';
+import EditAssetModal from '@/Shared/Modals/Assets/EditAssetModal/EditAssetModal';
+import LocationToDepartment from './LocationToDepartment/LocationToDepartment';
 
 const AssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -43,6 +45,7 @@ const AssetsPage = () => {
 
   // States
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
   // Pagination States
   const itemsPerPage = 6;
@@ -67,7 +70,7 @@ const AssetsPage = () => {
     keepPreviousData: true,
   });
 
-  // Fetch AssetCategory 
+  // Fetch Asset Category Options
   const {
     data: AssetCategoryOptionData,
     error: AssetCategoryOptionError,
@@ -80,24 +83,46 @@ const AssetsPage = () => {
     keepPreviousData: true,
   });
 
+  // Fetch Departments Options
+  const {
+    data: DepartmentsOptionData,
+    error: DepartmentsOptionError,
+    refetch: DepartmentsOptionRefetch,
+    isLoading: DepartmentsOptionIsLoading,
+  } = useQuery({
+    queryKey: ["DepartmentsOptionData"],
+    queryFn: () =>
+      axiosPublic.get(`/Departments/Options`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
   // Destructure AllUsers data
   const assets = AssetsData?.data || [];
   const totalItems = AssetsData?.total || 0;
   const totalPages = AssetsData?.totalPages || 1;
 
   // Handle loading
-  if (AssetCategoryOptionIsLoading) {
+  if (AssetCategoryOptionIsLoading || DepartmentsOptionIsLoading) {
     return <Loading />;
   }
 
   // Handle errors
-  if (AssetCategoryOptionError || AssetsError) {
-    return <Error errors={[AssetCategoryOptionError, AssetsError]} />;
+  if (
+    AssetsError ||
+    DepartmentsOptionError ||
+    AssetCategoryOptionError
+  ) {
+    return <Error errors={[
+      AssetsError,
+      DepartmentsOptionError,
+      AssetCategoryOptionError,
+    ]} />;
   }
 
   // Refetch all
   const RefetchAll = () => {
     AssetsRefetch();
+    DepartmentsOptionRefetch();
     AssetCategoryOptionRefetch();
   };
 
@@ -219,7 +244,7 @@ const AssetsPage = () => {
 
                   {/* Assigned To */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    {assets?.assigned_to || "Unassigned"}
+                    <LocationToDepartment location={assets?.location} />
                   </td>
 
                   {/* Status */}
@@ -236,7 +261,7 @@ const AssetsPage = () => {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })
-                      : "N/A"}
+                      : "N/A"} BDT
                   </td>
 
                   {/* Actions */}
@@ -359,8 +384,24 @@ const AssetsPage = () => {
       {/* Add Asset Modal */}
       <dialog id="Add_Asset_Modal" className="modal">
         <AddAssetModal
-          // RefetchAll={RefetchAll}
+          RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
+          DepartmentOptionData={DepartmentsOptionData}
+          AssetCategoryOptionData={AssetCategoryOptionData}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Edit Asset Modal */}
+      <dialog id="Edit_Asset_Modal" className="modal">
+        <EditAssetModal
+          RefetchAll={RefetchAll}
+          selectedAsset={selectedAsset}
+          UserEmail={session?.user?.email}
+          setSelectedAsset={setSelectedAsset}
+          DepartmentOptionData={DepartmentsOptionData}
           AssetCategoryOptionData={AssetCategoryOptionData}
         />
         <form method="dialog" className="modal-backdrop">
