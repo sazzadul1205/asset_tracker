@@ -5,11 +5,11 @@ import { generateId } from "@/Utils/generateId";
 
 const getTimestamp = () => new Date().toISOString();
 
-// GET: Fetch departments with optional search, pagination, and created_by filter
+// GET: Fetch Assets with optional search, pagination, and created_by filter
 export const GET = async (request) => {
   try {
     const db = await connectDB();
-    const collection = db.collection("Departments");
+    const collection = db.collection("Assets");
 
     // Parse query parameters
     const {
@@ -31,8 +31,8 @@ export const GET = async (request) => {
     // Get total count
     const total = await collection.countDocuments(filters);
 
-    // Fetch departments with pagination
-    const departments = await collection
+    // Fetch Assets with pagination
+    const assets = await collection
       .find(filters)
       .sort({ created_at: -1 })
       .skip((Number(page) - 1) * Number(limit))
@@ -42,7 +42,7 @@ export const GET = async (request) => {
     return NextResponse.json(
       {
         success: true,
-        data: departments,
+        data: assets,
         total,
         page: Number(page),
         limit: Number(limit),
@@ -51,11 +51,11 @@ export const GET = async (request) => {
       { status: 200 }
     );
   } catch (err) {
-    console.error("GET /Departments error:", err);
+    console.error("GET /Assets error:", err);
     return NextResponse.json(
       {
         success: false,
-        message: "Internal Server Error while fetching departments",
+        message: "Internal Server Error while fetching Assets",
         error: process.env.NODE_ENV === "development" ? err.message : undefined,
       },
       { status: 500 }
@@ -134,11 +134,11 @@ export const POST = async (request) => {
       purchase_date: data.purchase_date || null,
       purchase_cost: Number(data.purchase_cost) || 0,
       warranty_expiry: data.warranty_expiry || null,
-      Supplier: data.Supplier?.trim() || "",
-      Location: data.Location?.trim() || "",
+      supplier: data.Supplier?.trim() || "",
+      location: data.Location?.trim() || "",
       status: data.status || "unAssigned",
       condition_rating: data.condition_rating || "unAssigned",
-      description: data.description?.trim() || "",
+      asset_description: data.asset_description?.trim() || "",
       asset_notes: data.asset_notes?.trim() || "",
       created_by: data.created_by,
       created_at: getTimestamp(),

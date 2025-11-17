@@ -39,8 +39,6 @@ export const PUT = async (req, context) => {
       { $set: updatedData }
     );
 
-    console.log("Update result:", result);
-
     if (result.matchedCount === 0) {
       return NextResponse.json(
         { error: "Category not found" },
