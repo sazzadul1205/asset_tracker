@@ -1,26 +1,22 @@
-// src/app/middleware/route.js
+// src/app/middleware.js
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 // Define route access by role
 const roleAccess = {
-  "/Employee": ["Employee", "Manager", "Admin"],
-  "/Manager": ["Manager", "Admin"],
-  "/Admin": ["Admin"],
+  "/Employee": ["Employee", "Manager", "Admin"], // Employees + higher can access
+  "/Manager": ["Manager", "Admin"], // Only Manager or Admin
+  "/Admin": ["Admin"], // Only Admin
 };
 
-// Edge runtime
-export const runtime = "edge";
-
-export async function middleware(req) {
+export const middleware = async (req) => {
   const url = new URL(req.url);
   const pathname = url.pathname;
 
-  // Skip static files & API routes & auth pages
+  // Skip static files, API routes, auth pages, etc.
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
-    pathname.startsWith("/api") ||
     pathname.startsWith("/Auth/Login") ||
     pathname.startsWith("/Auth/SignUp") ||
     pathname.startsWith("/Auth/UnAuthorizedAccess")
@@ -34,7 +30,7 @@ export async function middleware(req) {
     secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
   });
 
-  // If no token, redirect to login
+  // Not logged in
   if (!token) {
     return NextResponse.redirect(
       new URL(
@@ -59,10 +55,26 @@ export async function middleware(req) {
     }
   }
 
-  return NextResponse.next();
-}
+  // Already logged in and visiting login/signup
+  if (
+    (pathname.startsWith("/Auth/Login") ||
+      pathname.startsWith("/Auth/SignUp")) &&
+    token
+  ) {
+    return NextResponse.redirect(
+      new URL("/Auth/UnAuthorizedAccess?message=Already logged in", req.url)
+    );
+  }
 
-// Apply to specific routes
+  return NextResponse.next();
+};
+
+// Apply middleware to all relevant protected routes
 export const config = {
-  matcher: ["/Employee/:path*", "/Manager/:path*", "/Admin/:path*"],
+  matcher: [
+    "/Employee/:path*",
+    "/Manager/:path*",
+    "/Admin/:path*",
+    "/Auth/:path*",
+  ],
 };
