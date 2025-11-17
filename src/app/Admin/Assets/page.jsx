@@ -33,6 +33,8 @@ import ViewEmployeeModal from '@/Shared/Modals/Employees/ViewEmployeeModal/ViewE
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
+import CategoryToIcon from './CategoryToIcon/CategoryToIcon';
+import Barcode from './Barcode/Barcode';
 
 const AssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -41,6 +43,29 @@ const AssetsPage = () => {
 
   // States
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Pagination States
+  const itemsPerPage = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch Assets
+  const {
+    data: AssetsData,
+    error: AssetsError,
+    refetch: AssetsRefetch,
+    isLoading: AssetsIsLoading,
+  } = useQuery({
+    queryKey: ["AssetsData", currentPage, itemsPerPage, searchTerm],
+    queryFn: () =>
+      axiosPublic.get(`/Assets`, {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchTerm || undefined,
+        },
+      }).then((res) => res.data),
+    keepPreviousData: true,
+  });
 
   // Fetch AssetCategory 
   const {
@@ -55,6 +80,10 @@ const AssetsPage = () => {
     keepPreviousData: true,
   });
 
+  // Destructure AllUsers data
+  const assets = AssetsData?.data || [];
+  const totalItems = AssetsData?.total || 0;
+  const totalPages = AssetsData?.totalPages || 1;
 
   // Handle loading
   if (AssetCategoryOptionIsLoading) {
@@ -62,12 +91,13 @@ const AssetsPage = () => {
   }
 
   // Handle errors
-  if (AssetCategoryOptionError) {
-    return <Error errors={[AssetCategoryOptionError]} />;
+  if (AssetCategoryOptionError || AssetsError) {
+    return <Error errors={[AssetCategoryOptionError, AssetsError]} />;
   }
 
   // Refetch all
   const RefetchAll = () => {
+    AssetsRefetch();
     AssetCategoryOptionRefetch();
   };
 
@@ -121,11 +151,11 @@ const AssetsPage = () => {
             <tr>
               {[
                 { label: "Assets", align: "left" },
-                { label: "Barcode", align: "left" },
+                { label: "Barcode", align: "center" },
                 { label: "Category", align: "left" },
                 { label: "Assigned To", align: "left" },
                 { label: "Status", align: "center" },
-                { label: "Purchase Price", align: "center" },
+                { label: "Purchase Price", align: "left" },
                 { label: "Action", align: "center" },
               ].map((col, idx) => (
                 <th
@@ -137,9 +167,194 @@ const AssetsPage = () => {
               ))}
             </tr>
           </thead>
+
+          {/* Table Body */}
+          <tbody>
+            {AssetsIsLoading || status === "loading" ? (
+              // Loading
+              <tr>
+                <td colSpan={6} className="py-12 text-center">
+                  <Loading
+                    height='min-h-[500px]'
+                    background_color='bg-white'
+                  />
+                </td>
+              </tr>
+            ) : assets?.length > 0 ? (
+              assets.map((assets) => (
+                <tr
+                  key={assets._id}
+                  className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
+                >
+                  {/* Icon, name, and ID */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default w-60 min-w-60">
+                    <div className="flex items-center gap-4">
+                      {/* Icon container */}
+                      <CategoryToIcon category={assets?.asset_category} />
+
+                      {/* Text content */}
+                      <div className="flex flex-col overflow-hidden">
+                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                          {assets?.asset_name}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate">
+                          {assets?.asset_tag}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Barcode */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    <Barcode number={assets?.serial_number} />
+                  </td>
+
+                  {/* Barcode */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    <CategoryToIcon
+                      category={assets?.asset_category}
+                      showOnlyName={true}
+                    />
+                  </td>
+
+                  {/* Assigned To */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {assets?.assigned_to || "Unassigned"}
+                  </td>
+
+                  {/* Status */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left">
+                    <div className="flex justify-center">
+                      <StatusBadge status={assets?.status} />
+                    </div>
+                  </td>
+
+                  {/* purchase_cost */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left">
+                    {assets?.purchase_cost != null
+                      ? Number(assets.purchase_cost).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                      : "N/A"}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="py-3 px-4 whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      {/* View */}
+                      <button
+                        data-tooltip-id={`view-tooltip-${assets._id}`}
+                        data-tooltip-content="View Asset"
+                        onClick={() => {
+                          setSelectedAsset(assets);
+                          document.getElementById("View_Asset_Modal").showModal();
+                        }}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+                      >
+                        <FaEye className="text-sm" />
+                      </button>
+
+                      {/* Edit */}
+                      <button
+                        data-tooltip-id={`edit-tooltip-${assets._id}`}
+                        data-tooltip-content="Edit Asset"
+                        onClick={() => {
+                          setSelectedAsset(assets);
+                          document.getElementById("Edit_Asset_Modal").showModal();
+                        }}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
+                      >
+                        <MdEdit className="text-sm" />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        data-tooltip-content="Delete Asset"
+                        data-tooltip-id={`delete-tooltip-${assets._id}`}
+                        onClick={() => handleDeleteAsset(assets._id)}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                      >
+                        <FaRegTrashAlt className="text-sm" />
+                      </button>
+                    </div>
+
+                    {/* Tooltip components with unique IDs */}
+                    <Tooltip id={`view-tooltip-${assets._id}`} place="top" effect="solid" />
+                    <Tooltip id={`edit-tooltip-${assets._id}`} place="top" effect="solid" />
+                    <Tooltip id={`delete-tooltip-${assets._id}`} place="top" effect="solid" />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="py-12 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    {/* Icon */}
+                    <FaBoxOpen className="text-gray-400 w-12 h-12" />
+
+                    {/* Main message */}
+                    <p className="text-gray-500 text-lg font-semibold">
+                      No Assets found
+                    </p>
+
+                    {/* Subtext for guidance */}
+                    <p className="text-gray-400 text-sm">
+                      Adjust your filters or add a new asset to get started.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+            )}
+          </tbody>
+
+          {/* Table footer with dynamic pagination */}
+          <tfoot>
+            <tr>
+              <td colSpan={7} className="px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-black">
+                  <div>
+                    <p className="text-sm">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+                    </p>
+                    <p className="text-xs font-semibold text-gray-500">Asset Categories</p>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-end space-x-2 mt-4">
+                    {/* Previous Button */}
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    >
+                      <FaAngleLeft /> Prev
+                    </button>
+
+                    {/* Page Number Display */}
+                    <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
+                      Page {currentPage} of {totalPages}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    >
+                      Next <FaAngleRight />
+                    </button>
+                  </div>
+
+                </div>
+              </td>
+            </tr>
+          </tfoot>
         </table>
       </div>
-
 
       {/* Add Asset Modal */}
       <dialog id="Add_Asset_Modal" className="modal">
@@ -152,9 +367,33 @@ const AssetsPage = () => {
           <button>close</button>
         </form>
       </dialog>
-
     </div>
   );
 };
 
 export default AssetsPage;
+
+// Status Badge
+const StatusBadge = ({ status }) => {
+  // Map status to Tailwind color classes
+  const statusColors = {
+    active: "bg-green-100 text-green-800",
+    assigned: "bg-blue-100 text-blue-800",
+    in_stock: "bg-gray-100 text-gray-800",
+    in_repair: "bg-yellow-100 text-yellow-800",
+    damaged: "bg-red-100 text-red-800",
+    lost: "bg-red-200 text-red-900",
+    retired: "bg-purple-100 text-purple-800",
+    default: "bg-gray-100 text-gray-800",
+  };
+
+  const colorClass = statusColors[status] || statusColors.default;
+
+  return (
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-semibold ${colorClass} uppercase text-center inline-block w-24`}
+    >
+      {status?.replace("_", " ") || "Unassigned"}
+    </span>
+  );
+};
