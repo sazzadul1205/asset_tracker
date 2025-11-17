@@ -14,7 +14,7 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 const CategoryToIcon = ({
   category,
   showOnlyName = false,
-  enableTooltip = true,  
+  enableTooltip = true,
 }) => {
   const axiosPublic = useAxiosPublic();
 
@@ -50,9 +50,9 @@ const CategoryToIcon = ({
   return (
     <div>
       {showOnlyName ? (
-        <div className="px-2 py-1 rounded text-sm font-medium text-gray-800">
+        <p className="px-2 py-1 rounded text-sm font-medium text-gray-800">
           {displayText}
-        </div>
+        </p>
       ) : (
         <div
           className="shrink-0 w-12 h-12 flex items-center justify-center rounded-lg transition-colors duration-200"
