@@ -131,6 +131,7 @@ export const POST = async (request) => {
       asset_category: data.asset_category,
       asset_brand: data.asset_brand?.trim() || "",
       asset_model: data.asset_model?.trim() || "",
+      assigned_to: data.assigned_to || null,
       purchase_date: data.purchase_date || null,
       purchase_cost: Number(data.purchase_cost) || 0,
       warranty_expiry: data.warranty_expiry || null,

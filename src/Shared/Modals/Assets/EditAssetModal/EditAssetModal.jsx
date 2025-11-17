@@ -35,8 +35,9 @@ const conditionRatingOptions = [
 ];
 
 const EditAssetModal = ({
-  RefetchAll,
   UserEmail,
+  AssignedTo,
+  RefetchAll,
   selectedAsset,
   setSelectedAsset,
   DepartmentOptionData,
@@ -112,7 +113,8 @@ const EditAssetModal = ({
       // Build payload
       const payload = {
         ...data,
-        updated_by: UserEmail, // optional field for tracking
+        updated_by: UserEmail,
+        assigned_to: AssignedTo,
       };
 
       // UPDATE existing asset

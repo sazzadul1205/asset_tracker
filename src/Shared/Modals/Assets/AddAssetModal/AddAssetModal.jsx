@@ -36,6 +36,7 @@ const conditionRatingOptions = [
 
 const AddAssetModal = ({
   UserEmail,
+  AssignedTo,
   RefetchAll,
   DepartmentOptionData,
   AssetCategoryOptionData,
@@ -81,11 +82,10 @@ const AddAssetModal = ({
       const payload = {
         ...data,
         created_by: UserEmail,
+        assigned_to: AssignedTo,
       };
 
       // Create employee
-      console.log(payload);
-
       const response = await axiosPublic.post("/Assets", payload);
 
       // Check response
