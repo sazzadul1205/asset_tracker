@@ -1,29 +1,51 @@
-// api/Users/[employee_id]/route.js
+// src/app/api/Users/[employee_id]/route.js
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
-// PUT Method - Update a user
+// GET Method - Fetch user by employee_id
+export const GET = async (req, context) => {
+  try {
+    const params = await context.params; // <-- await here
+    const { employee_id } = params;
+
+    if (!employee_id) {
+      return NextResponse.json(
+        { message: "Employee ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectDB();
+    const user = await db.collection("Users").findOne({ employee_id });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    const { password, ...safeUser } = user; // Remove sensitive info
+    return NextResponse.json(safeUser, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return NextResponse.json(
+      { message: "Failed to fetch user", error: error.message },
+      { status: 500 }
+    );
+  }
+};
+
+// PUT Method - Update user
 export const PUT = async (req, context) => {
   try {
-    // Await params if it's a promise
     const params = await context.params;
     const { employee_id } = params;
 
-    // Connect to DB
     const db = await connectDB();
-    const usersCollection = db.collection("Users");
-
-    // Parse request body
     const data = await req.json();
-
-    // Ensure updated_at is always set
     data.updated_at = new Date();
 
-    // Update the user directly with whatever is in the request body
-    const result = await usersCollection.updateOne(
-      { employee_id },
-      { $set: data }
-    );
+    const result = await db
+      .collection("Users")
+      .updateOne({ employee_id }, { $set: data });
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -45,16 +67,14 @@ export const PUT = async (req, context) => {
   }
 };
 
-// DELETE Method - Remove a user by employee_id
+// DELETE Method - Remove a user
 export const DELETE = async (req, context) => {
   try {
     const params = await context.params;
     const { employee_id } = params;
 
     const db = await connectDB();
-    const usersCollection = db.collection("Users");
-
-    const result = await usersCollection.deleteOne({ employee_id });
+    const result = await db.collection("Users").deleteOne({ employee_id });
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
