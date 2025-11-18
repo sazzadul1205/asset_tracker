@@ -147,16 +147,6 @@ const ViewAssetModal = ({
 
           {/* Content */}
           <div className="space-y-5">
-
-            {/* Created By */}
-            <div className="flex items-center gap-3">
-              <FiUser className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Created By</p>
-                <p className="font-medium">{selectedAsset?.created_by || "N/A"}</p>
-              </div>
-            </div>
-
             {/* Assigned To */}
             <div className="flex items-center gap-3">
               <FiUserCheck className="text-gray-500 w-5 h-5" />
@@ -172,6 +162,23 @@ const ViewAssetModal = ({
               <div>
                 <p className="text-sm text-gray-500">Assigned To Location</p>
                 <LocationToDepartment location={selectedAsset?.location} />
+              </div>
+            </div>
+
+            {/* Assigned At */}
+            <div className="flex items-center gap-3">
+              <FiCalendar className="text-gray-500 w-5 h-5" />
+              <div>
+                <p className="text-sm text-gray-500">Assigned At</p>
+                <p className="font-medium">
+                  {selectedAsset?.assigned_at
+                    ? new Date(selectedAsset.assigned_at).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                    : "Unknown"}
+                </p>
               </div>
             </div>
 
@@ -378,6 +385,16 @@ const ViewAssetModal = ({
               <div>
                 <p className="text-sm text-gray-500">Asset Description</p>
                 <p className="font-medium">{selectedAsset?.asset_description || "N/A"}</p>
+              </div>
+            </div>
+
+
+            {/* Created By */}
+            <div className="flex items-center gap-3">
+              <FiUser className="text-gray-500 w-5 h-5" />
+              <div>
+                <p className="text-sm text-gray-500">Created By</p>
+                <p className="font-medium">{selectedAsset?.created_by || "N/A"}</p>
               </div>
             </div>
           </div>

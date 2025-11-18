@@ -5,7 +5,7 @@ import { generateId } from "@/Utils/generateId";
 
 const getTimestamp = () => new Date().toISOString();
 
-// GET: Fetch Assets with optional search, pagination, and created_by filter
+// GET: Fetch Assets with optional search, pagination, created_by & assigned_to filters
 export const GET = async (request) => {
   try {
     const db = await connectDB();
@@ -16,22 +16,32 @@ export const GET = async (request) => {
       search,
       page = 1,
       limit = 10,
-      created_by, // optional filter
+      created_by,
+      assigned_to,
     } = Object.fromEntries(new URL(request.url).searchParams.entries());
 
     // Build filters
     const filters = {};
+
+    // Search by department name
     if (search) {
-      filters.department_name = { $regex: search, $options: "i" };
+      filters.asset_name = { $regex: search, $options: "i" };
     }
+
+    // Filter by created_by
     if (created_by) {
       filters.created_by = created_by;
     }
 
-    // Get total count
+    // Filter by assigned_to
+    if (assigned_to) {
+      filters.assigned_to = assigned_to;
+    }
+
+    // Count
     const total = await collection.countDocuments(filters);
 
-    // Fetch Assets with pagination
+    // Fetch with pagination
     const assets = await collection
       .find(filters)
       .sort({ created_at: -1 })
@@ -39,6 +49,7 @@ export const GET = async (request) => {
       .limit(Number(limit))
       .toArray();
 
+    // Return response
     return NextResponse.json(
       {
         success: true,
@@ -51,7 +62,10 @@ export const GET = async (request) => {
       { status: 200 }
     );
   } catch (err) {
+    // Log error
     console.error("GET /Assets error:", err);
+
+    // Return error response
     return NextResponse.json(
       {
         success: false,

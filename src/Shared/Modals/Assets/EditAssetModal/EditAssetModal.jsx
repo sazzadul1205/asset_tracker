@@ -285,7 +285,7 @@ const EditAssetModal = ({
           register={register}
           placeholder="Select Department"
           options={[
-            { label: "Unassigned", value: "" },
+            { label: "Unassigned", value: "UnAssigned" },
             ...DepartmentOptionData,
           ]}
           rules={{ required: "Location is required" }}
