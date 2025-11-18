@@ -19,12 +19,12 @@ const UserDepartmentView = ({ department }) => {
 
   // Loading
   if (isLoading) {
-    return <span className="text-gray-500">{department}</span>;
+    return <span className="text-gray-500">{department || "-"}</span>;
   }
 
   // Error OR No data → fallback to parent
   if (error || !data) {
-    return <span className="text-gray-800 font-medium">{department}</span>;
+    return <span className="text-gray-800 font-medium">{department || "-"}</span>;
   }
 
   // Success
