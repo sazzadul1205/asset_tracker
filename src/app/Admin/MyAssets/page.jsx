@@ -34,12 +34,14 @@ import CategoryToIcon from '../Assets/CategoryToIcon/CategoryToIcon';
 
 const MyAssetsPage = () => {
   const axiosPublic = useAxiosPublic();
+  const { data: session, status } = useSession();
+
   // States
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(null);
 
   // Pagination States
-  const itemsPerPage = 6;
+  const itemsPerPage = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch MyAssets
@@ -75,7 +77,9 @@ const MyAssetsPage = () => {
   const totalPages = MyAssetsData?.totalPages || 1;
 
   // Handle loading
-  if (MyAssetsIsLoading) { return <Loading /> }
+  if (
+    status === "loading"
+  ) { return <Loading /> }
 
   // Handle errors
   if (MyAssetsError) { return <Error errors={[MyAssetsError]} /> }
@@ -113,7 +117,6 @@ const MyAssetsPage = () => {
 
         </div>
       </div>
-
 
       {/* Assets Table */}
       <div className="overflow-x-auto relative px-2 mb-16">

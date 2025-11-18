@@ -258,7 +258,6 @@ const EmployeesPage = () => {
 
                   {/* Department */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    {/* {users.department} */}
                     <UserDepartmentView department={users.department} />
                   </td>
 

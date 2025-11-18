@@ -78,7 +78,8 @@ const AssetsPage = () => {
   } = useQuery({
     queryKey: ["AssetCategoryOptionData"],
     queryFn: () =>
-      axiosPublic.get(`/AssetCategory/Options`).then((res) => res.data.data),
+      axiosPublic.get(`/AssetCategory/Options`).
+        then((res) => res.data.data),
     keepPreviousData: true,
   });
 
@@ -91,7 +92,8 @@ const AssetsPage = () => {
   } = useQuery({
     queryKey: ["DepartmentsOptionData"],
     queryFn: () =>
-      axiosPublic.get(`/Departments/Options`).then((res) => res.data.data),
+      axiosPublic.get(`/Departments/Options`).
+        then((res) => res.data.data),
     keepPreviousData: true,
   });
 
@@ -101,7 +103,11 @@ const AssetsPage = () => {
   const totalPages = AssetsData?.totalPages || 1;
 
   // Handle loading
-  if (AssetCategoryOptionIsLoading || DepartmentsOptionIsLoading) {
+  if (
+    status === "loading" ||
+    DepartmentsOptionIsLoading ||
+    AssetCategoryOptionIsLoading
+  ) {
     return <Loading />;
   }
 
@@ -185,7 +191,7 @@ const AssetsPage = () => {
           {/* Add Button */}
           <button
             onClick={() => { document.getElementById("Add_Asset_Modal").showModal() }}
-            className=" gap-2 font-semibold text-white  py-2 bg-blue-600 rounded-lg shadow-md 
+            className="gap-2 font-semibold text-white  py-2 bg-blue-600 rounded-lg shadow-md 
                      hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 
                      active:translate-y-px active:shadow-md"
           >
