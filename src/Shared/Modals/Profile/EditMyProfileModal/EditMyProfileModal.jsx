@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 
 // Icons
 import { ImCross } from "react-icons/im";
+import { FaRegUser } from "react-icons/fa";
+import { HiBuildingOffice2 } from "react-icons/hi2";
 
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
@@ -14,12 +16,10 @@ import SharedInput from "@/Shared/SharedInput/SharedInput";
 import { useToast } from "@/Hooks/Toasts";
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
-const EditEmployeeModal = ({
+const EditMyProfileModal = ({
+  MyUserData,
   RefetchAll,
-  UserEmail,
-  selectedEmployee,
-  setSelectedEmployee,
-  DepartmentsBasicInfoData,
+  DepartmentsBasicInfoData
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -74,26 +74,26 @@ const EditEmployeeModal = ({
     }
   }, [watchedDepartment, DepartmentsBasicInfoData, setValue]);
 
-  // Pre-fill form when selectedEmployee changes
+  // Pre-fill form when MyUserData changes
   useEffect(() => {
-    if (selectedEmployee) {
+    if (MyUserData) {
       // Set all fields
       reset({
-        full_name: selectedEmployee.full_name || "",
-        email: selectedEmployee.email || "",
-        employee_id: selectedEmployee.employee_id || "",
-        phone: selectedEmployee.phone || "",
-        department: selectedEmployee.department || "unAssigned",
-        position: selectedEmployee.position || "unAssigned",
-        hire_date: selectedEmployee.hire_date ? new Date(selectedEmployee.hire_date) : "",
-        status: selectedEmployee.status || "active",
-        access_level: selectedEmployee.access_level || "unAssigned",
+        full_name: MyUserData.full_name || "",
+        email: MyUserData.email || "",
+        employee_id: MyUserData.employee_id || "",
+        phone: MyUserData.phone || "",
+        department: MyUserData.department || "unAssigned",
+        position: MyUserData.position || "unAssigned",
+        hire_date: MyUserData.hire_date ? new Date(MyUserData.hire_date) : "",
+        status: MyUserData.status || "active",
+        access_level: MyUserData.access_level || "unAssigned",
         password: "", // optional, leave blank to reset password
       });
 
       // Set position options based on department
       const dept = DepartmentsBasicInfoData.find(
-        (d) => d.dept_id === selectedEmployee.department
+        (d) => d.dept_id === MyUserData.department
       );
 
       if (dept && dept.positions) {
@@ -110,15 +110,14 @@ const EditEmployeeModal = ({
         setPositionOptions([{ label: "Unassigned", value: "unAssigned" }]);
       }
     }
-  }, [selectedEmployee, DepartmentsBasicInfoData, reset]);
+  }, [MyUserData, DepartmentsBasicInfoData, reset]);
 
   // Close modal
   const handleClose = () => {
     reset();
     setFormError(null);
     setPositionOptions([]);
-    setSelectedEmployee(null);
-    document.getElementById("Edit_Employee_Modal")?.close();
+    document.getElementById("Edit_My_Profile_Modal")?.close();
   };
 
   // Submit handler (EMPLOYEE UPDATE)
@@ -127,12 +126,12 @@ const EditEmployeeModal = ({
     setIsLoading(true);
 
     try {
-      if (!UserEmail) {
+      if (!MyUserData?.email) {
         setFormError("Session error: User email missing.");
         return;
       }
 
-      if (!selectedEmployee?.employee_id) {
+      if (!MyUserData?.employee_id) {
         setFormError("No employee selected for update.");
         return;
       }
@@ -148,7 +147,7 @@ const EditEmployeeModal = ({
         status: data.status,
         access_level: data.access_level || "unAssigned",
         password: data.password || undefined, // only send if changed
-        updated_by: UserEmail,
+        updated_by: MyUserData?.email,
       };
 
       // Remove password if it's empty (so it won't overwrite existing)
@@ -156,30 +155,28 @@ const EditEmployeeModal = ({
 
       // Send PUT request to update the employee
       const response = await axiosPublic.put(
-        `/Users/${selectedEmployee.employee_id}`,
+        `/Users/${MyUserData.employee_id}`,
         payload
       );
 
       if (response.status === 200) {
-        success("Employee updated successfully.");
-        RefetchAll?.();
         handleClose();
+        RefetchAll?.();
+        success("Employee updated successfully.");
       } else {
-        setFormError(response.data?.message || "Failed to update employee.");
+        setFormError("Failed to update employee. Please try again.");
       }
-    } catch (err) {
-      console.error("Employee update error:", err);
-      const serverError =
-        err.response?.data?.message || err.message || "Failed to update employee.";
-      setFormError(serverError);
+    } catch (error) {
+      console.error(error);
+      setFormError("Failed to update employee. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <div
-      id="Edit_Employee_Modal"
+      id="Edit_My_Profile_Modal"
       className="modal-box w-full max-w-3xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
     >
       {/* Header */}
@@ -205,157 +202,154 @@ const EditEmployeeModal = ({
 
       <hr className="my-3 border-gray-300" />
 
-      {/* Notice */}
-      <p className="text-red-500 text-sm pb-2">
-        The User ID and Password cannot be updated.
-        {selectedEmployee?.fixed && " This employee is fixed, so Department and Position cannot be changed."}
-        {selectedEmployee?.position === "Manager" && " This person is a Manager, so their position cannot be updated."}
-      </p>
-
       {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-3 grid grid-cols-2 gap-4"
+        className="space-y-3 "
       >
-        {/* Full Name */}
-        <SharedInput
-          label="Full Name"
-          name="full_name"
-          register={register}
-          placeholder="Enter Full Name"
-          rules={{ required: "Full Name is required" }}
-          error={errors.full_name}
-        />
+        {/* Personal Information - Header */}
+        <div className="flex items-center gap-2" >
+          <FaRegUser className="text-lg" />
+          <h3 className="font-semibold text-lg" >Personal Information</h3>
+        </div>
 
-        {/* Email */}
-        <SharedInput
-          label="Email"
-          name="email"
-          type="email"
-          register={register}
-          placeholder="Enter Email Address"
-          rules={{
-            required: "Email is required",
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Enter a valid email address",
-            },
-          }}
-          error={errors.email}
-        />
+        {/* Personal Information - Inputs */}
+        <div className="grid grid-cols-2 gap-3" >
+          {/* Full Name */}
+          <SharedInput
+            label="Full Name"
+            name="full_name"
+            register={register}
+            placeholder="Enter Full Name"
+            rules={{ required: "Full Name is required" }}
+            error={errors.full_name}
+          />
 
-        {/* Employee Id */}
-        <SharedInput
-          label="Employee ID"
-          name="employee_id"
-          readOnly={true}
-          register={register}
-          placeholder="Enter Employee ID"
-          rules={{ required: "Employee ID is required" }}
-          error={errors.employee_id}
-        />
+          {/* Employee Id */}
+          <SharedInput
+            label="Employee ID"
+            name="employee_id"
+            readOnly={true}
+            register={register}
+            placeholder="Enter Employee ID"
+            rules={{ required: "Employee ID is required" }}
+            error={errors.employee_id}
+          />
 
-        {/* Phone Number */}
-        <SharedInput
-          label="Phone Number"
-          name="phone"
-          type="tel"
-          register={register}
-          placeholder="Enter Phone Number"
-          rules={{ required: "Phone Number is required" }}
-          error={errors.phone}
-        />
+          {/* Email */}
+          <SharedInput
+            label="Email"
+            name="email"
+            readOnly={true}
+            register={register}
+            placeholder="Enter Email"
+            rules={{ required: "Email is required" }}
+            error={errors.email}
+          />
 
-        {/* Department Select */}
-        <SharedInput
-          label="Department"
-          name="department"
-          type="select"
-          register={register}
-          placeholder="Select Department"
-          options={[
-            { label: "Unassigned", value: "unAssigned" },
-            ...DepartmentsBasicInfoData.map(d => ({
-              label: d.department_name,
-              value: d.dept_id
-            }))
-          ]}
-          rules={{ required: "Department is required" }}
-          disabled={selectedEmployee?.fixed} // disable if fixed
-        />
+          {/* Phone Number */}
+          <SharedInput
+            label="Phone Number"
+            name="phone"
+            type="tel"
+            register={register}
+            placeholder="Enter Phone Number"
+            rules={{ required: "Phone Number is required" }}
+            error={errors.phone}
+          />
+        </div>
 
-        {/* Position */}
-        <SharedInput
-          label="Position"
-          name="position"
-          type="select"
-          register={register}
-          placeholder="Select Position"
-          options={positionOptions}
-          rules={{ required: "Position is required" }}
-          disabled={selectedEmployee?.fixed || !positionOptions.length} // disable if fixed or no positions
-        />
+        {/* Horizontal Line */}
+        <p className="shrink-0 bg-border h-px w-full" />
 
-        {/* Hire Date */}
-        <SharedInput
-          label="Hire Date"
-          name="hire_date"
-          type="date"
-          dateLimit=""
-          className="w-full"
-          control={control}
-          register={register}
-          rules={{ required: "Hire Date is required" }}
-          error={errors.hire_date}
-        />
+        {/* Work Information - Header */}
+        <div className="flex items-center gap-2" >
+          <HiBuildingOffice2 className="text-lg" />
+          <h3 className="font-semibold text-lg" >Work Information</h3>
+        </div>
 
-        {/* Status */}
-        <SharedInput
-          label="Status"
-          name="status"
-          type="select"
-          register={register}
-          placeholder="Select Status"
-          options={[
-            { value: "active", label: "Active" },
-            { value: "inactive", label: "Inactive" },
-            { value: "pending", label: "Pending" },
-            { value: "archived", label: "Archived" },
-          ]}
-          rules={{ required: "Status is required" }}
-          error={errors.status}
-        />
+        {/* Work Information - Inputs */}
+        <div className="grid grid-cols-2 gap-3" >
+          {/* Position */}
+          <SharedInput
+            label="Position"
+            name="position"
+            type="select"
+            register={register}
+            placeholder="Select Position"
+            options={positionOptions}
+            rules={{ required: "Position is required" }}
+            disabled={MyUserData?.fixed || !positionOptions.length} // disable if fixed or no positions
+          />
 
-        {/* Access Level */}
-        <SharedInput
-          label="Access Level"
-          name="access_level"
-          type="select"
-          register={register}
-          placeholder="Select Level"
-          options={[
-            // { value: "admin", label: "Admin" },
-            // { value: "manager", label: "Manager" },
-            { value: "employee", label: "Employee" },
-            { value: "intern", label: "Intern" },
-            { value: "guest", label: "Guest" },
-            { value: "supervisor", label: "Supervisor" },
-          ]}
-          rules={{ required: "Access Level is required" }}
-          error={errors.access_level}
-          disabled={selectedEmployee?.fixed || !positionOptions.length} // disable if fixed or no positions
-        />
+          {/* Hire Date */}
+          <SharedInput
+            label="Hire Date"
+            name="hire_date"
+            type="date"
+            dateLimit=""
+            className="w-full"
+            control={control}
+            register={register}
+            rules={{ required: "Hire Date is required" }}
+            error={errors.hire_date}
+          />
 
-        {/* Password */}
-        <SharedInput
-          label="Password"
-          name="password"
-          type="password"
-          readOnly={true}
-          register={register}
-          placeholder="Enter Password"
-          error={errors.password}
-        />
+
+          {/* Access Level */}
+          <SharedInput
+            label="Access Level"
+            name="access_level"
+            type="select"
+            register={register}
+            placeholder="Select Level"
+            options={[
+              // { value: "admin", label: "Admin" },
+              // { value: "manager", label: "Manager" },
+              { value: "employee", label: "Employee" },
+              { value: "intern", label: "Intern" },
+              { value: "guest", label: "Guest" },
+              { value: "supervisor", label: "Supervisor" },
+            ]}
+            error={errors.access_level}
+            disabled={MyUserData?.fixed || !positionOptions.length} // disable if fixed or no positions
+          />
+
+          {/* Department Select */}
+          <SharedInput
+            label="Department"
+            name="department"
+            type="select"
+            register={register}
+            placeholder="Select Department"
+            options={[
+              { label: "Unassigned", value: "unAssigned" },
+              ...DepartmentsBasicInfoData.map(d => ({
+                label: d.department_name,
+                value: d.dept_id
+              }))
+            ]}
+            rules={{ required: "Department is required" }}
+            disabled={MyUserData?.fixed} // disable if fixed
+          />
+
+          {/* Status */}
+          <SharedInput
+            label="Status"
+            name="status"
+            type="select"
+            register={register}
+            placeholder="Select Status"
+            options={[
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+              { value: "pending", label: "Pending" },
+              { value: "archived", label: "Archived" },
+            ]}
+            rules={{ required: "Status is required" }}
+            error={errors.status}
+          />
+        </div>
 
         {/* Buttons */}
         <div className="col-span-2 flex items-center justify-end gap-3 mt-6">
@@ -397,4 +391,4 @@ const EditEmployeeModal = ({
   );
 };
 
-export default EditEmployeeModal;
+export default EditMyProfileModal;
