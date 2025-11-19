@@ -37,9 +37,13 @@ import Loading from '@/Shared/Loading/Loading';
 
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import UserDepartmentView from '@/Shared/TableExtension/UserDepartmentView';
 
-const ProfilePage = () => {
+// Shared Modals
+import EditMyProfileModal from '@/Shared/Modals/Profile/EditMyProfileModal/EditMyProfileModal';
+import ChangePasswordModal from '@/Shared/Modals/Profile/ChangePasswordModal/ChangePasswordModal';
+
+
+const MyProfilePage = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
@@ -59,23 +63,37 @@ const ProfilePage = () => {
     enabled: !!session?.user?.employee_id,
   });
 
+  // Fetch Departments Basic Info
+  const {
+    data: DepartmentsBasicInfoData,
+    error: DepartmentsBasicInfoError,
+    refetch: DepartmentsBasicInfoRefetch,
+    isLoading: DepartmentsBasicInfoIsLoading,
+  } = useQuery({
+    queryKey: ["DepartmentsBasicInfoData"],
+    queryFn: () =>
+      axiosPublic.get(`/Departments/BasicInfo`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
 
   // Handle loading
   if (
     MyUserIsLoading ||
-    status === "loading"
+    status === "loading" ||
+    DepartmentsBasicInfoIsLoading
   ) {
     return <Loading />;
   }
 
   // Handle errors
-  if (MyUserError) {
-    return <Error errors={[MyUserError]} />;
+  if (MyUserError || DepartmentsBasicInfoError) {
+    return <Error errors={[MyUserError, DepartmentsBasicInfoError]} />;
   }
 
   // Refetch all
   const RefetchAll = () => {
     MyUserRefetch();
+    DepartmentsBasicInfoRefetch();
   };
 
   return (
@@ -93,6 +111,9 @@ const ProfilePage = () => {
         <div className="flex items-center gap-3" >
           {/* Change Password Button */}
           <button
+            onClick={() =>
+              document.getElementById("Change_Password_Modal").showModal()
+            }
             className="gap-2 font-semibold text-black py-2 bg-white rounded-lg shadow-md 
             hover:bg-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 
             active:translate-y-px active:shadow-md border border-gray-200" >
@@ -104,6 +125,9 @@ const ProfilePage = () => {
 
           {/* Edit Profile Button */}
           <button
+            onClick={() =>
+              document.getElementById("Edit_My_Profile_Modal").showModal()
+            }
             className="gap-2 font-semibold text-white  py-2 bg-blue-600 rounded-lg shadow-md 
             hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 
             active:translate-y-px active:shadow-md" >
@@ -193,9 +217,7 @@ const ProfilePage = () => {
               <div>
                 <h3 className="text-sm font-medium">Department</h3>
                 <p className="text-sm text-gray-600 truncate">
-                  <UserDepartmentView
-                    department={MyUserData?.department}
-                  />
+                  {MyUserData?.department === "unAssigned" ? "-" : MyUserData?.department || "-"}
                 </p>
               </div>
             </div>
@@ -206,7 +228,7 @@ const ProfilePage = () => {
               <div>
                 <h3 className="text-sm font-medium">Position</h3>
                 <p className="text-sm text-gray-600 truncate">
-                  {MyUserData?.position || "-"}
+                  {MyUserData?.position === "unAssigned" ? "-" : MyUserData?.position || "-"}
                 </p>
               </div>
             </div>
@@ -217,7 +239,7 @@ const ProfilePage = () => {
               <div>
                 <h3 className="text-sm font-medium">Role</h3>
                 <p className="text-sm text-gray-600 truncate">
-                  {MyUserData?.role || "-"}
+                  {MyUserData?.role === "unAssigned" ? "-" : MyUserData?.role || "-"}
                 </p>
               </div>
             </div>
@@ -228,10 +250,13 @@ const ProfilePage = () => {
               <div>
                 <h3 className="text-sm font-medium">Hire Date</h3>
                 <p className="text-sm text-gray-600 truncate">
-                  {formatDateTime(MyUserData?.hire_date)}
+                  {MyUserData?.hire_date === "unAssigned" || !MyUserData?.hire_date
+                    ? "-"
+                    : formatDateTime(MyUserData?.hire_date)}
                 </p>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -294,7 +319,22 @@ const ProfilePage = () => {
 
       {/* Change Password Modal */}
       <dialog id="Change_Password_Modal" className="modal">
-        <ChangePasswordModal MyUserData={MyUserData} />
+        <ChangePasswordModal
+          RefetchAll={RefetchAll}
+          MyUserData={MyUserData}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Edit My Profile Modal */}
+      <dialog id="Edit_My_Profile_Modal" className="modal">
+        <EditMyProfileModal
+          RefetchAll={RefetchAll}
+          MyUserData={MyUserData}
+          DepartmentsBasicInfoData={DepartmentsBasicInfoData}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
@@ -303,7 +343,7 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default MyProfilePage;
 
 const formatDateTime = (isoString) => {
   if (!isoString) return "-";
