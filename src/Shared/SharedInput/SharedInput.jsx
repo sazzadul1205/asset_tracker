@@ -15,33 +15,27 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaEye, FaEyeSlash, FaCalendarAlt } from "react-icons/fa";
 
 /**
- * SharedInput
- *
- * A reusable input component supporting:
- * - text, password, email, number
- * - textarea
- * - select (basic and searchable)
- * - datepicker
- * - error display
+ * SharedInput Component
  *
  * Props:
- * @param {string} label - The input label
+ * @param {string} name - Field name for react-hook-form
+ * @param {string} label - Label text shown above the input
+ * @param {string} type - Input type (text, password, textarea, select, date, number)
+ * @param {function} register - react-hook-form register function (for basic inputs)
+ * @param {object} control - react-hook-form control object (required for Controller)
+ * @param {array} options - Array of select options [{ label, value }]
+ * @param {object} rules - Validation rules
  * @param {string} placeholder - Placeholder text
- * @param {boolean} disabled - Disables the input
- * @param {boolean} readOnly - Makes input read-only
- * @param {number} rows - Number of rows (for textarea)
- * @param {string} defaultValue - Default value of input
- * @param {number} min - Minimum value (for number input)
- * @param {number} max - Maximum value (for number input)
+ * @param {number} rows - Textarea rows
  * @param {object} error - Error object from react-hook-form
- * @param {number|string} step - Step value (for number input)
- * @param {object} rules - Validation rules for react-hook-form
- * @param {string} name - The input's name (required for form registration)
- * @param {boolean} searchable - Enables searchable select (requires control)
- * @param {string} type - Input type: text, password, textarea, select, date, number
- * @param {array} options - Array of options for select inputs [{ label, value, ... }]
- * @param {object} register - react-hook-form register function (required for basic select/input)
- * @param {object} control - react-hook-form control object (required for Controller, e.g., searchable select or date)
+ * @param {string|number} defaultValue - Default value for the input
+ * @param {boolean} readOnly - Makes field read-only
+ * @param {boolean} disabled - Disables input
+ * @param {boolean} searchable - Enables react-select searchable dropdown
+ * @param {number} min - Min value (for number)
+ * @param {number} max - Max value (for number)
+ * @param {number|string} step - Step size (for number)
+ * @param {string} pickerPlacement - Placement of the datepicker (auto, top, bottom)
  */
 const SharedInput = ({
   name,
@@ -58,27 +52,24 @@ const SharedInput = ({
   readOnly = false,
   disabled = false,
   searchable = false,
+  pickerPlacement = "auto",
   min,
   max,
   step,
 }) => {
-  // States
   const [showPassword, setShowPassword] = useState(false);
 
-  // Input type
-  const inputType = type === "password" ? (showPassword ? "text" : "password") : type;
+  const inputType =
+    type === "password" ? (showPassword ? "text" : "password") : type;
 
-  // Classes for input
   const isDisabledOrReadOnly = disabled || readOnly;
 
-  // Classes for input
   const baseClasses = `w-full px-4 py-2 border rounded-md text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
-  ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"}
-  ${isDisabledOrReadOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : "bg-white"}`;
+    ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"}
+    ${isDisabledOrReadOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : "bg-white"}`;
 
   return (
     <div className="w-full">
-      {/* Label */}
       {label && (
         <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 block text-sm font-medium text-gray-700 mb-1">
           {label}
@@ -86,9 +77,7 @@ const SharedInput = ({
         </label>
       )}
 
-      {/* Input */}
       {type === "textarea" ? (
-        // Textarea
         <textarea
           placeholder={placeholder}
           rows={rows}
@@ -96,16 +85,14 @@ const SharedInput = ({
           defaultValue={defaultValue}
           disabled={disabled}
           {...(register ? register(name, rules) : {})}
-          className={`textarea w-full border border-gray-300 focus:border-blue-500 focus:ring-blue-100 rounded-md text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all  bg-white
-          ${error ? "textarea-error" : ""}  
-          ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : ""}
-          `}
+          className={`textarea w-full border border-gray-300 focus:border-blue-500 focus:ring-blue-100 rounded-md text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all bg-white
+            ${error ? "textarea-error" : ""}
+            ${disabled || readOnly ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : ""}`}
           onInput={(e) => {
             e.target.style.height = "auto";
             e.target.style.height = `${e.target.scrollHeight}px`;
           }}
         />
-
       ) : type === "select" ? (
         searchable && control ? (
           <Controller
@@ -114,32 +101,17 @@ const SharedInput = ({
             rules={rules}
             defaultValue={defaultValue || null}
             render={({ field }) => (
-              <div className="relative w-full text-black">
-                <FaCalendarAlt
-                  className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-gray-400" : "text-blue-500"
-                    }`}
-                  size={18}
-                />
-
-                <DatePicker
-                  placeholderText={placeholder || "Select date"}
-                  selected={field.value}
-                  onChange={(date) => field.onChange(date)}
-                  dateFormat="dd/MMM/yyyy"
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  yearDropdownItemNumber={100}
-                  scrollableYearDropdown
-                  disabled={disabled || readOnly}
-                  wrapperClassName="w-full"
-                  className={`pl-10 w-full ${baseClasses}`}
-                />
-              </div>
+              <Select
+                {...field}
+                options={options}
+                isDisabled={disabled || readOnly}
+                isSearchable={true}
+                placeholder={placeholder || "Select an option"}
+                classNamePrefix="react-select"
+              />
             )}
           />
         ) : (
-          // Basic select
           <select
             {...(register ? register(name, rules) : {})}
             defaultValue={defaultValue || ""}
@@ -157,7 +129,6 @@ const SharedInput = ({
           </select>
         )
       ) : type === "date" && control ? (
-        // Datepicker
         <Controller
           control={control}
           name={name}
@@ -165,30 +136,42 @@ const SharedInput = ({
           defaultValue={defaultValue || null}
           render={({ field }) => (
             <div className="relative w-full text-black">
+
+              {/* Force datepicker to use full width */}
+              <style>
+                {`
+                  .react-datepicker-wrapper,
+                  .react-datepicker__input-container,
+                  .react-datepicker__input-container input {
+                    width: 100% !important;
+                  }
+                `}
+              </style>
+
+              {/* Icon */}
               <FaCalendarAlt
-                className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-gray-400" : "text-blue-500"
-                  }`}
+                className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-gray-400" : "text-blue-500"}`}
                 size={18}
               />
+
+              {/* Datepicker */}
               <DatePicker
                 placeholderText={placeholder || "Select date"}
-                selected={field.value || defaultValue}
+                selected={field.value || null}
                 onChange={field.onChange}
                 dateFormat="dd/MMM/yyyy"
                 showMonthDropdown
                 showYearDropdown
                 dropdownMode="select"
-                yearDropdownItemNumber={100}
-                scrollableYearDropdown
                 disabled={disabled || readOnly}
-                wrapperClassName="w-full"
                 className={`pl-10 w-full ${baseClasses}`}
+                popperPlacement={pickerPlacement}
               />
+
             </div>
           )}
         />
       ) : (
-        // Basic input
         <div className="relative">
           <input
             type={inputType}
@@ -200,15 +183,16 @@ const SharedInput = ({
             max={type === "number" ? max : undefined}
             step={type === "number" ? step || "any" : undefined}
             autoComplete={
-              type === "password" ? "current-password" :
-                type === "email" ? "username" :
-                  undefined
+              type === "password"
+                ? "current-password"
+                : type === "email"
+                  ? "username"
+                  : undefined
             }
             {...(register ? register(name, rules) : {})}
-            className={`${baseClasses + (type === "password" ? " pr-11" : "")} `}
+            className={`${baseClasses}${type === "password" ? " pr-11" : ""}`}
           />
           {type === "password" && (
-            // Show/hide password
             <button
               type="button"
               tabIndex={-1}
@@ -222,8 +206,11 @@ const SharedInput = ({
         </div>
       )}
 
-      {/* Error */}
-      {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
+      {/* At the bottom of your component */}
+      {error && typeof error === "object" && error.message && (
+        <p className="text-red-500 text-sm mt-1">{error.message}</p>
+      )}
+
     </div>
   );
 };
