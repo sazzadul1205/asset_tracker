@@ -94,9 +94,6 @@ const MyRequestsPage = () => {
     AssetBasicInfoRefetch();
   };
 
-
-
-
   return (
     <div>
       {/* Header */}

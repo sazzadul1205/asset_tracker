@@ -1,4 +1,4 @@
-// Admin/AssetsCategory/page.jsx
+// Admin/Assets/page.jsx
 "use client";
 
 // React Components

@@ -9,11 +9,6 @@ import { useForm } from "react-hook-form";
 
 // Icons
 import { ImCross } from "react-icons/im";
-
-// Hooks
-import useAxiosPublic from "@/Hooks/useAxiosPublic";
-
-// Icons
 import {
   IoPersonAddOutline,
   IoDocumentTextOutline,
@@ -24,6 +19,12 @@ import {
   IoCreateOutline,
   IoCloseCircleOutline,
 } from "react-icons/io5";
+
+// Hooks
+import { useToast } from "@/Hooks/Toasts";
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
+
+// Components
 import AssignAssetForm from "./AssignAssetForm/AssignAssetForm";
 
 
@@ -94,8 +95,9 @@ const rows = [
   actionItems.slice(6, 8),
 ];
 
-
+// Modal
 const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
+  const { success } = useToast();
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
@@ -108,13 +110,13 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
 
   // Close modal
   const handleClose = () => {
-    // reset();
+    reset();
     setFormError(null);
-
+    setSelectedAction(null);
     document.getElementById("Add_Request_Modal")?.close();
   }
 
-  // Form
+  // Form Hooks
   const {
     reset,
     control,
@@ -125,8 +127,6 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
 
   // Handle Submit
   const onAssetAssignSubmit = async (data) => {
-    console.log("Form Data:", data);
-
     setFormError(null);
     setIsLoading(true);
 
@@ -143,11 +143,12 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
         requested_by: session.user.email,
       };
 
-      console.log("Payload:", payload);
-      // TODO: Send payload to API here
+      // Make request
+      await axiosPublic.post("/Requests", payload);
 
-      reset(); // Reset form after submit
-      setSelectedAction(null); // Close modal / go back
+      RefetchAll();
+      handleClose();
+      success("Request Created Successfully.");
     } catch (err) {
       console.error("Error in onSubmit", err);
       const serverError =
