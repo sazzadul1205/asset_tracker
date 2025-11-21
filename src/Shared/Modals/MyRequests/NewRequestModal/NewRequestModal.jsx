@@ -26,6 +26,8 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 // Components
 import AssignAssetForm from "./AssignAssetForm/AssignAssetForm";
+import RequestAssetForm from "./RequestAssetForm/RequestAssetForm";
+import ReturnAssetForm from "./ReturnAssetForm/ReturnAssetForm";
 
 
 // Action Items
@@ -96,10 +98,9 @@ const rows = [
 ];
 
 // Modal
-const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
+const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
-  const { data: session, status } = useSession();
 
   // States
   const [formError, setFormError] = useState(null);
@@ -125,13 +126,13 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Handle Submit
+  // Handle Asset Assign Submit
   const onAssetAssignSubmit = async (data) => {
     setFormError(null);
     setIsLoading(true);
 
     try {
-      if (!session?.user?.email) {
+      if (!UserEmail) {
         setFormError("Session error: User email missing.");
         return;
       }
@@ -140,7 +141,7 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
       const payload = {
         ...data,
         action_type: 'assign',
-        requested_by: session.user.email,
+        requested_by: UserEmail,
       };
 
       // Make request
@@ -148,13 +149,85 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
 
       RefetchAll();
       handleClose();
-      success("Request Created Successfully.");
+      success("Assign Asset Request Created Successfully.");
     } catch (err) {
       console.error("Error in onSubmit", err);
       const serverError =
         err.response?.data?.message ||
         err.message ||
         "Failed to make Assign Asset request.";
+      setFormError(serverError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Submit
+  const onAssetRequestSubmit = async (data) => {
+    setFormError(null);
+    setIsLoading(true);
+
+    try {
+      if (!UserEmail) {
+        setFormError("Session error: User email missing.");
+        return;
+      }
+
+      // Build payload
+      const payload = {
+        ...data,
+        action_type: 'request',
+        requested_by: UserEmail,
+      };
+
+      // Make request
+      await axiosPublic.post("/Requests", payload);
+
+      RefetchAll();
+      handleClose();
+      success("Request Asset Request Created Successfully.");
+    } catch (err) {
+      console.error("Error in onSubmit", err);
+      const serverError =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to make Request Asset request.";
+      setFormError(serverError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Submit
+  const onAssetReturnSubmit = async (data) => {
+    setFormError(null);
+    setIsLoading(true);
+
+    try {
+      if (!UserEmail) {
+        setFormError("Session error: User email missing.");
+        return;
+      }
+
+      // Build payload
+      const payload = {
+        ...data,
+        action_type: 'return',
+        requested_by: UserEmail,
+      };
+
+      // Make request
+      await axiosPublic.post("/Requests", payload);
+
+      RefetchAll();
+      handleClose();
+      success("Return Asset Request Created Successfully.");
+    } catch (err) {
+      console.error("Error in onSubmit", err);
+      const serverError =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to make Return Asset request.";
       setFormError(serverError);
     } finally {
       setIsLoading(false);
@@ -246,8 +319,37 @@ const NewRequestModal = ({ RefetchAll, AssetBasicInfoData }) => {
             onAssetAssignSubmit={onAssetAssignSubmit}
           />
         }
-        {selectedAction === "request" && "RequestAssetForm"}
-        {selectedAction === "return" && "ReturnAssetForm"}
+        {selectedAction === "request" &&
+          <RequestAssetForm
+            reset={reset}
+            errors={errors}
+            control={control}
+            register={register}
+            isLoading={isLoading}
+            formError={formError}
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            setSelectedAction={setSelectedAction}
+            AssetBasicInfoData={AssetBasicInfoData}
+            onAssetRequestSubmit={onAssetRequestSubmit}
+          />
+        }
+        {selectedAction === "return" &&
+          <ReturnAssetForm
+            reset={reset}
+            errors={errors}
+            control={control}
+            register={register}
+            isLoading={isLoading}
+            UserEmail={UserEmail}
+            formError={formError}
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            setSelectedAction={setSelectedAction}
+            AssetBasicInfoData={AssetBasicInfoData}
+            onAssetReturnSubmit={onAssetReturnSubmit}
+          />
+        }
         {selectedAction === "repair" && "RepairAssetForm"}
         {selectedAction === "retire" && "RetireAssetForm"}
         {selectedAction === "transfer" && "TransferAssetForm"}

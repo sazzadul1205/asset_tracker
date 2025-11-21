@@ -3,6 +3,9 @@
 // React Components
 import React from 'react';
 
+// Next Components
+import { useSession } from 'next-auth/react';
+
 // Icons
 import { FaPlus } from 'react-icons/fa';
 import { GoGear } from "react-icons/go";
@@ -65,6 +68,7 @@ const dashboardCards = [
 
 const MyRequestsPage = () => {
   const axiosPublic = useAxiosPublic();
+  const { data: session, status } = useSession();
 
   // Fetch Assets Basic Info Data
   const {
@@ -80,7 +84,7 @@ const MyRequestsPage = () => {
   });
 
   // Handle loading
-  if (AssetBasicInfoIsLoading) {
+  if (AssetBasicInfoIsLoading || status === "loading") {
     return <Loading />;
   }
 
@@ -149,6 +153,7 @@ const MyRequestsPage = () => {
       <dialog id="Add_Request_Modal" className="modal">
         <NewRequestModal
           RefetchAll={RefetchAll}
+          UserEmail={session?.user?.email}
           AssetBasicInfoData={AssetBasicInfoData}
         />
         <form method="dialog" className="modal-backdrop">
