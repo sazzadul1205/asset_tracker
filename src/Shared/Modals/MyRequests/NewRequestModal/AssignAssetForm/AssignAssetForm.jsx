@@ -82,7 +82,6 @@ const AssignAssetForm = ({
           register={register}
           placeholder="Assign Asset"
           readOnly
-          defaultValue="assign"
         />
 
         {/* Priority */}
@@ -110,8 +109,8 @@ const AssignAssetForm = ({
           type="date"
           control={control}
           placeholder="Select return date"
-          rules={{ required: "Expected Return Date is required" }}
           defaultValue=""
+          dateLimit="future"
           error={errors?.return_date}
         />
 
