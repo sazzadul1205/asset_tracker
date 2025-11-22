@@ -1,5 +1,10 @@
-import { useState } from "react";
+// React Components
+import React, { useState } from "react";
+
+// Icons
 import { IoMdArrowRoundBack } from "react-icons/io";
+
+// Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
 const generalUpdateOptions = [
@@ -17,6 +22,7 @@ const UpdateAssetRequestForm = ({
   formError,
   MyAssetData,
   isSubmitting,
+  AllAssetData,
   handleSubmit,
   setSelectedAction,
   handleUniversalSubmit,
@@ -126,7 +132,6 @@ const UpdateAssetRequestForm = ({
           register={register}
           placeholder="Select Priority"
           options={[
-            { label: "Select Priority", value: "" },
             { label: "Critical", value: "critical" },
             { label: "High", value: "high" },
             { label: "Medium", value: "medium" },
@@ -171,10 +176,10 @@ const UpdateAssetRequestForm = ({
           </div>
         </div>
 
-
         {/* Conditional Fields */}
         {updateType === "current" && (
           <>
+            {/* Update Option */}
             <SharedInput
               label="Update Option"
               name="update_option"
@@ -185,6 +190,7 @@ const UpdateAssetRequestForm = ({
               rules={{ required: "Select update option" }}
             />
 
+            {/* Reason */}
             <div className="col-span-2">
               <SharedInput
                 label="Reason for Update"
@@ -235,7 +241,7 @@ const UpdateAssetRequestForm = ({
               </div>
             </div>
 
-
+            {/* From Inventory */}
             {fullAssetOption === "inventory" && (
               <SharedInput
                 label="Select Update Asset"
@@ -244,14 +250,16 @@ const UpdateAssetRequestForm = ({
                 control={control}
                 searchable
                 placeholder="Select asset from inventory"
-                options={AssetData.map(d => ({ label: `${d.asset_name} (${d.asset_tag})`, value: d.asset_tag }))}
+                options={AllAssetData.map(d => ({ label: `${d.asset_name} (${d.asset_tag})`, value: d.asset_tag }))}
                 rules={{ required: "Select asset from inventory" }}
                 error={errors?.update_asset_inventory}
               />
             )}
 
+            {/* Suggest New Asset */}
             {fullAssetOption === "new" && (
               <div className="space-y-4" >
+                {/* New Asset Name */}
                 <SharedInput
                   label="New Asset Name"
                   name="new_asset_name"
@@ -261,8 +269,11 @@ const UpdateAssetRequestForm = ({
                   rules={{ required: "Asset name is required" }}
                   error={errors?.new_asset_name}
                 />
+
+                {/* Asset Text */}
                 <p className="text-sm text-gray-500 mt-1">Please contact your manager to finalize the new asset.</p>
 
+                {/* Asset Description */}
                 <SharedInput
                   label="Asset Description"
                   name="asset_description"
@@ -272,7 +283,6 @@ const UpdateAssetRequestForm = ({
                   rules={{ required: "asset_description is required" }}
                   error={errors?.asset_description}
                 />
-
               </div>
             )}
 
@@ -285,7 +295,6 @@ const UpdateAssetRequestForm = ({
               placeholder="Explain why this full asset update is needed"
               rules={{ required: "Reason is required" }}
             />
-
           </div>
         )}
 
@@ -305,15 +314,16 @@ const UpdateAssetRequestForm = ({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 ${isSubmitting || isLoading
-              ? "bg-blue-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
+            className={`h-11 w-64 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
+              ${isSubmitting || isLoading
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
               }`}
           >
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Submit Update Request"
+              "Create Update Asset Request"
             )}
           </button>
         </div>

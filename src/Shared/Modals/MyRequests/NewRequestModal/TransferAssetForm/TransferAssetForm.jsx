@@ -15,6 +15,7 @@ const TransferAssetForm = ({
   isSubmitting,
   handleSubmit,
   setSelectedAction,
+  UsersBasicInfoData,
   handleUniversalSubmit,
 }) => {
   return (
@@ -112,19 +113,6 @@ const TransferAssetForm = ({
           error={errors?.transfer_to}
         />
 
-        {/* Transfer Date */}
-        <SharedInput
-          label="Transfer Date"
-          name="transfer_date"
-          type="date"
-          control={control}
-          register={register}
-          rules={{ required: "Transfer Date is required" }}
-          defaultValue=""
-          dateLimit="future"
-          error={errors?.return_date}
-        />
-
         {/* Transfer Reason */}
         <SharedInput
           label="Transfer Reason"
@@ -158,7 +146,7 @@ const TransferAssetForm = ({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
+            className={`h-11 w-64 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
               ${isSubmitting || isLoading
                 ? "bg-blue-400 cursor-not-allowed pointer-events-none"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98] shadow-blue-200"
@@ -167,7 +155,7 @@ const TransferAssetForm = ({
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Submit Retire Request"
+              "Create Transfer Asset Request"
             )}
           </button>
         </div>

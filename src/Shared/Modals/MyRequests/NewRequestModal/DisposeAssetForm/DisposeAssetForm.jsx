@@ -11,7 +11,7 @@ const DisposeAssetForm = ({
   register,
   isLoading,
   formError,
-  MyAssetData,
+  AllAssetData,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
@@ -59,7 +59,7 @@ const DisposeAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={MyAssetData.map(d => ({
+          options={AllAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -73,7 +73,7 @@ const DisposeAssetForm = ({
           name="action_type"
           type="select"
           register={register}
-          placeholder="Transfer Asset"
+          placeholder="Dispose Asset"
           readOnly
         />
 
@@ -85,7 +85,6 @@ const DisposeAssetForm = ({
           register={register}
           placeholder="Select Priority"
           options={[
-            { label: "Select Priority", value: "" },
             { label: "Critical", value: "critical" },
             { label: "High", value: "high" },
             { label: "Medium", value: "medium" },
@@ -160,8 +159,8 @@ const DisposeAssetForm = ({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
-                ${isSubmitting || isLoading
+            className={`h-11 w-64 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
+              ${isSubmitting || isLoading
                 ? "bg-blue-400 cursor-not-allowed pointer-events-none"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98] shadow-blue-200"
               }`}
@@ -169,7 +168,7 @@ const DisposeAssetForm = ({
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Submit Dispose Request"
+              "Create Dispose Asset Request"
             )}
           </button>
         </div>

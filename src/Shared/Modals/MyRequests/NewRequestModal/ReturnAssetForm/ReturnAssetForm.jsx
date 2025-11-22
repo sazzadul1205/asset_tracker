@@ -96,7 +96,6 @@ const ReturnAssetForm = ({
           register={register}
           placeholder="Select Priority"
           options={[
-            { label: "Select Priority", value: "" },
             { label: "Critical", value: "critical" },
             { label: "High", value: "high" },
             { label: "Medium", value: "medium" },
@@ -104,6 +103,19 @@ const ReturnAssetForm = ({
           ]}
           rules={{ required: "Priority is required" }}
           error={errors?.priority}
+        />
+
+        {/* Return Date */}
+        <SharedInput
+          label="Return Date"
+          name="return_date"
+          type="date"
+          control={control}
+          placeholder="Select return date"
+          defaultValue=""
+          dateLimit="future"
+          rules={{ required: "Return Date is required" }}
+          error={errors?.return_date}
         />
 
         {/* Condition Rating */}
@@ -118,19 +130,6 @@ const ReturnAssetForm = ({
             ...conditionRatingOptions
           ]}
           rules={{ required: "Condition Rating is required" }}
-        />
-
-        {/* Return Date */}
-        <SharedInput
-          label="Return Date"
-          name="return_date"
-          type="date"
-          control={control}
-          placeholder="Select return date"
-          defaultValue=""
-          dateLimit="future"
-          rules={{ required: "Return Date is required" }}
-          error={errors?.return_date}
         />
 
         {/* Notes */}
@@ -151,8 +150,8 @@ const ReturnAssetForm = ({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
-                 ${isSubmitting || isLoading
+            className={`h-11 w-64 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
+              ${isSubmitting || isLoading
                 ? "bg-blue-400 cursor-not-allowed pointer-events-none"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98] shadow-blue-200"
               }`}
@@ -160,7 +159,7 @@ const ReturnAssetForm = ({
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Create Asset Request"
+              "Create Asset Return Request"
             )}
           </button>
         </div>

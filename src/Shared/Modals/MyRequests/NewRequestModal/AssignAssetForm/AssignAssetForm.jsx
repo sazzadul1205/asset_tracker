@@ -83,7 +83,6 @@ const AssignAssetForm = ({
           register={register}
           placeholder="Select Priority"
           options={[
-            { label: "Select Priority", value: "" },
             { label: "Critical", value: "critical" },
             { label: "High", value: "high" },
             { label: "Medium", value: "medium" },
@@ -123,7 +122,7 @@ const AssignAssetForm = ({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
+            className={`h-11 w-64 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
               ${isSubmitting || isLoading
                 ? "bg-blue-400 cursor-not-allowed pointer-events-none"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98] shadow-blue-200"
@@ -132,7 +131,7 @@ const AssignAssetForm = ({
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Create Assign Request"
+              "Create Assign Asset Request"
             )}
           </button>
         </div>

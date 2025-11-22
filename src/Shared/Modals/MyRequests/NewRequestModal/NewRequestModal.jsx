@@ -135,9 +135,10 @@ const NewRequestModal = ({
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Remove assigned assets
+  // Remove assigned assets - Excluding assigned
   const AllAssetData = RemoveAssigned(AssetBasicInfoData);
 
+  // My Assets 
   const MyAssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
 
   // Handle Universal Submit
@@ -165,10 +166,12 @@ const NewRequestModal = ({
       // Make request
       await axiosPublic.post("/Requests", payload);
 
-      // 
+
       RefetchAll();
       handleClose();
-      success(`${action_type.toUpperCase()} Request Created Successfully.`);
+      const capitalizeFirst = (str) =>
+        str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+      success(`${capitalizeFirst(action_type)} request created successfully.`);
     } catch (err) {
       const serverError =
         err.response?.data?.message ||
@@ -349,6 +352,7 @@ const NewRequestModal = ({
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
+            UsersBasicInfoData={UsersBasicInfoData}
             handleUniversalSubmit={handleUniversalSubmit}
           />
         }
@@ -364,6 +368,7 @@ const NewRequestModal = ({
             formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
+            AllAssetData={AllAssetData}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
             handleUniversalSubmit={handleUniversalSubmit}
@@ -379,7 +384,7 @@ const NewRequestModal = ({
             register={register}
             isLoading={isLoading}
             formError={formError}
-            MyAssetData={MyAssetData}
+            AllAssetData={AllAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}

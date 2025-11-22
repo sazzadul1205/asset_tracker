@@ -4,9 +4,6 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-// Utils
-import { getAssetsByEmail } from "../ReturnAssetForm/ReturnAssetForm";
-
 // Issue Type
 const issueTypeOptions = [
   { label: "Not Working", value: "not_working" },
@@ -111,7 +108,6 @@ const RepairAssetForm = ({
           register={register}
           placeholder="Select Priority"
           options={[
-            { label: "Select Priority", value: "" },
             { label: "Critical", value: "critical" },
             { label: "High", value: "high" },
             { label: "Medium", value: "medium" },
@@ -161,8 +157,8 @@ const RepairAssetForm = ({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all
-            ${isSubmitting || isLoading
+            className={`h-11 w-64 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center 
+              ${isSubmitting || isLoading
                 ? "bg-blue-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
               }`}
@@ -170,7 +166,7 @@ const RepairAssetForm = ({
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Submit Repair Request"
+              "Create Repair Asset Request"
             )}
           </button>
         </div>
