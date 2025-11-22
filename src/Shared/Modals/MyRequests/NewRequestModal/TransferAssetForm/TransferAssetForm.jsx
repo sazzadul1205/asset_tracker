@@ -5,50 +5,33 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
 // Utils
-import { RemoveAssigned } from "../AssignAssetForm/AssignAssetForm";
+import { getAssetsByEmail } from "../ReturnAssetForm/ReturnAssetForm";
 
-// Condition Rating Options
-const conditionRatingOptions = [
-  { label: "Excellent", value: "excellent" },
-  { label: "Good", value: "good" },
-  { label: "Fair", value: "fair" },
-  { label: "Poor", value: "poor" },
-  { label: "Broken", value: "broken" },
-];
-
-// Retirement Reason Options
-const retireReasons = [
-  { label: "End of Life", value: "end_of_life" },
-  { label: "Damaged Beyond Repair", value: "damaged_beyond_repair" },
-  { label: "Obsolete / Outdated", value: "obsolete" },
-  { label: "Frequent Failures", value: "frequent_failures" },
-  { label: "Costlier to Repair", value: "repair_cost_too_high" },
-  { label: "Other", value: "other" },
-];
-
-const RetireAssetForm = ({
+const TransferAssetForm = ({
   reset,
   errors,
   control,
   register,
   isLoading,
+  UserEmail,
   formError,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
   AssetBasicInfoData,
-  onAssetRetireSubmit,
+  UsersBasicInfoData,
+  onAssetTransferSubmit,
 }) => {
 
   // Remove assigned assets
-  const AssetData = RemoveAssigned(AssetBasicInfoData);
+  const AssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Retire Asset</h3>
+          <h3 className="text-xl font-semibold text-gray-900">Transfer Asset</h3>
           <p className="text-sm text-gray-600">
             Fill in the details to retire an asset.
           </p>
@@ -73,7 +56,7 @@ const RetireAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetRetireSubmit)}
+        onSubmit={handleSubmit(onAssetTransferSubmit)}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
         {/* Select Asset */}
@@ -97,32 +80,56 @@ const RetireAssetForm = ({
         <SharedInput
           label="Action Type"
           name="action_type"
-          type="select"
+          type="text"
           register={register}
-          placeholder="Retire Asset"
           readOnly
+          defaultValue="Transfer Asset"
         />
 
-        {/* Condition Rating */}
+        {/* Transfer To (User) */}
         <SharedInput
-          label="Condition Rating"
-          name="condition_rating"
+          label="Transfer To"
+          name="transfer_to"
           type="select"
-          register={register}
-          placeholder="Select Condition Rating"
-          options={conditionRatingOptions}
-          rules={{ required: "Condition Rating is required" }}
+          control={control}
+          searchable={true}
+          placeholder="Search & select user"
+          rules={{ required: "Select User is required" }}
+          options={UsersBasicInfoData?.map(d => ({
+            label: `${d.full_name} (${d.employee_id})`,
+            value: d.employee_id,
+          }))}
+          defaultValue=""
+          error={errors?.transfer_to}
         />
 
-        {/* Retirement Reason */}
+        {/* Transfer Date */}
         <SharedInput
-          label="Retirement Reason"
-          name="retire_reason"
+          label="Transfer Date"
+          name="transfer_date"
+          type="date"
+          control={control}
+          register={register}
+          rules={{ required: "Transfer Date is required" }}
+          defaultValue=""
+          dateLimit="future"
+          error={errors?.return_date}
+        />
+
+        {/* Transfer Reason */}
+        <SharedInput
+          label="Transfer Reason"
+          name="transfer_reason"
           type="select"
           register={register}
-          placeholder="Select Retirement Reason"
-          options={retireReasons}
-          rules={{ required: "Retirement Reason is required" }}
+          placeholder="Select reason"
+          options={[
+            { label: "Employee Transfer", value: "employee_transfer" },
+            { label: "Department Change", value: "department_change" },
+            { label: "Replacement", value: "replacement" },
+            { label: "Project Assignment", value: "project_assignment" },
+            { label: "Other", value: "other" },
+          ]}
         />
 
         {/* Notes */}
@@ -132,8 +139,7 @@ const RetireAssetForm = ({
             name="notes"
             type="textarea"
             register={register}
-            placeholder="Add notes about the retirement"
-            rules={{ required: "Notes are required" }}
+            placeholder="Add optional notes"
             error={errors?.notes}
           />
         </div>
@@ -161,4 +167,4 @@ const RetireAssetForm = ({
   );
 };
 
-export default RetireAssetForm;
+export default TransferAssetForm;

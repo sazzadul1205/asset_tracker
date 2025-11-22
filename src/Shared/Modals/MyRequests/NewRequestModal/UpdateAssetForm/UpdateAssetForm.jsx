@@ -2,14 +2,6 @@ import { useState } from "react";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-const conditionRatingOptions = [
-  { label: "Excellent", value: "excellent" },
-  { label: "Good", value: "good" },
-  { label: "Fair", value: "fair" },
-  { label: "Poor", value: "poor" },
-  { label: "Broken", value: "broken" },
-];
-
 const priorityOptions = [
   { label: "Low", value: "low" },
   { label: "Medium", value: "medium" },
@@ -39,13 +31,52 @@ const UpdateAssetRequestForm = ({
   handleSubmit,
   setSelectedAction,
   AssetBasicInfoData,
-  onAssetUpdateRequestSubmit,
+  onAssetUpdateSubmit,
 }) => {
-  const [updateType, setUpdateType] = useState("current"); // current or full
-  const [fullAssetOption, setFullAssetOption] = useState("inventory"); // inventory or new
+  const [updateType, setUpdateType] = useState("current");
+  const [fullAssetOption, setFullAssetOption] = useState("inventory");
 
   const MyAssetData = AssetBasicInfoData.filter(asset => asset.assigned_to === UserEmail);
   const AssetData = RemoveAssigned(AssetBasicInfoData);
+
+
+  // Payload builder
+  const onSubmit = (formData) => {
+    const payload = {
+      general: {
+        current_asset: formData.current_asset,
+        action_type: formData.action_type,
+        priority: formData.priority,
+        notes: formData.notes || "",
+      },
+      update: {},
+    };
+
+    if (updateType === "current") {
+      payload.update = {
+        type: "current",
+        update_option: formData.update_option,
+        reason: formData.reason_current,
+      };
+    } else if (updateType === "full") {
+      payload.update = {
+        type: "full",
+        reason: formData.reason_full,
+      };
+
+      if (fullAssetOption === "inventory") {
+        payload.update.full_option = "inventory";
+        payload.update.update_asset_inventory = formData.update_asset_inventory;
+      } else if (fullAssetOption === "new") {
+        payload.update.full_option = "new";
+        payload.update.new_asset_name = formData.new_asset_name;
+        payload.update.asset_description = formData.asset_description;
+      }
+    }
+    // Pass payload to your API or handler
+    onAssetUpdateSubmit(payload);
+  };
+
 
   return (
     <div>
@@ -71,7 +102,7 @@ const UpdateAssetRequestForm = ({
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onAssetUpdateRequestSubmit)}
+      <form onSubmit={handleSubmit(onSubmit)}
         className="space-y-3 grid grid-cols-2 gap-4">
         {/* Select Current Asset */}
         <SharedInput
