@@ -83,19 +83,33 @@ const MyRequestsPage = () => {
     keepPreviousData: true,
   });
 
+  // Fetch Users Basic Info Data
+  const {
+    data: UsersBasicInfoData,
+    error: UsersBasicInfoError,
+    refetch: UsersBasicInfoRefetch,
+    isLoading: UsersBasicInfoIsLoading,
+  } = useQuery({
+    queryKey: ["UsersBasicInfoData"],
+    queryFn: () =>
+      axiosPublic.get(`/Users/BasicInfo`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
   // Handle loading
-  if (AssetBasicInfoIsLoading || status === "loading") {
+  if (AssetBasicInfoIsLoading || UsersBasicInfoIsLoading || status === "loading") {
     return <Loading />;
   }
 
   // Handle errors
-  if (AssetBasicInfoError) {
-    return <Error errors={[AssetBasicInfoError]} />;
+  if (AssetBasicInfoError || UsersBasicInfoError) {
+    return <Error errors={[AssetBasicInfoError, UsersBasicInfoError]} />;
   }
 
   // Refetch all
   const RefetchAll = () => {
     AssetBasicInfoRefetch();
+    UsersBasicInfoRefetch();
   };
 
   return (
@@ -155,6 +169,7 @@ const MyRequestsPage = () => {
           RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
           AssetBasicInfoData={AssetBasicInfoData}
+          UsersBasicInfoData={UsersBasicInfoData}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
