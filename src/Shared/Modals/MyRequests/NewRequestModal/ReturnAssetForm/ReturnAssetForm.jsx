@@ -4,17 +4,6 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-/**
- * Get all assets assigned to a specific email
- * @param {Array} data - Array of asset objects
- * @param {string} email - Email to filter by
- * @returns {Array} Filtered assets
- */
-export function getAssetsByEmail(data, email) {
-  if (!Array.isArray(data) || !email) return [];
-  return data.filter(asset => asset.assigned_to?.toLowerCase() === email.toLowerCase());
-}
-
 // Condition Rating Options
 const conditionRatingOptions = [
   { label: "Excellent", value: "excellent" },
@@ -30,18 +19,13 @@ const ReturnAssetForm = ({
   control,
   register,
   isLoading,
-  UserEmail,
   formError,
+  MyAssetData,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetReturnSubmit,
+  handleUniversalSubmit,
 }) => {
-
-  // Remove assigned assets
-  const AssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
-
   return (
     <div>
       {/* Header */}
@@ -74,7 +58,7 @@ const ReturnAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetReturnSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "return"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
         {/* Select Asset (Controlled) */}
@@ -86,7 +70,7 @@ const ReturnAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={MyAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -102,6 +86,24 @@ const ReturnAssetForm = ({
           register={register}
           placeholder="Return Asset"
           readOnly
+        />
+
+        {/* Priority */}
+        <SharedInput
+          label="Priority"
+          name="priority"
+          type="select"
+          register={register}
+          placeholder="Select Priority"
+          options={[
+            { label: "Select Priority", value: "" },
+            { label: "Critical", value: "critical" },
+            { label: "High", value: "high" },
+            { label: "Medium", value: "medium" },
+            { label: "Low", value: "low" },
+          ]}
+          rules={{ required: "Priority is required" }}
+          error={errors?.priority}
         />
 
         {/* Condition Rating */}

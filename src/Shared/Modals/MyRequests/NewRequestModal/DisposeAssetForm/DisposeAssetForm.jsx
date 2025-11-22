@@ -4,9 +4,6 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-// Utils
-import { RemoveAssigned } from "../AssignAssetForm/AssignAssetForm";
-
 const DisposeAssetForm = ({
   reset,
   errors,
@@ -14,16 +11,12 @@ const DisposeAssetForm = ({
   register,
   isLoading,
   formError,
+  MyAssetData,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetDeposeSubmit,
+  handleUniversalSubmit,
 }) => {
-
-  // Remove assigned assets
-  const AssetData = RemoveAssigned(AssetBasicInfoData);
-
   return (
     <div>
       {/* Header */}
@@ -54,10 +47,10 @@ const DisposeAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetDeposeSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "dispose"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
-        {/* Select Asset */}
+        {/* Select Asset (Controlled) */}
         <SharedInput
           label="Select Asset"
           name="asset"
@@ -66,7 +59,7 @@ const DisposeAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={MyAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -74,16 +67,33 @@ const DisposeAssetForm = ({
           error={errors?.asset}
         />
 
-        {/* Action Type */}
+        {/* Action Type (Read-only) */}
         <SharedInput
           label="Action Type"
           name="action_type"
           type="select"
           register={register}
-          placeholder="Retire Asset"
+          placeholder="Transfer Asset"
           readOnly
         />
 
+        {/* Priority */}
+        <SharedInput
+          label="Priority"
+          name="priority"
+          type="select"
+          register={register}
+          placeholder="Select Priority"
+          options={[
+            { label: "Select Priority", value: "" },
+            { label: "Critical", value: "critical" },
+            { label: "High", value: "high" },
+            { label: "Medium", value: "medium" },
+            { label: "Low", value: "low" },
+          ]}
+          rules={{ required: "Priority is required" }}
+          error={errors?.priority}
+        />
 
         {/* Condition Rating */}
         <SharedInput

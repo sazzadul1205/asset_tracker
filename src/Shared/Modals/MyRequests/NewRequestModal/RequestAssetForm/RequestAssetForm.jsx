@@ -18,9 +18,9 @@ const RequestAssetForm = ({
   formError,
   isSubmitting,
   handleSubmit,
+  AllAssetData,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetRequestSubmit,
+  handleUniversalSubmit,
 }) => {
 
   // Remove assigned assets
@@ -58,7 +58,7 @@ const RequestAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetRequestSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "request"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
         {/* Select Asset (Controlled) */}
@@ -70,7 +70,7 @@ const RequestAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={AllAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}

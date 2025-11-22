@@ -4,28 +4,19 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-// Utils
-import { getAssetsByEmail } from "../ReturnAssetForm/ReturnAssetForm";
-
 const TransferAssetForm = ({
   reset,
   errors,
   control,
   register,
   isLoading,
-  UserEmail,
   formError,
+  MyAssetData,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
-  AssetBasicInfoData,
-  UsersBasicInfoData,
-  onAssetTransferSubmit,
+  handleUniversalSubmit,
 }) => {
-
-  // Remove assigned assets
-  const AssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
-
   return (
     <div>
       {/* Header */}
@@ -56,10 +47,10 @@ const TransferAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetTransferSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "transfer"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
-        {/* Select Asset */}
+        {/* Select Asset (Controlled) */}
         <SharedInput
           label="Select Asset"
           name="asset"
@@ -68,7 +59,7 @@ const TransferAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={MyAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -76,14 +67,32 @@ const TransferAssetForm = ({
           error={errors?.asset}
         />
 
-        {/* Action Type */}
+        {/* Action Type (Read-only) */}
         <SharedInput
           label="Action Type"
           name="action_type"
-          type="text"
+          type="select"
           register={register}
+          placeholder="Transfer Asset"
           readOnly
-          defaultValue="Transfer Asset"
+        />
+
+        {/* Priority */}
+        <SharedInput
+          label="Priority"
+          name="priority"
+          type="select"
+          register={register}
+          placeholder="Select Priority"
+          options={[
+            { label: "Select Priority", value: "" },
+            { label: "Critical", value: "critical" },
+            { label: "High", value: "high" },
+            { label: "Medium", value: "medium" },
+            { label: "Low", value: "low" },
+          ]}
+          rules={{ required: "Priority is required" }}
+          error={errors?.priority}
         />
 
         {/* Transfer To (User) */}

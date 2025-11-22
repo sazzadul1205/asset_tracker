@@ -34,15 +34,11 @@ const RetireAssetForm = ({
   isLoading,
   formError,
   isSubmitting,
+  MyAssetData,
   handleSubmit,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetRetireSubmit,
+  handleUniversalSubmit,
 }) => {
-
-  // Remove assigned assets
-  const AssetData = RemoveAssigned(AssetBasicInfoData);
-
   return (
     <div>
       {/* Header */}
@@ -73,10 +69,10 @@ const RetireAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetRetireSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "retire"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
-        {/* Select Asset */}
+        {/* Select Asset (Controlled) */}
         <SharedInput
           label="Select Asset"
           name="asset"
@@ -85,7 +81,7 @@ const RetireAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={MyAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -93,7 +89,7 @@ const RetireAssetForm = ({
           error={errors?.asset}
         />
 
-        {/* Action Type */}
+        {/* Action Type (Read-only) */}
         <SharedInput
           label="Action Type"
           name="action_type"
@@ -101,6 +97,24 @@ const RetireAssetForm = ({
           register={register}
           placeholder="Retire Asset"
           readOnly
+        />
+
+        {/* Priority */}
+        <SharedInput
+          label="Priority"
+          name="priority"
+          type="select"
+          register={register}
+          placeholder="Select Priority"
+          options={[
+            { label: "Select Priority", value: "" },
+            { label: "Critical", value: "critical" },
+            { label: "High", value: "high" },
+            { label: "Medium", value: "medium" },
+            { label: "Low", value: "low" },
+          ]}
+          rules={{ required: "Priority is required" }}
+          error={errors?.priority}
         />
 
         {/* Condition Rating */}

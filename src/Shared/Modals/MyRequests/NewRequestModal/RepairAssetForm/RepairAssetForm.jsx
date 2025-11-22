@@ -38,17 +38,13 @@ const RepairAssetForm = ({
   control,
   register,
   isLoading,
-  UserEmail,
   formError,
+  MyAssetData,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetRepairSubmit,
+  handleUniversalSubmit,
 }) => {
-
-  const AssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
-
   return (
     <div>
       {/* Header */}
@@ -77,10 +73,10 @@ const RepairAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetRepairSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "repair"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
-        {/* Select Asset (Controlled & Mandatory) */}
+        {/* Select Asset (Controlled) */}
         <SharedInput
           label="Select Asset"
           name="asset"
@@ -89,7 +85,7 @@ const RepairAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={MyAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -97,14 +93,32 @@ const RepairAssetForm = ({
           error={errors?.asset}
         />
 
-        {/* Action Type (Read-only fixed) */}
+        {/* Action Type (Read-only) */}
         <SharedInput
           label="Action Type"
           name="action_type"
           type="select"
           register={register}
-          placeholder="Repair Request"
+          placeholder="Repair Asset"
           readOnly
+        />
+
+        {/* Priority */}
+        <SharedInput
+          label="Priority"
+          name="priority"
+          type="select"
+          register={register}
+          placeholder="Select Priority"
+          options={[
+            { label: "Select Priority", value: "" },
+            { label: "Critical", value: "critical" },
+            { label: "High", value: "high" },
+            { label: "Medium", value: "medium" },
+            { label: "Low", value: "low" },
+          ]}
+          rules={{ required: "Priority is required" }}
+          error={errors?.priority}
         />
 
         {/* Issue Type */}
@@ -117,23 +131,6 @@ const RepairAssetForm = ({
           options={issueTypeOptions}
           rules={{ required: "Issue Type is required" }}
           error={errors?.issue_type}
-        />
-
-        {/* Priority */}
-        <SharedInput
-          label="Priority"
-          name="priority"
-          type="select"
-          register={register}
-          placeholder="Select Priority"
-          options={[
-            { label: "Critical", value: "critical" },
-            { label: "High", value: "high" },
-            { label: "Medium", value: "medium" },
-            { label: "Low", value: "low" },
-          ]}
-          rules={{ required: "Priority is required" }}
-          error={errors?.priority}
         />
 
         {/* Condition Rating */}

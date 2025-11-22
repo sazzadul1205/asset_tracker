@@ -2,22 +2,11 @@ import { useState } from "react";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-const priorityOptions = [
-  { label: "Low", value: "low" },
-  { label: "Medium", value: "medium" },
-  { label: "High", value: "high" },
-  { label: "Critical", value: "critical" },
-];
-
 const generalUpdateOptions = [
   { label: "Software Update", value: "software" },
   { label: "Hardware Upgrade", value: "hardware" },
   { label: "Configuration Change", value: "config" },
 ];
-
-function RemoveAssigned(data) {
-  return data.filter(item => !item.assigned_to);
-}
 
 const UpdateAssetRequestForm = ({
   reset,
@@ -25,19 +14,15 @@ const UpdateAssetRequestForm = ({
   control,
   register,
   isLoading,
-  UserEmail,
   formError,
+  MyAssetData,
   isSubmitting,
   handleSubmit,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetUpdateSubmit,
+  handleUniversalSubmit,
 }) => {
   const [updateType, setUpdateType] = useState("current");
   const [fullAssetOption, setFullAssetOption] = useState("inventory");
-
-  const MyAssetData = AssetBasicInfoData.filter(asset => asset.assigned_to === UserEmail);
-  const AssetData = RemoveAssigned(AssetBasicInfoData);
 
 
   // Payload builder
@@ -74,9 +59,9 @@ const UpdateAssetRequestForm = ({
       }
     }
     // Pass payload to your API or handler
-    onAssetUpdateSubmit(payload);
-  };
+    handleUniversalSubmit(payload, "update");
 
+  };
 
   return (
     <div>
@@ -102,19 +87,25 @@ const UpdateAssetRequestForm = ({
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)}
-        className="space-y-3 grid grid-cols-2 gap-4">
-        {/* Select Current Asset */}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-3 grid grid-cols-2 gap-4"
+      >
+        {/* Select Asset (Controlled) */}
         <SharedInput
-          label="Select Current Asset"
-          name="current_asset"
+          label="Select Asset"
+          name="asset"
           type="select"
           control={control}
-          searchable
-          placeholder="Search & select your asset"
-          rules={{ required: "Select asset is required" }}
-          options={MyAssetData.map(d => ({ label: `${d.asset_name} (${d.asset_tag})`, value: d.asset_tag }))}
-          error={errors?.current_asset}
+          searchable={true}
+          placeholder="Search & select asset"
+          rules={{ required: "Select Asset is required" }}
+          options={MyAssetData.map(d => ({
+            label: `${d.asset_name} (${d.asset_tag})`,
+            value: d.asset_tag,
+          }))}
+          defaultValue=""
+          error={errors?.asset}
         />
 
         {/* Action Type (Read-only) */}
@@ -123,7 +114,7 @@ const UpdateAssetRequestForm = ({
           name="action_type"
           type="select"
           register={register}
-          placeholder="Update Asset"
+          placeholder="Transfer Asset"
           readOnly
         />
 
@@ -133,9 +124,16 @@ const UpdateAssetRequestForm = ({
           name="priority"
           type="select"
           register={register}
-          placeholder="Select priority"
-          options={priorityOptions}
+          placeholder="Select Priority"
+          options={[
+            { label: "Select Priority", value: "" },
+            { label: "Critical", value: "critical" },
+            { label: "High", value: "high" },
+            { label: "Medium", value: "medium" },
+            { label: "Low", value: "low" },
+          ]}
           rules={{ required: "Priority is required" }}
+          error={errors?.priority}
         />
 
         {/* Update Type */}

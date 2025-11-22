@@ -4,11 +4,6 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-// Remove assigned assets from list
-export function RemoveAssigned(data) {
-  return data.filter(item => !item.assigned_to);
-}
-
 const AssignAssetForm = ({
   reset,
   errors,
@@ -18,14 +13,10 @@ const AssignAssetForm = ({
   formError,
   isSubmitting,
   handleSubmit,
+  AllAssetData,
   setSelectedAction,
-  AssetBasicInfoData,
-  onAssetAssignSubmit,
+  handleUniversalSubmit,
 }) => {
-
-  // Remove assigned assets
-  const AssetData = RemoveAssigned(AssetBasicInfoData);
-
   return (
     <div>
       {/* Header */}
@@ -54,7 +45,7 @@ const AssignAssetForm = ({
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit(onAssetAssignSubmit)}
+        onSubmit={handleSubmit((data) => handleUniversalSubmit(data, "assign"))}
         className="space-y-3 grid grid-cols-2 gap-4"
       >
         {/* Select Asset (Controlled) */}
@@ -66,7 +57,7 @@ const AssignAssetForm = ({
           searchable={true}
           placeholder="Search & select asset"
           rules={{ required: "Select Asset is required" }}
-          options={AssetData.map(d => ({
+          options={AllAssetData.map(d => ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
@@ -141,7 +132,7 @@ const AssignAssetForm = ({
             {isSubmitting || isLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Create Asset Request"
+              "Create Assign Request"
             )}
           </button>
         </div>
