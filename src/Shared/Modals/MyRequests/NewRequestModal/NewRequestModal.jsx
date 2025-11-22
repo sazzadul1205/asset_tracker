@@ -28,6 +28,9 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 import AssignAssetForm from "./AssignAssetForm/AssignAssetForm";
 import RequestAssetForm from "./RequestAssetForm/RequestAssetForm";
 import ReturnAssetForm from "./ReturnAssetForm/ReturnAssetForm";
+import RepairAssetForm from "./RepairAssetForm/RepairAssetForm";
+import RetireAssetForm from "./RetireAssetForm/RetireAssetForm";
+import UpdateAssetForm from "./UpdateAssetForm/UpdateAssetForm";
 
 
 // Action Items
@@ -234,6 +237,122 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData }) => {
     }
   };
 
+  // Handle Submit
+  const onAssetRepairSubmit = async (data) => {
+    setFormError(null);
+    setIsLoading(true);
+
+    try {
+      if (!UserEmail) {
+        setFormError("Session error: User email missing.");
+        return;
+      }
+
+      // Build payload
+      const payload = {
+        ...data,
+        action_type: 'repair',
+        requested_by: UserEmail,
+        requested_at: new Date().toISOString(),
+      };
+
+      // Make request
+      await axiosPublic.post("/Requests", payload);
+
+      RefetchAll();
+      handleClose();
+      success("Repair Asset Request Created Successfully.");
+    } catch (err) {
+      console.error("Error in onSubmit", err);
+      const serverError =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to make Repair Asset request.";
+      setFormError(serverError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Submit
+  const onAssetRetireSubmit = async (data) => {
+    setFormError(null);
+    setIsLoading(true);
+
+    try {
+      if (!UserEmail) {
+        setFormError("Session error: User email missing.");
+        return;
+      }
+
+      // Build payload
+      const payload = {
+        ...data,
+        action_type: 'retire',
+        requested_by: UserEmail,
+        requested_at: new Date().toISOString(),
+      };
+
+      // Make request
+      await axiosPublic.post("/Requests", payload);
+
+      RefetchAll();
+      handleClose();
+      success("Retire Asset Request Created Successfully.");
+    } catch (err) {
+      console.error("Error in onSubmit", err);
+      const serverError =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to make Retire Asset request.";
+      setFormError(serverError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Submit
+  const onAssetUpdateRequestSubmit = async (data) => {
+    setFormError(null);
+    setIsLoading(true);
+
+    try {
+      if (!UserEmail) {
+        setFormError("Session error: User email missing.");
+        return;
+      }
+
+      // Build payload
+      const payload = {
+        ...data,
+        action_type: 'update',
+        requested_by: UserEmail,
+        requested_at: new Date().toISOString(),
+      };
+
+      // Make request
+      // await axiosPublic.post("/Requests", payload);
+      console.log(payload);
+      
+
+
+      RefetchAll();
+      handleClose();
+      success("Retire Asset Request Created Successfully.");
+    } catch (err) {
+      console.error("Error in onSubmit", err);
+      const serverError =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to make Retire Asset request.";
+      setFormError(serverError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
   return (
     <div
       id="Add_Request_Modal"
@@ -350,10 +469,55 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData }) => {
             onAssetReturnSubmit={onAssetReturnSubmit}
           />
         }
-        {selectedAction === "repair" && "RepairAssetForm"}
-        {selectedAction === "retire" && "RetireAssetForm"}
+        {selectedAction === "repair" &&
+          <RepairAssetForm
+            reset={reset}
+            errors={errors}
+            control={control}
+            register={register}
+            isLoading={isLoading}
+            UserEmail={UserEmail}
+            formError={formError}
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            setSelectedAction={setSelectedAction}
+            AssetBasicInfoData={AssetBasicInfoData}
+            onAssetRepairSubmit={onAssetRepairSubmit}
+          />
+        }
+        {selectedAction === "retire" &&
+          <RetireAssetForm
+            reset={reset}
+            errors={errors}
+            control={control}
+            register={register}
+            isLoading={isLoading}
+            UserEmail={UserEmail}
+            formError={formError}
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            setSelectedAction={setSelectedAction}
+            AssetBasicInfoData={AssetBasicInfoData}
+            onAssetRetireSubmit={onAssetRetireSubmit}
+          />
+        }
         {selectedAction === "transfer" && "TransferAssetForm"}
-        {selectedAction === "update" && "UpdateAssetForm"}
+        {selectedAction === "update" &&
+          <UpdateAssetForm
+            reset={reset}
+            errors={errors}
+            control={control}
+            register={register}
+            isLoading={isLoading}
+            UserEmail={UserEmail}
+            formError={formError}
+            isSubmitting={isSubmitting}
+            handleSubmit={handleSubmit}
+            setSelectedAction={setSelectedAction}
+            AssetBasicInfoData={AssetBasicInfoData}
+            onAssetUpdateRequestSubmit={onAssetUpdateRequestSubmit}
+          />
+        }
         {selectedAction === "dispose" && "DisposeAssetForm"}
       </div>
     </div>
