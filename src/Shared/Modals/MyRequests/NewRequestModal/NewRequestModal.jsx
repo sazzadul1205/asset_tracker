@@ -1,9 +1,6 @@
 // React Components
 import React, { useState } from "react";
 
-// Next Components
-import { useSession } from 'next-auth/react';
-
 // React Hook Form
 import { useForm } from "react-hook-form";
 
@@ -33,6 +30,9 @@ import RetireAssetForm from "./RetireAssetForm/RetireAssetForm";
 import UpdateAssetForm from "./UpdateAssetForm/UpdateAssetForm";
 import DisposeAssetForm from "./DisposeAssetForm/DisposeAssetForm";
 import TransferAssetForm from "./TransferAssetForm/TransferAssetForm";
+
+// Utils
+import { getAssetsByEmail, RemoveAssigned } from "@/Utils/AssetRequestModalFunc";
 
 
 // Action Items
@@ -102,8 +102,12 @@ const rows = [
   actionItems.slice(6, 8),
 ];
 
-// Modal
-const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasicInfoData }) => {
+const NewRequestModal = ({
+  UserEmail,
+  RefetchAll,
+  UsersBasicInfoData,
+  AssetBasicInfoData,
+}) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
 
@@ -131,12 +135,20 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Handle Asset Assign Submit
-  const onAssetAssignSubmit = async (data) => {
+  // Remove assigned assets
+  const AllAssetData = RemoveAssigned(AssetBasicInfoData);
+
+  const MyAssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
+
+  // Handle Universal Submit
+  const handleUniversalSubmit = async (data, action_type) => {
     setFormError(null);
     setIsLoading(true);
 
+    // Make request
     try {
+
+      // If user email is missing
       if (!UserEmail) {
         setFormError("Session error: User email missing.");
         return;
@@ -145,115 +157,7 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
       // Build payload
       const payload = {
         ...data,
-        action_type: 'assign',
-        requested_by: UserEmail,
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Assign Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Assign Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Submit
-  const onAssetRequestSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'request',
-        requested_by: UserEmail,
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Request Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Request Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Submit
-  const onAssetReturnSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'return',
-        requested_by: UserEmail,
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Return Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Return Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Submit
-  const onAssetRepairSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'repair',
+        action_type,
         requested_by: UserEmail,
         requested_at: new Date().toISOString(),
       };
@@ -261,163 +165,16 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
       // Make request
       await axiosPublic.post("/Requests", payload);
 
+      // 
       RefetchAll();
       handleClose();
-      success("Repair Asset Request Created Successfully.");
+      success(`${action_type.toUpperCase()} Request Created Successfully.`);
     } catch (err) {
-      console.error("Error in onSubmit", err);
       const serverError =
         err.response?.data?.message ||
         err.message ||
-        "Failed to make Repair Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        `Failed to make ${action_type} request.`;
 
-  // Handle Submit
-  const onAssetRetireSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'retire',
-        requested_by: UserEmail,
-        requested_at: new Date().toISOString(),
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Retire Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Retire Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Submit
-  const onAssetTransferSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'transfer',
-        requested_by: UserEmail,
-        requested_at: new Date().toISOString(),
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Transfer Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Transfer Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Submit
-  const onAssetUpdateSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'update',
-        requested_by: UserEmail,
-        requested_at: new Date().toISOString(),
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Retire Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Retire Asset request.";
-      setFormError(serverError);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle Submit
-  const onAssetDeposeSubmit = async (data) => {
-    setFormError(null);
-    setIsLoading(true);
-
-    try {
-      if (!UserEmail) {
-        setFormError("Session error: User email missing.");
-        return;
-      }
-
-      // Build payload
-      const payload = {
-        ...data,
-        action_type: 'dispose',
-        requested_by: UserEmail,
-        requested_at: new Date().toISOString(),
-      };
-
-      // Make request
-      await axiosPublic.post("/Requests", payload);
-
-      RefetchAll();
-      handleClose();
-      success("Retire Asset Request Created Successfully.");
-    } catch (err) {
-      console.error("Error in onSubmit", err);
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to make Retire Asset request.";
       setFormError(serverError);
     } finally {
       setIsLoading(false);
@@ -503,12 +260,14 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             isLoading={isLoading}
             formError={formError}
             isSubmitting={isSubmitting}
+            AllAssetData={AllAssetData}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetAssignSubmit={onAssetAssignSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Request Asset Form */}
         {selectedAction === "request" &&
           <RequestAssetForm
             reset={reset}
@@ -517,13 +276,16 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             register={register}
             isLoading={isLoading}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
+            AllAssetData={AllAssetData}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetRequestSubmit={onAssetRequestSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Return Asset Form */}
         {selectedAction === "return" &&
           <ReturnAssetForm
             reset={reset}
@@ -531,15 +293,16 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             control={control}
             register={register}
             isLoading={isLoading}
-            UserEmail={UserEmail}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetReturnSubmit={onAssetReturnSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Repair Asset Form */}
         {selectedAction === "repair" &&
           <RepairAssetForm
             reset={reset}
@@ -547,15 +310,16 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             control={control}
             register={register}
             isLoading={isLoading}
-            UserEmail={UserEmail}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetRepairSubmit={onAssetRepairSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Retire Asset Form */}
         {selectedAction === "retire" &&
           <RetireAssetForm
             reset={reset}
@@ -564,13 +328,15 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             register={register}
             isLoading={isLoading}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetRetireSubmit={onAssetRetireSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Transfer Asset Form */}
         {selectedAction === "transfer" &&
           <TransferAssetForm
             reset={reset}
@@ -578,16 +344,16 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             control={control}
             register={register}
             isLoading={isLoading}
-            UserEmail={UserEmail}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            UsersBasicInfoData={UsersBasicInfoData}
-            onAssetTransferSubmit={onAssetTransferSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Update Asset Form */}
         {selectedAction === "update" &&
           <UpdateAssetForm
             reset={reset}
@@ -595,15 +361,16 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             control={control}
             register={register}
             isLoading={isLoading}
-            UserEmail={UserEmail}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetUpdateSubmit={onAssetUpdateSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
+
+        {/* Dispose Asset Form */}
         {selectedAction === "dispose" &&
           <DisposeAssetForm
             reset={reset}
@@ -612,11 +379,11 @@ const NewRequestModal = ({ RefetchAll, UserEmail, AssetBasicInfoData, UsersBasic
             register={register}
             isLoading={isLoading}
             formError={formError}
+            MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
-            AssetBasicInfoData={AssetBasicInfoData}
-            onAssetDeposeSubmit={onAssetDeposeSubmit}
+            handleUniversalSubmit={handleUniversalSubmit}
           />
         }
       </div>
