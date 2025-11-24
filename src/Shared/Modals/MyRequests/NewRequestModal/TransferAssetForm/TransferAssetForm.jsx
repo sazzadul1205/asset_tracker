@@ -86,7 +86,6 @@ const TransferAssetForm = ({
           register={register}
           placeholder="Select Priority"
           options={[
-            { label: "Select Priority", value: "" },
             { label: "Critical", value: "critical" },
             { label: "High", value: "high" },
             { label: "Medium", value: "medium" },

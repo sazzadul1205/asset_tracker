@@ -28,7 +28,6 @@ const ViewAssetModal = ({
   setSelectedAsset,
 }) => {
 
-
   // Handle Close
   const handleClose = () => {
     setSelectedAsset(null);

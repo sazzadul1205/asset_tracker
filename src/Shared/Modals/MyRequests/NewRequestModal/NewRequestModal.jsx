@@ -166,13 +166,17 @@ const NewRequestModal = ({
       // Make request
       await axiosPublic.post("/Requests", payload);
 
-
+      // Refetch
       RefetchAll();
       handleClose();
+
+      // Success Message
       const capitalizeFirst = (str) =>
         str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
       success(`${capitalizeFirst(action_type)} request created successfully.`);
     } catch (err) {
+
+      // Handle error
       const serverError =
         err.response?.data?.message ||
         err.message ||
