@@ -84,11 +84,6 @@ const MyAssetsPage = () => {
   // Handle errors
   if (MyAssetsError) { return <Error errors={[MyAssetsError]} /> }
 
-  // Refetch all
-  const RefetchAll = () => {
-    MyAssetsRefetch();
-  };
-
   return (
     <div>
       {/* Header */}
