@@ -6,7 +6,7 @@ import { generateId } from "@/Utils/generateId";
 // Helper to get current UTC timestamp
 const getTimestamp = () => new Date().toISOString();
 
-// GET: Fetch all Requests with optional search & pagination
+// GET: Fetch all Requests with optional search, pagination & requested_by filter
 export const GET = async (request) => {
   try {
     const db = await connectDB();
@@ -14,13 +14,21 @@ export const GET = async (request) => {
 
     const {
       search,
+      requested_by, // NEW: optional filter
       page = 1,
       limit = 10,
     } = Object.fromEntries(new URL(request.url).searchParams.entries());
 
     const filters = {};
+
+    // Filter by search term
     if (search) {
       filters.request_title = { $regex: search, $options: "i" };
+    }
+
+    // Filter by requested_by if provided
+    if (requested_by) {
+      filters.requested_by = requested_by;
     }
 
     const total = await collection.countDocuments(filters);

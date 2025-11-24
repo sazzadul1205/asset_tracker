@@ -2,16 +2,25 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
-// GET Method - Fetch a single asset by asset_id
+// GET Method - Fetch a single asset by asset_id or asset_tag
 export const GET = async (req, context) => {
   try {
     const params = await context.params;
     const { asset_id } = params;
 
+    if (!asset_id) {
+      return NextResponse.json(
+        { message: "asset_id or asset_tag is required" },
+        { status: 400 }
+      );
+    }
+
     const db = await connectDB();
     const assetsCollection = db.collection("Assets");
 
-    const asset = await assetsCollection.findOne({ asset_id });
+    const asset = await assetsCollection.findOne({
+      $or: [{ asset_id }, { asset_tag: asset_id }],
+    });
 
     if (!asset) {
       return NextResponse.json({ message: "Asset not found" }, { status: 404 });
