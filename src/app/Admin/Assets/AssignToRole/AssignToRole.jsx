@@ -7,13 +7,10 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 const AssignToRole = ({ email, showOnlyName = false }) => {
   const axiosPublic = useAxiosPublic();
 
-  // Fetch IndividualCategory
-  const { data, isLoading, isError, error } = useQuery({
+  // Fetch user data
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["UserByEmail", email],
-    queryFn: () =>
-      axiosPublic
-        .get(`/Users/ByEmail/${email}`)
-        .then((res) => res.data),
+    queryFn: () => axiosPublic.get(`/Users/ByEmail/${email}`).then(res => res.data),
     keepPreviousData: true,
     enabled: !!email,
   });
@@ -25,10 +22,9 @@ const AssignToRole = ({ email, showOnlyName = false }) => {
       ? "Not Found"
       : data
         ? showOnlyName
-          ? data?.position
-          : data?.position
+          ? data?.full_name || "No Name"
+          : data?.position || "No Position"
         : "Un Assigned";
-
 
   return (
     <p className="text-sm font-medium text-gray-800">{displayText}</p>

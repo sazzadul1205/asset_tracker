@@ -15,6 +15,7 @@ const AssignAssetForm = ({
   handleSubmit,
   AllAssetData,
   setSelectedAction,
+  UsersBasicInfoData,
   handleUniversalSubmit,
 }) => {
   return (
@@ -74,6 +75,35 @@ const AssignAssetForm = ({
           placeholder="Assign Asset"
           readOnly
         />
+        
+        {/* Assign To (User) */}
+        <SharedInput
+          label="Assign To"
+          name="assign_to"
+          type="select"
+          control={control}
+          searchable={true}
+          placeholder="Search & select user"
+          rules={{ required: "Select User is required" }}
+          options={UsersBasicInfoData?.map(d => ({
+            label: `${d.full_name} (${d.employee_id})`,
+            value: d.employee_id,
+          }))}
+          defaultValue=""
+          error={errors?.assign_to}
+        />
+
+        {/* Expected Return Date (Controlled) */}
+        <SharedInput
+          label="Expected Return Date"
+          name="return_date"
+          type="date"
+          control={control}
+          placeholder="Select return date"
+          defaultValue=""
+          dateLimit="future"
+          error={errors?.return_date}
+        />
 
         {/* Priority */}
         <SharedInput
@@ -90,18 +120,6 @@ const AssignAssetForm = ({
           ]}
           rules={{ required: "Priority is required" }}
           error={errors?.priority}
-        />
-
-        {/* Expected Return Date (Controlled) */}
-        <SharedInput
-          label="Expected Return Date"
-          name="return_date"
-          type="date"
-          control={control}
-          placeholder="Select return date"
-          defaultValue=""
-          dateLimit="future"
-          error={errors?.return_date}
         />
 
         {/* Notes */}
