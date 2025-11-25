@@ -22,6 +22,7 @@ import { FiCalendar, FiClock, FiDollarSign, FiMapPin, FiUser, FiUserCheck } from
 import BarcodeGenerator from '@/app/Admin/Assets/Barcode/Barcode';
 import CategoryToIcon from '@/app/Admin/Assets/CategoryToIcon/CategoryToIcon';
 import LocationToDepartment from '@/app/Admin/Assets/LocationToDepartment/LocationToDepartment';
+import AssignToRole from '@/app/Admin/Assets/AssignToRole/AssignToRole';
 
 const ViewAssetModal = ({
   selectedAsset,
@@ -151,7 +152,8 @@ const ViewAssetModal = ({
               <FiUserCheck className="text-gray-500 w-5 h-5" />
               <div>
                 <p className="text-sm text-gray-500">Assigned To</p>
-                <p className="font-medium">{selectedAsset?.assigned_to || "N/A"}</p>
+                {/* <p className="font-medium">{selectedAsset?.assigned_to || "N/A"}</p> */}
+                <AssignToRole email={selectedAsset?.assigned_to} showOnlyName />
               </div>
             </div>
 

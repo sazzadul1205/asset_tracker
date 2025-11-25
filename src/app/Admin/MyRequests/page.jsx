@@ -296,6 +296,7 @@ const MyRequestsPage = () => {
         RefetchAll={RefetchAll}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        UserRole={session?.user?.role}
         UserEmail={session?.user?.email}
       />
 
@@ -323,9 +324,10 @@ const MyRequestsList = ({
   data,
   error,
   isError,
+  UserRole,
+  UserEmail,
   isLoading,
   RefetchAll,
-  UserEmail,
   hasNextPage,
   fetchNextPage,
 }) => {
@@ -376,6 +378,7 @@ const MyRequestsList = ({
           allRequests.map((request, index) => (
             <RequestCard
               key={`${request.request_id || request._id}-${index}` || index}
+              UserRole={UserRole}
               UserEmail={UserEmail}
               MyRequestData={request}
               RefetchAll={RefetchAll}
