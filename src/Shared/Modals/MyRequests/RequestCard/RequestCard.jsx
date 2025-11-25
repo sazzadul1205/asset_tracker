@@ -3,6 +3,7 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 import { useQuery } from '@tanstack/react-query';
 import { BsClock, BsPerson, BsStar, BsFlag, BsBox } from "react-icons/bs";
 import React from 'react';
+import AssignToRole from '@/app/Admin/Assets/AssignToRole/AssignToRole';
 
 // Map action_type to colors
 const actionTypeColors = {
@@ -21,7 +22,7 @@ const statusColors = {
   accepted: { bg: "bg-green-100", text: "text-green-700" },
   rejected: { bg: "bg-red-100", text: "text-red-700" },
   expired: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  pending: { bg: "bg-gray-100", text: "text-gray-700" }, // default
+  pending: { bg: "bg-gray-100", text: "text-gray-700" },
 };
 
 // Function to format date
@@ -41,8 +42,8 @@ const formatDate = (dateStr) => {
 const RequestCard = ({ MyRequestData }) => {
   const axiosPublic = useAxiosPublic();
 
-  // Fetch Selected Asset Data
-  const request = MyRequestData?.data?.[6];
+  // Destructure MyRequestData
+  const request = MyRequestData
 
   // Fetch Selected Asset Data
   const {
@@ -75,116 +76,140 @@ const RequestCard = ({ MyRequestData }) => {
   };
 
   return (
-    <div className='mx-5 my-2 p-6 bg-white border border-gray-300 rounded-lg text-black' >
-      <div className='' >
-        {/* Top Part */}
-        <div className='flex items-center gap-5 mb-1' >
-          {/* Title */}
-          <h3 className='text-lg font-semibold text-gray-900'>
-            {getTitle(request?.action_type, request?.request_id)}
-          </h3>
+    <div className="mx-5 my-5 p-6 bg-white border border-gray-300 rounded-lg text-black transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">      <div className='' >
+      {/* Top Part */}
+      <div className='flex items-center gap-5 mb-1' >
+        {/* Title */}
+        <h3 className='text-lg font-semibold text-gray-900'>
+          {getTitle(request?.action_type, request?.request_id) || "Unknown"}
+        </h3>
 
-          {/* Action Type Badge */}
-          <span
-            className={`px-5 py-1 text-xs font-medium rounded-xl ${actionTypeColors[request?.action_type]?.bg || "bg-gray-100"
-              } ${actionTypeColors[request?.action_type]?.text || "text-gray-700"
-              }`}
-          >
-            {request?.action_type
-              ? `${request?.action_type.charAt(0).toUpperCase()}${request?.action_type.slice(1)}`
-              : "Unknown"}
-          </span>
-
-
-          {/* Barcode */}
-          {SelectAssetIsLoading ? (
-            <p className="text-gray-500">Loading asset...</p>
-          ) : SelectAssetError ? (
-            <p className="text-red-500">Error fetching asset: {SelectAssetError.message}</p>
-          ) : SelectAssetData ? (
-            <BarcodeGenerator
-              padding={0}
-              barWidth={1}
-              barHeight={30}
-              numberText="xs"
-              numberBellow={0}
-              number={SelectAssetData.asset_tag || SelectAssetData.asset?.value} // fallback
-            />
-          ) : (
-            <p className="text-gray-400">No asset data available</p>
-          )}
-
-          {/* Status Badge */}
-          <span
-            className={`px-5 py-1 text-xs font-medium rounded-xl ${statusColors[request?.status?.toLowerCase()]?.bg || statusColors.pending.bg
-              } ${statusColors[request?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
-          >
-            {request?.status
-              ? request.status.charAt(0).toUpperCase() + request.status.slice(1)
-              : "Pending"}
-          </span>
+        {/* Action Type Badge */}
+        <span
+          className={`px-5 py-1 text-xs font-medium rounded-xl ${actionTypeColors[request?.action_type]?.bg || "bg-gray-100"
+            } ${actionTypeColors[request?.action_type]?.text || "text-gray-700"
+            }`}
+        >
+          {request?.action_type
+            ? `${request?.action_type.charAt(0).toUpperCase()}${request?.action_type.slice(1)}`
+            : "Unknown"}
+        </span>
 
 
-        </div>
+        {/* Barcode */}
+        {SelectAssetIsLoading ? (
+          <p className="text-gray-500">Loading asset...</p>
+        ) : SelectAssetError ? (
+          <p className="text-red-500">Error fetching asset: {SelectAssetError.message || "Unknown"}</p>
+        ) : SelectAssetData ? (
+          <BarcodeGenerator
+            padding={0}
+            barWidth={1}
+            barHeight={30}
+            numberText="xs"
+            numberBellow={0}
+            number={SelectAssetData.asset_tag || SelectAssetData.asset?.value} // fallback
+          />
+        ) : (
+          <p className="text-gray-400">No asset data available</p>
+        )}
 
-        {/* Middle Part */}
-        <div >
-          {/* Title */}
-          <h3 className='text-sm text-gray-600 mb-2'  >Description :</h3>
+        {/* Status Badge */}
+        <span
+          className={`px-5 py-1 text-xs font-medium rounded-xl ${statusColors[request?.status?.toLowerCase()]?.bg || statusColors.pending.bg
+            } ${statusColors[request?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
+        >
+          {request?.status
+            ? request.status.charAt(0).toUpperCase() + request.status.slice(1)
+            : "Pending"}
+        </span>
 
-          {/* Description */}
-          <p className='text-sm text-gray-700' >{request?.notes || ""}</p>
 
-          {/* Information */}
+      </div>
+
+      {/* Middle Part */}
+      <div >
+        {/* Title */}
+        <h3 className='text-sm text-gray-600 mb-2'  >Description :</h3>
+
+        {/* Description */}
+        <p className='text-sm text-gray-700' >{request?.notes || ""}</p>
+
+        {/* Information */}
+
+        {request?.action_type === "return" && (
           <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-medium' >
             Return Request: When accepted, this asset will be returned to your Manager.
           </div>
+        )}
 
-          {/* Reply */}
-          {request?.reply && (
-            <>
-              {/* Title */}
-              <h3 className='text-sm text-gray-600 my-2' >
-                Reply / Notes:
-              </h3>
+        {request?.action_type === "assign" && (
+          <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-medium' >
+            Assign Request: When accepted, this asset will be assigned to you.
+          </div>
+        )
+        }
 
-              {/* Reply - text */}
-              <div className='text-sm text-gray-700 bg-gray-50 p-2 rounded' >
-                {request?.reply || ""}
-              </div>
-            </>
+        {/* Reply */}
+        {request?.reply && (
+          <>
+            {/* Title */}
+            <h3 className='text-sm text-gray-600 my-2' >
+              Reply / Notes:
+            </h3>
+
+            {/* Reply - text */}
+            <div className='text-sm text-gray-700 bg-gray-50 p-2 rounded' >
+              {request?.reply || ""}
+            </div>
+          </>
+        )}
+
+      </div>
+
+      {/* Bottom Part - Remaining Data with Icons */}
+      <div className='mt-4 text-sm text-gray-800'>
+        <div className='flex flex-wrap gap-5'>
+          {request?.asset && (
+            <p className='flex items-center gap-1'>
+              <BsBox />
+              Asset: {request?.asset?.label || ""}
+            </p>
           )}
 
-        </div>
+          {/* Request Priority */}
+          {request?.priority && (
+            <p className='flex items-center gap-1'><BsFlag /> Priority: {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}</p>
+          )}
 
-        {/* Bottom Part - Remaining Data with Icons */}
-        <div className='mt-4 text-sm text-gray-800'>
-          <div className='flex flex-wrap gap-5'>
-            {request?.asset && (
-              <p className='flex items-center gap-1'>
-                <BsBox />
-                Asset: {request?.asset?.label || ""}
-              </p>
-            )}
-            {request?.priority && (
-              <p className='flex items-center gap-1'><BsFlag /> Priority: {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}</p>
-            )}
-            {request?.return_date && (
-              <p className='flex items-center gap-1'><BsClock /> Return: {formatDate(request.requested_at)}</p>
-            )}
-            {request?.condition_rating && (
-              <p className='flex items-center gap-1'><BsStar /> Condition: {request.condition_rating.charAt(0).toUpperCase() + request.condition_rating.slice(1)}</p>
-            )}
-            {request?.requested_by && (
-              <p className='flex items-center gap-1'><BsPerson /> Requested By: {request.requested_by}</p>
-            )}
-            {request?.requested_at && (
-              <p className='flex items-center gap-1'><BsClock /> Requested At: {formatDate(request.requested_at)}</p>
-            )}
-          </div>
+          {/* Request Return Date -- Assign */}
+          {request?.return_date && ["assign"].includes(request?.action_type) && (
+            <p className="flex items-center gap-1">
+              <BsClock /> Expected Return: {formatDate(request.return_date)}
+            </p>
+          )}
+
+
+          {/* Asset Condition */}
+          {request?.condition_rating && (
+            <p className='flex items-center gap-1'><BsStar /> Condition: {request.condition_rating.charAt(0).toUpperCase() + request.condition_rating.slice(1)}</p>
+          )}
+
+          {/* Requested By */}
+          {request?.requested_by && (
+            <p className='flex items-center gap-1'><BsPerson /> Requested By:
+              <AssignToRole email={request?.requested_by?.email} showOnlyName />
+            </p>
+          )}
+
+          {/* Requested At */}
+          {request?.requested_at && (
+            <p className='flex items-center gap-1'><BsClock /> Requested At: {formatDate(request.requested_at)}</p>
+          )}
         </div>
       </div>
     </div>
+    </div >
   );
 };
 
