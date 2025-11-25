@@ -12,7 +12,7 @@ export const GET = async (request) => {
     const email = searchParams.get("email");
 
     // Build filter
-    const filter = email ? { requested_by: email } : {};
+    const filter = email ? { "requested_by.email": email } : {};
 
     // 1. Count all matching documents
     const totalCount = await collection.countDocuments(filter);

@@ -28,7 +28,7 @@ export const GET = async (request) => {
 
     // Filter by requested_by if provided
     if (requested_by) {
-      filters.requested_by = requested_by;
+      filters["requested_by.email"] = requested_by;
     }
 
     const total = await collection.countDocuments(filters);
