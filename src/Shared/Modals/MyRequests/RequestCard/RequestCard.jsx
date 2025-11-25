@@ -1,8 +1,24 @@
-import BarcodeGenerator from '@/app/Admin/Assets/Barcode/Barcode';
-import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import { useQuery } from '@tanstack/react-query';
-import { BsClock, BsPerson, BsStar, BsFlag, BsBox } from "react-icons/bs";
 import React from 'react';
+
+// Icons
+import {
+  BsBoxSeam,
+  BsHourglass,
+  BsShieldCheck,
+  BsPersonBadge,
+  BsPersonCircle,
+  BsCalendarEvent,
+  BsExclamationTriangle,
+} from "react-icons/bs";
+
+// Tanstack
+import { useQuery } from '@tanstack/react-query';
+
+// Hooks
+import useAxiosPublic from '@/Hooks/useAxiosPublic';
+
+// Components
+import BarcodeGenerator from '@/app/Admin/Assets/Barcode/Barcode';
 import AssignToRole from '@/app/Admin/Assets/AssignToRole/AssignToRole';
 
 // Map action_type to colors
@@ -39,7 +55,7 @@ const formatDate = (dateStr) => {
   return date.toLocaleString("en-US", options);
 };
 
-const RequestCard = ({ MyRequestData }) => {
+const RequestCard = ({ MyRequestData, UserEmail }) => {
   const axiosPublic = useAxiosPublic();
 
   // Destructure MyRequestData
@@ -78,53 +94,80 @@ const RequestCard = ({ MyRequestData }) => {
   return (
     <div className="mx-5 my-5 p-6 bg-white border border-gray-300 rounded-lg text-black transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">      <div className='' >
       {/* Top Part */}
-      <div className='flex items-center gap-5 mb-1' >
-        {/* Title */}
-        <h3 className='text-lg font-semibold text-gray-900'>
-          {getTitle(request?.action_type, request?.request_id) || "Unknown"}
-        </h3>
+      <div className='flex justify-between items-center mb-1' >
+        {/* Top Left */}
+        <div className='flex items-center gap-5' >
+          {/* Title */}
+          <h3 className='text-lg font-semibold text-gray-900'>
+            {getTitle(request?.action_type, request?.request_id) || "Unknown"}
+          </h3>
 
-        {/* Action Type Badge */}
-        <span
-          className={`px-5 py-1 text-xs font-medium rounded-xl ${actionTypeColors[request?.action_type]?.bg || "bg-gray-100"
-            } ${actionTypeColors[request?.action_type]?.text || "text-gray-700"
-            }`}
-        >
-          {request?.action_type
-            ? `${request?.action_type.charAt(0).toUpperCase()}${request?.action_type.slice(1)}`
-            : "Unknown"}
-        </span>
+          {/* Action Type Badge */}
+          <span
+            className={`px-5 py-1 text-xs font-medium rounded-xl ${actionTypeColors[request?.action_type]?.bg || "bg-gray-100"
+              } ${actionTypeColors[request?.action_type]?.text || "text-gray-700"
+              }`}
+          >
+            {request?.action_type
+              ? `${request?.action_type.charAt(0).toUpperCase()}${request?.action_type.slice(1)}`
+              : "Unknown"}
+          </span>
 
+          {/* Barcode */}
+          {SelectAssetIsLoading ? (
+            <p className="text-gray-500">Loading asset...</p>
+          ) : SelectAssetError ? (
+            <p className="text-red-500">Error fetching asset: {SelectAssetError.message || "Unknown"}</p>
+          ) : SelectAssetData ? (
+            <BarcodeGenerator
+              padding={0}
+              barWidth={1}
+              barHeight={30}
+              numberText="xs"
+              numberBellow={0}
+              number={SelectAssetData.asset_tag || SelectAssetData.asset?.value} // fallback
+            />
+          ) : (
+            <p className="text-gray-400">No asset data available</p>
+          )}
 
-        {/* Barcode */}
-        {SelectAssetIsLoading ? (
-          <p className="text-gray-500">Loading asset...</p>
-        ) : SelectAssetError ? (
-          <p className="text-red-500">Error fetching asset: {SelectAssetError.message || "Unknown"}</p>
-        ) : SelectAssetData ? (
-          <BarcodeGenerator
-            padding={0}
-            barWidth={1}
-            barHeight={30}
-            numberText="xs"
-            numberBellow={0}
-            number={SelectAssetData.asset_tag || SelectAssetData.asset?.value} // fallback
-          />
-        ) : (
-          <p className="text-gray-400">No asset data available</p>
-        )}
+          {/* Status Badge */}
+          <span
+            className={`px-5 py-1 text-xs font-medium rounded-xl ${statusColors[request?.status?.toLowerCase()]?.bg || statusColors.pending.bg
+              } ${statusColors[request?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
+          >
+            {request?.status
+              ? request.status.charAt(0).toUpperCase() + request.status.slice(1)
+              : "Pending"}
+          </span>
+        </div>
 
-        {/* Status Badge */}
-        <span
-          className={`px-5 py-1 text-xs font-medium rounded-xl ${statusColors[request?.status?.toLowerCase()]?.bg || statusColors.pending.bg
-            } ${statusColors[request?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
-        >
-          {request?.status
-            ? request.status.charAt(0).toUpperCase() + request.status.slice(1)
-            : "Pending"}
-        </span>
+        {/* Top Right */}
+        <div className="flex items-center gap-3 w-full max-w-sm">
+          {/* Accept Button */}
+          <button
+            className="
+            w-full px-4 py-2 rounded-lg font-medium
+            bg-green-600 text-white shadow-md
+            hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5
+            active:translate-y-px active:shadow-md
+            transition-all duration-200"
+          >
+            Accept
+          </button>
 
-
+          {/* Reject Button */}
+          <button
+            className="
+            w-full px-4 py-2 rounded-lg font-medium
+            bg-red-600 text-white shadow-md
+            hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5
+            active:translate-y-px active:shadow-md
+            transition-all duration-200"
+          >
+            Reject
+          </button>
+        </div>
       </div>
 
       {/* Middle Part */}
@@ -143,12 +186,27 @@ const RequestCard = ({ MyRequestData }) => {
           </div>
         )}
 
+        {/* Assign */}
         {request?.action_type === "assign" && (
-          <div className='mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-medium' >
-            Assign Request: When accepted, this asset will be assigned to you.
+          <div className="mt-2 p-3 rounded-lg text-sm font-medium
+                  border bg-blue-50 border-blue-200 text-blue-800">
+
+            {/* Personalized message */}
+            {UserEmail === request?.requested_by?.email ? (
+              // If the request was created BY the logged-in user
+              <div className='flex gap-2' >
+                <span className='font-bold' >Assign Request:</span>
+                When approved, this asset will be assigned to
+                <AssignToRole employee_id={request?.assign_to?.value} showOnlyName />
+              </div>
+            ) : (
+              // If it's assigned to someone else
+              <p>Assign Request: When approved, this asset will be assigned to <b>you</b>.</p>
+            )}
+
           </div>
-        )
-        }
+        )}
+
 
         {/* Reply */}
         {request?.reply && (
@@ -164,47 +222,73 @@ const RequestCard = ({ MyRequestData }) => {
             </div>
           </>
         )}
-
       </div>
 
       {/* Bottom Part - Remaining Data with Icons */}
-      <div className='mt-4 text-sm text-gray-800'>
-        <div className='flex flex-wrap gap-5'>
+      <div className='mt-5 text-sm text-gray-800'>
+        <div className='flex flex-wrap gap-6'>
+          {/* Asset */}
           {request?.asset && (
-            <p className='flex items-center gap-1'>
-              <BsBox />
-              Asset: {request?.asset?.label || ""}
+            <p className='flex items-center gap-2'>
+              <BsBoxSeam className='text-xl' />
+              <span className='font-semibold' >Asset:</span> {request?.asset?.label || ""}
             </p>
           )}
 
-          {/* Request Priority */}
+          {/* Priority */}
           {request?.priority && (
-            <p className='flex items-center gap-1'><BsFlag /> Priority: {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}</p>
-          )}
-
-          {/* Request Return Date -- Assign */}
-          {request?.return_date && ["assign"].includes(request?.action_type) && (
-            <p className="flex items-center gap-1">
-              <BsClock /> Expected Return: {formatDate(request.return_date)}
+            <p className='flex items-center gap-2'>
+              <BsExclamationTriangle className='text-xl text-red-500' />
+              <span className='font-semibold' >Priority:</span> {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
             </p>
           )}
 
+          {/* Expected Return */}
+          {request?.return_date && ["assign"].includes(request?.action_type) && (
+            <p className="flex items-center gap-2">
+              <BsCalendarEvent className="text-xl" />
+              <span className="font-semibold">Expected Return:</span>
 
-          {/* Asset Condition */}
+              {
+                isNaN(new Date(request?.return_date).getTime())
+                  ? "Undecided"
+                  : formatDate(request.return_date)
+              }
+            </p>
+          )}
+
+          {/* Condition */}
           {request?.condition_rating && (
-            <p className='flex items-center gap-1'><BsStar /> Condition: {request.condition_rating.charAt(0).toUpperCase() + request.condition_rating.slice(1)}</p>
+            <p className='flex items-center gap-2'>
+              <BsShieldCheck className='text-xl' />
+              <span className='font-semibold' >Condition: </span>{request.condition_rating.charAt(0).toUpperCase() + request.condition_rating.slice(1)}
+            </p>
           )}
 
           {/* Requested By */}
           {request?.requested_by && (
-            <p className='flex items-center gap-1'><BsPerson /> Requested By:
+            <div className='flex items-center gap-2'>
+              <BsPersonCircle className='text-xl' />
+              <span className='font-semibold' > Requested By:</span>
               <AssignToRole email={request?.requested_by?.email} showOnlyName />
-            </p>
+            </div>
+          )}
+
+          {/* Assigned To */}
+          {request?.assign_to && (
+            <div className='flex items-center gap-2'>
+              <BsPersonBadge className='text-xl' />
+              <span className='font-semibold' >Assigned To:</span>
+              <AssignToRole employee_id={request?.assign_to?.value} showOnlyName />
+            </div>
           )}
 
           {/* Requested At */}
           {request?.requested_at && (
-            <p className='flex items-center gap-1'><BsClock /> Requested At: {formatDate(request.requested_at)}</p>
+            <p className='flex items-center gap-2'>
+              <BsHourglass className='text-xl' />
+              <span className='font-semibold' >Requested At:</span> {formatDate(request.requested_at)}
+            </p>
           )}
         </div>
       </div>

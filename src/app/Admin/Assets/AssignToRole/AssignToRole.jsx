@@ -4,18 +4,28 @@ import { useQuery } from "@tanstack/react-query";
 // Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
-const AssignToRole = ({ email, showOnlyName = false }) => {
+const AssignToRole = ({ email, employee_id, showOnlyName = false }) => {
   const axiosPublic = useAxiosPublic();
 
-  // Fetch user data
+  // Decide which lookup to use
+  const lookupType = employee_id ? "employee_id" : email ? "email" : null;
+  const queryKey = lookupType === "employee_id"
+    ? ["UserByEmployeeId", employee_id]
+    : ["UserByEmail", email];
+
+  const queryFn =
+    lookupType === "employee_id"
+      ? () => axiosPublic.get(`/Users/${employee_id}`).then(res => res.data)
+      : () => axiosPublic.get(`/Users/ByEmail/${email}`).then(res => res.data);
+
+  // Fetch user
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["UserByEmail", email],
-    queryFn: () => axiosPublic.get(`/Users/ByEmail/${email}`).then(res => res.data),
+    queryKey,
+    queryFn,
+    enabled: !!lookupType,
     keepPreviousData: true,
-    enabled: !!email,
   });
 
-  // Determine text to display
   const displayText = isLoading
     ? "Loading..."
     : isError
@@ -26,9 +36,7 @@ const AssignToRole = ({ email, showOnlyName = false }) => {
           : data?.position || "No Position"
         : "Un Assigned";
 
-  return (
-    <p className="text-sm font-medium text-gray-800">{displayText}</p>
-  );
+  return <p className="text-sm font-medium text-gray-800">{displayText}</p>;
 };
 
 export default AssignToRole;

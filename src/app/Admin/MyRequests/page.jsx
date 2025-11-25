@@ -296,6 +296,7 @@ const MyRequestsPage = () => {
         RefetchAll={RefetchAll}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        UserEmail={session?.user?.email}
       />
 
       {/* Add Request Modal */}
@@ -324,6 +325,7 @@ const MyRequestsList = ({
   isError,
   isLoading,
   RefetchAll,
+  UserEmail,
   hasNextPage,
   fetchNextPage,
 }) => {
@@ -374,6 +376,7 @@ const MyRequestsList = ({
           allRequests.map((request, index) => (
             <RequestCard
               key={`${request.request_id || request._id}-${index}` || index}
+              UserEmail={UserEmail}
               MyRequestData={request}
               RefetchAll={RefetchAll}
             />
