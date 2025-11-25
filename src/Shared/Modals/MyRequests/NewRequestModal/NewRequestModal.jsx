@@ -103,6 +103,7 @@ const rows = [
 ];
 
 const NewRequestModal = ({
+  UserId,
   UserEmail,
   RefetchAll,
   UsersBasicInfoData,
@@ -159,7 +160,10 @@ const NewRequestModal = ({
       const payload = {
         ...data,
         action_type,
-        requested_by: UserEmail,
+        requested_by: {
+          id: UserId,
+          email: UserEmail,
+        },
         requested_at: new Date().toISOString(),
       };
 
@@ -270,6 +274,7 @@ const NewRequestModal = ({
             AllAssetData={AllAssetData}
             handleSubmit={handleSubmit}
             setSelectedAction={setSelectedAction}
+            UsersBasicInfoData={UsersBasicInfoData}
             handleUniversalSubmit={handleUniversalSubmit}
           />
         }

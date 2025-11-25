@@ -1,13 +1,12 @@
 "use client";
 
 // React Components
-import React from 'react';
+import React, { useState } from 'react';
 
 // Next Components
 import { useSession } from 'next-auth/react';
 
 // Icons
-import { FaPlus } from 'react-icons/fa';
 import {
   IoTrashOutline,
   IoBuildOutline,
@@ -19,21 +18,26 @@ import {
   IoDocumentTextOutline,
   IoReturnDownBackOutline,
 } from "react-icons/io5";
+import { FaPlus } from 'react-icons/fa';
+import { BsInbox } from 'react-icons/bs';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
+// Packages
+import InfiniteScroll from "react-infinite-scroll-component";
 
 // Tanstack
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+import RequestCard from '@/Shared/Modals/MyRequests/RequestCard/RequestCard';
 
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
 
 // Shared - Modal
 import NewRequestModal from '@/Shared/Modals/MyRequests/NewRequestModal/NewRequestModal';
-import RequestCard from '@/Shared/Modals/MyRequests/RequestCard/RequestCard';
 
 const MyRequestsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -81,26 +85,28 @@ const MyRequestsPage = () => {
     enabled: !!session?.user?.email,
   });
 
-  // Fetch My Request Data
+  // Fetch Infinite Request Data
   const {
-    data: MyRequestData,
-    error: MyRequestError,
-    refetch: MyRequestRefetch,
-    isLoading: MyRequestIsLoading,
-  } = useQuery({
+    data,
+    error,
+    refetch,
+    isError,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ["MyRequestData", session?.user?.email],
-    queryFn: () =>
-      axiosPublic.get(`/Requests?requested_by=${session?.user?.email}`).
-        then((res) => res.data
-        ),
-    keepPreviousData: true,
+    queryFn: ({ pageParam = 1 }) =>
+      axiosPublic
+        .get(`/Requests?requested_by=${session?.user?.email}&page=${pageParam}&limit=5`)
+        .then((res) => res.data),
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!session?.user?.email,
   });
 
-
   // Handle loading
   if (
-    MyRequestIsLoading ||
     status === "loading" ||
     RequestCountIsLoading ||
     AssetBasicInfoIsLoading ||
@@ -111,13 +117,11 @@ const MyRequestsPage = () => {
 
   // Handle errors
   if (
-    MyRequestError ||
     RequestCountError ||
     AssetBasicInfoError ||
     UsersBasicInfoError
   ) {
     return <Error errors={[
-      MyRequestError,
       RequestCountError,
       AssetBasicInfoError,
       UsersBasicInfoError,
@@ -126,14 +130,11 @@ const MyRequestsPage = () => {
 
   // Refetch all
   const RefetchAll = () => {
-    MyRequestRefetch();
+    refetch();
     RequestCountRefetch();
     AssetBasicInfoRefetch();
     UsersBasicInfoRefetch();
   };
-
-  console.log(MyRequestData);
-
 
   // Dashboard Cards with values assigned from server data
   const dashboardCards = [
@@ -286,18 +287,23 @@ const MyRequestsPage = () => {
         ))}
       </div>
 
-      {/* Data Big Card */}
-      <RequestCard
+      {/* My Requests */}
+      <MyRequestsList
+        data={data}
+        error={error}
+        isError={isError}
+        isLoading={isLoading}
         RefetchAll={RefetchAll}
-        MyRequestData={MyRequestData}
+        hasNextPage={hasNextPage}
+        fetchNextPage={fetchNextPage}
       />
-
 
       {/* Add Request Modal */}
       <dialog id="Add_Request_Modal" className="modal">
         <NewRequestModal
           RefetchAll={RefetchAll}
           UserEmail={session?.user?.email}
+          UserId={session?.user?.employee_id}
           AssetBasicInfoData={AssetBasicInfoData}
           UsersBasicInfoData={UsersBasicInfoData}
         />
@@ -305,9 +311,84 @@ const MyRequestsPage = () => {
           <button>close</button>
         </form>
       </dialog>
-
     </div>
   );
 };
 
 export default MyRequestsPage;
+
+// My Requests List Component
+const MyRequestsList = ({
+  data,
+  error,
+  isError,
+  isLoading,
+  RefetchAll,
+  hasNextPage,
+  fetchNextPage,
+}) => {
+  // Loading
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-lg shadow-md m-6">
+        <AiOutlineLoading3Quarters className="animate-spin text-4xl text-blue-500 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-700">Loading Requests</h3>
+        <p className="text-sm text-gray-500 mt-1">Please wait while we fetch your requests...</p>
+      </div>
+    );
+  }
+
+  // Error
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 bg-red-50 rounded-lg border border-red-200 shadow-md m-6">
+        <BsInbox className="text-4xl text-red-500 mb-4" />
+        <h3 className="text-lg font-semibold text-red-700">Something went wrong</h3>
+        <p className="text-sm text-red-500 mt-1">{error?.message || "Unable to load your requests."}</p>
+        <button
+          onClick={RefetchAll}
+          className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const allRequests = data.pages.flatMap((page) => page.data);
+
+  return (
+    <InfiniteScroll
+      dataLength={allRequests.length}
+      next={fetchNextPage}
+      hasMore={!!hasNextPage}
+      loader={<p className="text-center py-4 text-gray-500">Loading more requests...</p>}
+      endMessage={
+        allRequests.length ? (
+          <p className="text-center py-4 text-gray-500">No more requests</p>
+        ) : null
+      }
+    >
+      <div>
+        {allRequests.length > 0 ? (
+          allRequests.map((request, index) => (
+            <RequestCard
+              key={`${request.request_id || request._id}-${index}` || index}
+              MyRequestData={request}
+              RefetchAll={RefetchAll}
+            />
+          ))
+        ) : (
+          <div className="m-6 text-center flex flex-col items-center justify-center gap-2">
+            <BsInbox className="text-4xl text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-700">No Requests Found</h3>
+            <p className="text-sm text-gray-500">
+              There are currently no requests to display. Please check back later or create a new request.
+            </p>
+          </div>
+        )}
+      </div>
+    </InfiniteScroll>
+  );
+};
+
