@@ -14,10 +14,13 @@ export const GET = async (request) => {
 
     const {
       search,
-      requested_by, // NEW: optional filter
+      requested_by,
       page = 1,
       limit = 10,
     } = Object.fromEntries(new URL(request.url).searchParams.entries());
+
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
 
     const filters = {};
 
@@ -35,9 +38,9 @@ export const GET = async (request) => {
 
     const requests = await collection
       .find(filters)
-      .sort({ created_at: -1 })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit))
+      .sort({ created_at: -1, _id: -1 }) // added _id for tie-breaking
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
       .toArray();
 
     return NextResponse.json(
@@ -45,9 +48,9 @@ export const GET = async (request) => {
         success: true,
         data: requests,
         total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       },
       { status: 200 }
     );
