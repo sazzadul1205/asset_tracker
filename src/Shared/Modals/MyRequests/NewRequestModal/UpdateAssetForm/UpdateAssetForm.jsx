@@ -35,7 +35,7 @@ const UpdateAssetRequestForm = ({
   const onSubmit = (formData) => {
     const payload = {
       general: {
-        current_asset: formData.current_asset,
+        current_asset: formData.current_asset || null,
         action_type: formData.action_type,
         priority: formData.priority,
         notes: formData.notes || "",
@@ -64,9 +64,9 @@ const UpdateAssetRequestForm = ({
         payload.update.asset_description = formData.asset_description;
       }
     }
+
     // Pass payload to your API or handler
     handleUniversalSubmit(payload, "update");
-
   };
 
   return (
@@ -100,7 +100,7 @@ const UpdateAssetRequestForm = ({
         {/* Select Asset (Controlled) */}
         <SharedInput
           label="Select Asset"
-          name="asset"
+          name="current_asset"
           type="select"
           control={control}
           searchable={true}
@@ -110,9 +110,11 @@ const UpdateAssetRequestForm = ({
             label: `${d.asset_name} (${d.asset_tag})`,
             value: d.asset_tag,
           }))}
-          defaultValue=""
-          error={errors?.asset}
+          defaultValue={null}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
         />
+
 
         {/* Action Type (Read-only) */}
         <SharedInput

@@ -133,7 +133,19 @@ const RequestMessage = ({
           )}
 
           {/* Update Request */}
-
+          {request.action_type === "update" && (
+            UserEmail === request?.requested_by?.email ? (
+              <div className="flex gap-2 items-center">
+                <span className="font-bold">Update Request:</span>
+                When approved, this asset will be updated.
+              </div>
+            ) : (
+              <div className="flex gap-2 items-center">
+                <span className="font-bold">Update Request:</span>
+                <b>{request?.requested_by?.email}</b> submitted this update request.
+              </div>
+            )
+          )}
 
           {/* Dispose Request */}
           {request.action_type === "dispose" && (
