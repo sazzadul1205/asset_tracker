@@ -10,6 +10,7 @@ import {
   BsCalendarEvent,
   BsExclamationTriangle,
   BsExclamationCircle,
+  BsRecycle,
 } from "react-icons/bs";
 
 // Tanstack
@@ -176,7 +177,7 @@ const RequestCard = ({ MyRequestData, UserEmail, UserRole }) => {
       <div >
         {/* Title */}
 
-        {["assign", "request", "return"].includes(request?.action_type) && (
+        {["assign", "request", "return", "transfer", "update", "dispose"].includes(request?.action_type) && (
           <h3 className='text-sm text-gray-600 mb-2'  >Description :</h3>
         )}
 
@@ -258,11 +259,44 @@ const RequestCard = ({ MyRequestData, UserEmail, UserRole }) => {
           )}
 
           {/* Requested To (for 'request' action type) */}
-          {request?.action_type === "request" && (
+          {["request", "retire", "repair", "dispose"].includes(request?.action_type) && (
             <p className="flex items-center gap-2">
               <BsPersonBadge className="text-xl text-indigo-500" />
               <span className="font-semibold">Requested To:</span>
               Manager
+            </p>
+          )}
+
+          {/* Transfer To */}
+          {request?.transfer_to && (
+            <p className="flex items-center gap-2">
+              <BsPersonBadge className="text-xl text-indigo-500" />
+              <span className="font-semibold">Transfer To:</span>
+              {request?.transfer_to?.label || "Unassigned"}
+            </p>
+          )}
+
+          {/* Retire Reason */}
+          {request?.retire_reason && (
+            <p className="flex items-center gap-2">
+              <BsExclamationCircle className="text-xl text-orange-600" />
+              <span className="font-semibold">Retire Reason:</span>
+              {request.retire_reason
+                .split("_")
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")}
+            </p>
+          )}
+
+          {/* Disposal Method */}
+          {request?.disposal_method && (
+            <p className="flex items-center gap-2">
+              <BsRecycle className="text-xl text-green-600" />
+              <span className="font-semibold">Disposal Method:</span>
+              {request.disposal_method
+                .split("_")
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")}
             </p>
           )}
 
@@ -285,6 +319,19 @@ const RequestCard = ({ MyRequestData, UserEmail, UserRole }) => {
                 .join(" ")}
             </p>
           )}
+
+          {/* Transfer Reason */}
+          {request?.transfer_reason && (
+            <p className="flex items-center gap-2">
+              <BsExclamationCircle className="text-xl text-blue-600" />
+              <span className="font-semibold">Transfer Reason:</span>
+              {request.transfer_reason
+                .split("_")
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")}
+            </p>
+          )}
+
 
         </div>
       </div>
