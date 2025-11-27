@@ -36,7 +36,7 @@ const AssignToRole = ({ email, employee_id, showOnlyName = false }) => {
           : data?.position || "No Position"
         : "Un Assigned";
 
-  return <p className="text-sm font-medium text-gray-800">{displayText}</p>;
+  return <span className="text-sm font-medium text-gray-800">{displayText}</span>;
 };
 
 export default AssignToRole;

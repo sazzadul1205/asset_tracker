@@ -67,23 +67,6 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
   const axiosPublic = useAxiosPublic();
   const { success, error, confirm } = useToast();
 
-  // Determine asset value for fetching
-  const assetValue =
-    request?.asset?.value || request?.general?.current_asset?.value;
-
-  // Fetch Selected Asset Data
-  const {
-    data: SelectAssetData,
-    error: SelectAssetError,
-    isLoading: SelectAssetIsLoading,
-  } = useQuery({
-    queryKey: ["SelectAssetData", assetValue],
-    queryFn: () =>
-      axiosPublic.get(`/Assets/${assetValue}`).then((res) => res.data.data),
-    keepPreviousData: true,
-    enabled: !!assetValue, // only run query if assetValue exists
-  });
-
   // Convert action_type to readable title
   const getTitle = (action_type, request_id) => {
     if (!action_type) return `Request #${request_id}`;
@@ -156,28 +139,19 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
               : "Unknown"}
           </span>
 
-          {/* Barcode */}
-          {SelectAssetIsLoading ? (
-            <p className="text-gray-500">Loading asset...</p>
-          ) : SelectAssetError ? (
-            <p className="text-red-500">Error: {SelectAssetError.message || "Unknown"}</p>
-          ) : SelectAssetData ? (
-            <BarcodeGenerator
-              padding={0}
-              barWidth={1}
-              barHeight={30}
-              numberText="xs"
-              numberBellow={0}
-              number={
-                SelectAssetData.asset_tag ||
-                SelectAssetData.asset?.value ||
-                SelectAssetData.general?.current_asset?.value ||
-                "N/A"
-              }
-            />
-          ) : (
-            <p className="text-gray-400">No asset data</p>
-          )}
+          {/* Barcode — clean version */}
+          <BarcodeGenerator
+            assetId={
+              request?.asset?.value ||
+              request?.general?.current_asset?.value
+            }
+            padding={0}
+            barWidth={1}
+            barHeight={30}
+            numberText="xs"
+            numberBellow={0}
+          />
+
 
           {/* Status Badge */}
           <span
