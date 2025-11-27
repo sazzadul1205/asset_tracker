@@ -15,12 +15,24 @@ export const GET = async (req, context) => {
       );
     }
 
+    // Parse optional fields from query parameters
+    const url = new URL(req.url);
+    const fieldsParam = url.searchParams.get("fields"); // e.g., "status,location,asset_name"
+    let projection = {};
+    if (fieldsParam) {
+      const fieldsArray = fieldsParam.split(",");
+      fieldsArray.forEach((field) => {
+        projection[field.trim()] = 1; // include field
+      });
+    }
+
     const db = await connectDB();
     const assetsCollection = db.collection("Assets");
 
-    const asset = await assetsCollection.findOne({
-      $or: [{ asset_id }, { asset_tag: asset_id }],
-    });
+    const asset = await assetsCollection.findOne(
+      { $or: [{ asset_id }, { asset_tag: asset_id }] },
+      { projection: Object.keys(projection).length ? projection : undefined }
+    );
 
     if (!asset) {
       return NextResponse.json({ message: "Asset not found" }, { status: 404 });
