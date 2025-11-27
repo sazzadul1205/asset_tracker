@@ -48,7 +48,6 @@ const MyAssetsPage = () => {
   const {
     data: MyAssetsData,
     error: MyAssetsError,
-    refetch: MyAssetsRefetch,
     isLoading: MyAssetsIsLoading,
   } = useQuery({
     queryKey: [

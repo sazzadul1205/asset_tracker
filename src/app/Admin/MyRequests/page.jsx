@@ -209,35 +209,51 @@ const MyRequestsPage = () => {
 
 export default MyRequestsPage;
 
-/** My Requests List */
+// My Requests List
 const MyRequestsList = ({ data, error, isError, isLoading, RefetchAll, hasNextPage, fetchNextPage, isFetchingNextPage, UserRole, UserEmail }) => {
+  // Handle loading
   if (isLoading) return <Loading />;
 
+  // Handle error
   if (isError) return (
     <div className="flex flex-col items-center justify-center py-12 bg-red-50 rounded-lg border border-red-200 shadow-md m-6">
+      {/* Icon */}
       <BsInbox className="text-4xl text-red-500 mb-4" />
+
+      {/* Title */}
       <h3 className="text-lg font-semibold text-red-700">Something went wrong</h3>
+
+      {/* Description */}
       <p className="text-sm text-red-500 mt-1">{error?.message || "Unable to load your requests."}</p>
+
+      {/* Button */}
       <button onClick={RefetchAll} className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Retry</button>
     </div>
   );
 
+  // Get all requests
   const allRequests = data?.pages?.flatMap(page => page.data || []) || [];
 
   return (
     <InfiniteScroll
-      dataLength={allRequests.length}
       next={fetchNextPage}
       hasMore={!!hasNextPage}
+      dataLength={allRequests.length}
       loader={isFetchingNextPage && <p className="text-center py-4 text-gray-500">Loading more requests...</p>}
       endMessage={allRequests.length ? <p className="text-center py-4 text-gray-500">No more requests</p> : null}
     >
+      {/* Requests */}
       {allRequests.length > 0 ? allRequests.map((request, i) => (
         <RequestCard key={`${request.request_id || request._id}-${i}`} request={request} UserRole={UserRole} UserEmail={UserEmail} RefetchAll={RefetchAll} />
       )) : (
         <div className="m-6 text-center flex flex-col items-center justify-center gap-2">
+          {/* Inbox Icon */}
           <BsInbox className="text-4xl text-gray-400" />
+
+          {/* Message */}
           <h3 className="text-lg font-semibold text-gray-700">No Requests Found</h3>
+
+          {/* Description */}
           <p className="text-sm text-gray-500">There are currently no requests to display. Please check back later or create a new request.</p>
         </div>
       )}
