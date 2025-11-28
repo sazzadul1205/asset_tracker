@@ -15,9 +15,6 @@ import {
 import { FaTools } from 'react-icons/fa';
 import { IoTrashOutline } from 'react-icons/io5';
 
-// Tanstack
-import { useQuery } from '@tanstack/react-query';
-
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
 
@@ -28,60 +25,12 @@ import AssignToRole from '@/app/Admin/Assets/AssignToRole/AssignToRole';
 
 // Utils
 import { useToast } from '@/Hooks/Toasts';
+import { actionTypeColors, formatDate, getTitle, statusColors } from './RequestCardOption/RequestCardOption';
 
-// Map action_type to colors
-const actionTypeColors = {
-  assign: { bg: "bg-blue-100", text: "text-blue-700" },
-  request: { bg: "bg-green-100", text: "text-green-700" },
-  return: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  repair: { bg: "bg-orange-100", text: "text-orange-700" },
-  retire: { bg: "bg-red-100", text: "text-red-700" },
-  transfer: { bg: "bg-purple-100", text: "text-purple-700" },
-  update: { bg: "bg-teal-100", text: "text-teal-700" },
-  dispose: { bg: "bg-gray-100", text: "text-gray-700" },
-};
-
-// Status colors mapping
-const statusColors = {
-  accepted: { bg: "bg-green-100", text: "text-green-700" },
-  rejected: { bg: "bg-red-100", text: "text-red-700" },
-  expired: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  pending: { bg: "bg-gray-100", text: "text-gray-700" },
-};
-
-// Function to format date
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  const options = {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true
-  };
-  return date.toLocaleString("en-US", options);
-};
 
 const RequestCard = ({ request, UserEmail, RefetchAll }) => {
   const axiosPublic = useAxiosPublic();
   const { success, error, confirm } = useToast();
-
-  // Convert action_type to readable title
-  const getTitle = (action_type, request_id) => {
-    if (!action_type) return `Request #${request_id}`;
-    const actionMap = {
-      assign: "Assign Assets Request",
-      request: "Request Assets Request",
-      return: "Return Assets Request",
-      repair: "Repair Assets Request",
-      retire: "Retire Assets Request",
-      transfer: "Transfer Assets Request",
-      update: "Asset Update Request",
-      dispose: "Dispose Assets Request",
-    };
-    return `${actionMap[action_type] || "Request"} # ${request_id}`;
-  };
 
   // Delete Request Handler
   const handleDeleteRequest = async (request) => {
@@ -131,8 +80,8 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
           {/* Action Type Badge */}
           <span
             className={`px-5 py-1 text-xs font-medium rounded-xl 
-        ${actionTypeColors[request?.action_type]?.bg || "bg-gray-100"} 
-        ${actionTypeColors[request?.action_type]?.text || "text-gray-700"}`}
+              ${actionTypeColors[request?.action_type]?.bg || "bg-gray-100"} 
+              ${actionTypeColors[request?.action_type]?.text || "text-gray-700"}`}
           >
             {request?.action_type
               ? request.action_type.charAt(0).toUpperCase() + request.action_type.slice(1)
@@ -156,8 +105,8 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
           {/* Status Badge */}
           <span
             className={`px-5 py-1 text-xs font-medium rounded-xl 
-        ${statusColors[request?.status?.toLowerCase()]?.bg || statusColors.pending.bg}
-        ${statusColors[request?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
+              ${statusColors[request?.status?.toLowerCase()]?.bg || statusColors.pending.bg}
+              ${statusColors[request?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
           >
             {request?.status
               ? request.status.charAt(0).toUpperCase() + request.status.slice(1)
@@ -172,8 +121,8 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
             <button
               onClick={() => handleDeleteRequest(request)}
               className="flex items-center justify-center px-5 py-1.5 rounded-lg bg-red-600 text-white shadow-md gap-2 
-          hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 
-          active:translate-y-px active:shadow-md transition-all duration-200"
+              hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 
+              active:translate-y-px active:shadow-md transition-all duration-200"
             >
               <IoTrashOutline className="text-xl" />
               Delete
