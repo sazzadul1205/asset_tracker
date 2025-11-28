@@ -99,8 +99,6 @@ const MyRequestsPage = () => {
     enabled: !!session?.user?.email,
   });
 
-  const allRequests = data?.pages?.flatMap(page => page.data || []) || [];
-
   /** Handle Loading */
   if (
     status === "loading" ||

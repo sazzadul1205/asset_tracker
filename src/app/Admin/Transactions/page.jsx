@@ -1,4 +1,4 @@
-// Admin/AssetsCategory/page.jsx
+// Admin/Transactions/page.jsx
 "use client";
 
 // React Components
@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 
 // Icons
 import { FiSearch } from "react-icons/fi";
-import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaEye } from 'react-icons/fa';
+import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaUser } from 'react-icons/fa';
 
 // Tanstack
 import { useQuery } from '@tanstack/react-query';
@@ -20,8 +20,18 @@ import Loading from '@/Shared/Loading/Loading';
 
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import CategoryToIcon from '../Assets/CategoryToIcon/CategoryToIcon';
+
+// Components
 import BarcodeGenerator from '../Assets/Barcode/Barcode';
+import AssignToRole from '../Assets/AssignToRole/AssignToRole';
+import CategoryToIcon from '../Assets/CategoryToIcon/CategoryToIcon';
+import UserDepartmentManager from './UserDepartmentManager/UserDepartmentManager';
+
+// Utils
+import { actionTypeColors, formatDate, statusColors } from '@/Shared/Modals/MyRequests/RequestCard/RequestCardOption/RequestCardOption';
+import TableBottomPagination from '@/Shared/TableBottomPagination/TableBottomPagination';
+
+
 
 const TransactionsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -29,10 +39,9 @@ const TransactionsPage = () => {
 
   // States
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAsset, setSelectedAsset] = useState(null);
 
   // Pagination States
-  const itemsPerPage = 8;
+  const itemsPerPage = 6;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch Requests
@@ -73,8 +82,6 @@ const TransactionsPage = () => {
 
   // Handle errors
   if (RequestsError) { return <Error errors={[RequestsError]} /> }
-
-  console.log(request);
 
   return (
     <div>
@@ -131,95 +138,166 @@ const TransactionsPage = () => {
             </tr>
           </thead>
 
-          {/* Table Body */}
           <tbody>
-            {RequestsIsLoading || status === "loading" ? (
-              // Loading
+            {/* Loading State */}
+            {(RequestsIsLoading || status === "loading") && (
               <tr>
-                <td colSpan={6} className="py-12 text-center">
+                <td colSpan={7} className="py-12 text-center">
                   <Loading
-                    height='min-h-[500px]'
-                    background_color='bg-white'
+                    height="min-h-[500px]"
+                    background_color="bg-white"
                   />
                 </td>
               </tr>
-            ) : request?.length > 0 ? (
-              request.map((request) => (
-                <tr
-                  key={request._id}
-                  className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
-                >
-                  {/* Icon, name, and ID */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default w-60 min-w-60">
-                    <div className="flex items-center gap-4">
-                      {/* Icon container */}
-                      <CategoryToIcon
-                        id={
-                          request?.asset?.value ||
-                          request?.general?.current_asset?.value
-                        }
-                      />
+            )}
 
-                      {/* Text content */}
-                      <div className="flex flex-col overflow-hidden">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
-                          <p>
-                            {
-                              request?.asset?.label?.replace(/\s*\(.*?\)\s*/g, "") ||
-                              request?.general?.current_asset?.label?.replace(/\s*\(.*?\)\s*/g, "") ||
-                              "Unassigned"
-                            }
-                          </p>
-                        </h3>
-                        <p className="text-sm text-gray-500 truncate">
-                          {
-                            request?.asset?.value ||
-                            request?.general?.current_asset?.value
-                          }
-                        </p>
-                      </div>
+            {/* Empty State */}
+            {!RequestsIsLoading &&
+              status !== "loading" &&
+              request.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <FaBoxOpen className="text-gray-400 w-12 h-12" />
+
+                      <p className="text-gray-500 text-lg font-semibold">
+                        No Assets found
+                      </p>
+
+                      <p className="text-gray-400 text-sm">
+                        Adjust your filters or add a new asset to get started.
+                      </p>
                     </div>
                   </td>
-
-                  {/* Barcode */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    <BarcodeGenerator
-                      assetId={
-                        request?.asset?.value ||
-                        request?.general?.current_asset?.value
-                      }
-                      padding={0}
-                      barWidth={1}
-                      barHeight={30}
-                      numberText="xs"
-                      numberBellow={0}
-                    />
-                  </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="py-12 text-center">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    {/* Icon */}
-                    <FaBoxOpen className="text-gray-400 w-12 h-12" />
+              )}
 
-                    {/* Main message */}
-                    <p className="text-gray-500 text-lg font-semibold">
-                      No Request found
-                    </p>
+            {/* Data Rows */}
+            {request.length > 0 &&
+              request.map((req) => {
+                const assetValue =
+                  req?.asset?.value || req?.general?.current_asset?.value;
 
-                    {/* Subtext for guidance */}
-                    <p className="text-gray-400 text-sm">
-                      Adjust your filters or add a new asset to get started.
-                    </p>
-                  </div>
-                </td>
-              </tr>
+                const assetLabel =
+                  req?.asset?.label?.replace(/\s*\(.*?\)\s*/g, "") ||
+                  req?.general?.current_asset?.label?.replace(/\s*\(.*?\)\s*/g, "") ||
+                  "Unassigned";
 
-            )}
+                const requestedBy =
+                  req?.requested_by || req?.general?.requested_by;
+
+                return (
+                  <tr
+                    key={req._id}
+                    className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
+                  >
+                    {/* Icon + Asset Name */}
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default w-60 min-w-60">
+                      <div className="flex items-center gap-4">
+                        <CategoryToIcon id={assetValue} />
+
+                        <div className="flex flex-col overflow-hidden">
+                          <h3 className="text-sm font-medium text-gray-900 truncate">
+                            {assetLabel}
+                          </h3>
+
+                          <p className="text-sm text-gray-500 truncate">
+                            {assetValue}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Barcode */}
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                      <BarcodeGenerator
+                        assetId={assetValue}
+                        padding={0}
+                        barWidth={1}
+                        barHeight={30}
+                        numberText="xs"
+                        numberBellow={0}
+                      />
+                    </td>
+
+                    {/* Action Type */}
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default w-60 max-w-32">
+                      <span
+                        className={`px-5 py-1 text-xs font-medium rounded-xl 
+                          ${actionTypeColors[req?.action_type]?.bg || "bg-gray-100"} 
+                        ${actionTypeColors[req?.action_type]?.text || "text-gray-700"}`}
+                      >
+                        {req?.action_type
+                          ? req.action_type.charAt(0).toUpperCase() +
+                          req.action_type.slice(1)
+                          : "Unknown"}
+                      </span>
+                    </td>
+
+                    {/* Requested By */}
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-gray-100 flex items-center justify-center">
+                          <FaUser className="text-gray-500 text-md" />
+                        </div>
+
+                        <div className="flex flex-col">
+                          <AssignToRole employee_id={requestedBy?.id} showOnlyName />
+                          <p className="text-gray-500 text-sm">{requestedBy?.email}</p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Requested To */}
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-gray-100 flex items-center justify-center">
+                          <FaUser className="text-gray-500 text-md" />
+                        </div>
+
+
+                        <UserDepartmentManager employee_id={requestedBy?.id} showRoleLabel={true} />
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="items-center gap-3 py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                      <span
+                        className={`px-5 py-1 text-xs font-medium rounded-xl 
+                          ${statusColors[req?.status?.toLowerCase()]?.bg || statusColors.pending.bg}
+                        ${statusColors[req?.status?.toLowerCase()]?.text || statusColors.pending.text}`}
+                      >
+                        {req?.status
+                          ? req.status.charAt(0).toUpperCase() +
+                          req.status.slice(1)
+                          : "Pending"}
+                      </span>
+                    </td>
+
+                    {/* Requested At */}
+                    <td className="items-center gap-3 py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                      {req?.requested_at ? (
+                        <p className="text-gray-500 text-sm">
+                          {formatDate(req?.requested_at)}
+                        </p>
+                      ) : (
+                        <p className="text-gray-500 text-sm">N/A</p>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
 
+          {/* Table footer with dynamic pagination */}
+          <TableBottomPagination
+            totalItems={totalItems}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            setCurrentPage={setCurrentPage}
+            paginationText="Requests"
+          />
         </table>
       </div>
     </div>
