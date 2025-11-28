@@ -31,6 +31,11 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Components
 import BarcodeGenerator from '../Assets/Barcode/Barcode';
 import CategoryToIcon from '../Assets/CategoryToIcon/CategoryToIcon';
+import TableBottomPagination from '@/Shared/TableBottomPagination/TableBottomPagination';
+
+
+// Utils
+import { formatDate } from '@/Shared/Modals/MyRequests/RequestCard/RequestCardOption/RequestCardOption';
 
 const MyAssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -108,7 +113,6 @@ const MyAssetsPage = () => {
                        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200"
             />
           </div>
-
         </div>
       </div>
 
@@ -176,7 +180,14 @@ const MyAssetsPage = () => {
 
                   {/* Barcode */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    <BarcodeGenerator number={assets?.serial_number} />
+                    <BarcodeGenerator
+                      number={assets?.serial_number}
+                      padding={0}
+                      barWidth={1}
+                      barHeight={30}
+                      numberText="xs"
+                      numberBellow={0}
+                    />
                   </td>
 
                   {/* Category */}
@@ -203,18 +214,12 @@ const MyAssetsPage = () => {
                   </td>
 
                   {/* purchase_cost */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left">
-                    {assets?.assigned_at
-                      ? new Date(assets?.assigned_at).toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                      : "Unknown"}
+                  <td className="items-center gap-3 py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {formatDate(assets?.assigned_at)}
                   </td>
 
                   {/* Actions */}
-                  <td className="py-3 px-4 whitespace-nowrap text-center">
+                  <td className="items-center gap-3 py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
                     <div className="flex items-center justify-center gap-3">
                       {/* View */}
                       <button
@@ -258,48 +263,14 @@ const MyAssetsPage = () => {
           </tbody>
 
           {/* Table footer with dynamic pagination */}
-          <tfoot>
-            <tr>
-              <td colSpan={7} className="px-6 py-4 border-t border-gray-200">
-                <div className="flex items-center justify-between text-black">
-                  <div>
-                    <p className="text-sm">
-                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
-                    </p>
-                    <p className="text-xs font-semibold text-gray-500">Asset Categories</p>
-                  </div>
-
-                  {/* Pagination */}
-                  <div className="flex items-center justify-end space-x-2 mt-4">
-                    {/* Previous Button */}
-                    <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    >
-                      <FaAngleLeft /> Prev
-                    </button>
-
-                    {/* Page Number Display */}
-                    <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
-                      Page {currentPage} of {totalPages}
-                    </div>
-
-                    {/* Next Button */}
-                    <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    >
-                      Next <FaAngleRight />
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
+          <TableBottomPagination
+            totalItems={totalItems}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            setCurrentPage={setCurrentPage}
+            paginationText="My Assets"
+          />
         </table>
       </div>
 
