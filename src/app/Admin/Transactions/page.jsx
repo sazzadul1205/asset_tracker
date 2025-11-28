@@ -31,8 +31,6 @@ import UserDepartmentManager from './UserDepartmentManager/UserDepartmentManager
 import { actionTypeColors, formatDate, statusColors } from '@/Shared/Modals/MyRequests/RequestCard/RequestCardOption/RequestCardOption';
 import TableBottomPagination from '@/Shared/TableBottomPagination/TableBottomPagination';
 
-
-
 const TransactionsPage = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
@@ -130,7 +128,8 @@ const TransactionsPage = () => {
               ].map((col, idx) => (
                 <th
                   key={idx}
-                  className={`px-6 py-4 text-xs font-medium text-gray-500 uppercase ${col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right"}`}
+                  className={`px-6 py-4 text-xs font-medium text-gray-500 uppercase 
+                    ${col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right"}`}
                 >
                   {col.label}
                 </th>
@@ -144,7 +143,7 @@ const TransactionsPage = () => {
               <tr>
                 <td colSpan={7} className="py-12 text-center">
                   <Loading
-                    height="min-h-[500px]"
+                    height="h-[430px]"
                     background_color="bg-white"
                   />
                 </td>
@@ -276,16 +275,10 @@ const TransactionsPage = () => {
 
                     {/* Requested At */}
                     <td className="items-center gap-3 py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                      {req?.requested_at ? (
-                        <p className="text-gray-500 text-sm">
-                          {formatDate(req?.requested_at)}
-                        </p>
-                      ) : (
-                        <p className="text-gray-500 text-sm">N/A</p>
-                      )}
+                      {formatDate(req?.requested_at)}
                     </td>
                   </tr>
-                );
+                )
               })}
           </tbody>
 

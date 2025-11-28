@@ -147,45 +147,45 @@ const NewRequestModal = ({
     setFormError(null);
     setIsLoading(true);
 
-    // Make request
     try {
-
-      // If user email is missing
       if (!UserEmail) {
         setFormError("Session error: User email missing.");
         return;
       }
 
-      // Build payload
       const payload = {
         ...data,
         action_type,
-        requested_by: {
-          id: UserId,
-          email: UserEmail,
-        },
+        requested_by: { id: UserId, email: UserEmail },
         requested_at: new Date().toISOString(),
       };
 
-      // Make request
+      // ---- POST DUPLICATE CHECK WITH PARAMS ----
+      const duplicateCheck = await axiosPublic.post("/Requests/CheckDuplicate", {
+        asset_value: payload.asset?.value || payload.general?.current_asset?.value,
+        requested_by_id: UserId,
+      });
+
+      if (duplicateCheck.data?.success === false) {
+        setFormError(duplicateCheck.data?.message || "Duplicate request detected.");
+        return; // stop submission
+      }
+
+      // ---- PROCEED TO CREATE REQUEST ----
       await axiosPublic.post("/Requests", payload);
 
-      // Refetch
+      // Refetch & close
       RefetchAll();
       handleClose();
 
-      // Success Message
       const capitalizeFirst = (str) =>
         str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
       success(`${capitalizeFirst(action_type)} request created successfully.`);
     } catch (err) {
-
-      // Handle error
       const serverError =
         err.response?.data?.message ||
         err.message ||
         `Failed to make ${action_type} request.`;
-
       setFormError(serverError);
     } finally {
       setIsLoading(false);
@@ -258,8 +258,15 @@ const NewRequestModal = ({
               ))}
             </div>
           </div>
-
         )}
+
+        {/* form Error */}
+        {formError && (
+          <div className="py-3 bg-red-100 border border-red-400 rounded-lg mb-4">
+            <p className="text-red-500 font-semibold text-center">{formError}</p>
+          </div>
+        )}
+
 
         {/* Assign Asset Form */}
         {selectedAction === "assign" &&
@@ -269,7 +276,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             isSubmitting={isSubmitting}
             AllAssetData={AllAssetData}
             handleSubmit={handleSubmit}
@@ -287,7 +293,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
@@ -305,7 +310,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
@@ -322,7 +326,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
@@ -339,7 +342,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
@@ -356,7 +358,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
@@ -374,7 +375,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             MyAssetData={MyAssetData}
             isSubmitting={isSubmitting}
             AllAssetData={AllAssetData}
@@ -392,7 +392,6 @@ const NewRequestModal = ({
             control={control}
             register={register}
             isLoading={isLoading}
-            formError={formError}
             AllAssetData={AllAssetData}
             isSubmitting={isSubmitting}
             handleSubmit={handleSubmit}
