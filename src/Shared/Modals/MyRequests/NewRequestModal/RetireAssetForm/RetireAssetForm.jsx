@@ -4,9 +4,6 @@ import { IoMdArrowRoundBack } from "react-icons/io";
 // Shared Components
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-// Utils
-import { RemoveAssigned } from "../AssignAssetForm/AssignAssetForm";
-
 // Condition Rating Options
 const conditionRatingOptions = [
   { label: "Excellent", value: "excellent" },
@@ -32,7 +29,6 @@ const RetireAssetForm = ({
   control,
   register,
   isLoading,
-  formError,
   isSubmitting,
   MyAssetData,
   handleSubmit,
@@ -59,13 +55,6 @@ const RetireAssetForm = ({
           <span className="text-sm font-medium">Back</span>
         </button>
       </div>
-
-      {/* form Error */}
-      {formError && (
-        <div className="py-3 bg-red-100 border border-red-400 rounded-lg mb-4">
-          <p className="text-red-500 font-semibold text-center">{formError}</p>
-        </div>
-      )}
 
       {/* Form */}
       <form
