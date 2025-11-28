@@ -19,7 +19,6 @@ const UpdateAssetRequestForm = ({
   control,
   register,
   isLoading,
-  formError,
   MyAssetData,
   isSubmitting,
   AllAssetData,
@@ -31,25 +30,32 @@ const UpdateAssetRequestForm = ({
   const [fullAssetOption, setFullAssetOption] = useState("inventory");
 
 
-  // Payload builder
   const onSubmit = (formData) => {
     const payload = {
+      // Move current_asset to the root as "asset"
+      asset: formData.current_asset || null,
+
       general: {
-        current_asset: formData.current_asset || null,
+        // Remove current_asset from here
         action_type: formData.action_type,
         priority: formData.priority,
         notes: formData.notes || "",
       },
+
       update: {},
     };
 
+    // Update type: current update
     if (updateType === "current") {
       payload.update = {
         type: "current",
         update_option: formData.update_option,
         reason: formData.reason_current,
       };
-    } else if (updateType === "full") {
+    }
+
+    // Update type: full update
+    else if (updateType === "full") {
       payload.update = {
         type: "full",
         reason: formData.reason_full,
@@ -58,14 +64,15 @@ const UpdateAssetRequestForm = ({
       if (fullAssetOption === "inventory") {
         payload.update.full_option = "inventory";
         payload.update.update_asset_inventory = formData.update_asset_inventory;
-      } else if (fullAssetOption === "new") {
+      }
+
+      if (fullAssetOption === "new") {
         payload.update.full_option = "new";
         payload.update.new_asset_name = formData.new_asset_name;
         payload.update.asset_description = formData.asset_description;
       }
     }
 
-    // Pass payload to your API or handler
     handleUniversalSubmit(payload, "update");
   };
 
@@ -86,12 +93,6 @@ const UpdateAssetRequestForm = ({
           <span className="text-sm font-medium">Back</span>
         </button>
       </div>
-
-      {formError && (
-        <div className="py-3 bg-red-100 border border-red-400 rounded-lg mb-4">
-          <p className="text-red-500 font-semibold text-center">{formError}</p>
-        </div>
-      )}
 
       <form
         onSubmit={handleSubmit(onSubmit)}
