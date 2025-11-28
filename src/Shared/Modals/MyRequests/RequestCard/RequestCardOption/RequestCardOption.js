@@ -18,9 +18,15 @@ export const statusColors = {
   pending: { bg: "bg-gray-100", text: "text-gray-700" },
 };
 
-// Function to format date
+// Safe date formatter with invalid date handling
 export const formatDate = (dateStr) => {
+  if (!dateStr) return "Invalid Date";
+
   const date = new Date(dateStr);
+
+  // Check for invalid date
+  if (isNaN(date.getTime())) return "Invalid Date";
+
   const options = {
     day: "2-digit",
     month: "short",
@@ -29,7 +35,12 @@ export const formatDate = (dateStr) => {
     minute: "2-digit",
     hour12: true,
   };
-  return date.toLocaleString("en-US", options);
+
+  try {
+    return date.toLocaleString("en-US", options);
+  } catch {
+    return "Invalid Date";
+  }
 };
 
 // Convert action_type to readable title
@@ -47,5 +58,3 @@ export const getTitle = (action_type, request_id) => {
   };
   return `${actionMap[action_type] || "Request"} # ${request_id}`;
 };
-
-

@@ -24,9 +24,9 @@ export const GET = async (request) => {
 
     const filters = {};
 
-    // Filter by search term
+    // Filter by search term (asset label)
     if (search) {
-      filters.request_title = { $regex: search, $options: "i" };
+      filters["asset.label"] = { $regex: search, $options: "i" };
     }
 
     // Filter by requested_by if provided
