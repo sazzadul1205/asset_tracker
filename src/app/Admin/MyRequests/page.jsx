@@ -192,6 +192,7 @@ const MyRequestsPage = () => {
       <dialog id="Add_Request_Modal" className="modal">
         <NewRequestModal
           RefetchAll={RefetchAll}
+          UserRole={session?.user?.role}
           UserEmail={session?.user?.email}
           UserId={session?.user?.employee_id}
           AssetBasicInfoData={AssetBasicInfoData}
@@ -253,7 +254,13 @@ const MyRequestsList = ({
     >
       {/* Requests */}
       {allRequests.length > 0 ? allRequests.map((request, i) => (
-        <RequestCard key={`${request.request_id || request._id}-${i}`} request={request} UserRole={UserRole} UserEmail={UserEmail} RefetchAll={RefetchAll} />
+        <RequestCard
+          request={request}
+          UserRole={UserRole}
+          UserEmail={UserEmail}
+          RefetchAll={RefetchAll}
+          key={`${request.request_id || request._id}-${i}`}
+        />
       )) : (
         <div className="m-6 text-center flex flex-col items-center justify-center gap-2">
           {/* Inbox Icon */}
