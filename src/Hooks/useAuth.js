@@ -1,10 +1,20 @@
 // hooks/useAuth.js
 "use client";
 
+// React Components
 import { useEffect, useState } from "react";
+
+
+// Next Components
 import { useRouter } from "next/navigation";
+
+// Next Auth
 import { signIn, getSession, signOut } from "next-auth/react";
+
+// Hooks
 import useAxiosPublic from "./useAxiosPublic";
+
+// Utils
 import { useToast } from "./Toasts";
 
 export const useAuth = (redirectIfAuthenticated = false) => {
@@ -75,6 +85,9 @@ export const useAuth = (redirectIfAuthenticated = false) => {
             break;
           case "Manager":
             router.push("/Manager/Dashboard");
+            break;
+          case "Employee":
+            router.push("/Employee/Dashboard");
             break;
           default:
             router.push("/Employee/Dashboard");

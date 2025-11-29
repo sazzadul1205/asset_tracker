@@ -72,7 +72,7 @@ export const middleware = async (req) => {
 // Apply middleware to all relevant protected routes
 export const config = {
   matcher: [
-    "/Employee/:path*",
+    "/Employees/:path*",
     "/Manager/:path*",
     "/Admin/:path*",
     "/Auth/:path*",
