@@ -28,7 +28,12 @@ import { useToast } from '@/Hooks/Toasts';
 import { actionTypeColors, formatDate, getTitle, statusColors } from './RequestCardOption/RequestCardOption';
 
 
-const RequestCard = ({ request, UserEmail, RefetchAll }) => {
+const RequestCard = ({
+  request,
+  UserRole,
+  UserEmail,
+  RefetchAll,
+}) => {
   const axiosPublic = useAxiosPublic();
   const { success, error, confirm } = useToast();
 
@@ -64,6 +69,12 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
       error(err?.response?.data?.error || "Something went wrong while deleting!");
     }
   };
+
+  // Check if the current user is the requester
+  const isRequester = UserEmail === request?.requested_by?.email;
+
+  // Check if the current user is a privileged user
+  const isPrivileged = UserRole === "Admin" || UserRole === "Manager";
 
   return (
     <div className="mx-5 my-5 p-6 bg-white border border-gray-300 rounded-lg text-black transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
@@ -101,7 +112,6 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
             numberBellow={0}
           />
 
-
           {/* Status Badge */}
           <span
             className={`px-5 py-1 text-xs font-medium rounded-xl 
@@ -114,19 +124,48 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
           </span>
         </div>
 
-        {/* Right Side Buttons */}
-        <div className="flex items-center">
-          {/* Delete Button (only for request creator) */}
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Delete Button (only for creator) */}
           {UserEmail === request?.requested_by?.email && (
             <button
               onClick={() => handleDeleteRequest(request)}
-              className="flex items-center justify-center px-5 py-1.5 rounded-lg bg-red-600 text-white shadow-md gap-2 
-              hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 
-              active:translate-y-px active:shadow-md transition-all duration-200"
-            >
-              <IoTrashOutline className="text-xl" />
-              Delete
+              className="
+              flex items-center justify-center px-2 font-semibold py-1.5 rounded-lg bg-red-600 text-white 
+              shadow-md gap-2 hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
+              active:shadow-md transition-all duration-200"            >
+              <IoTrashOutline className="text-2xl" />
             </button>
+          )}
+
+
+          {/* Accept and Reject Buttons */}
+          {isRequester && !isPrivileged ? (
+            <></>
+          ) : (
+            <>
+              {/* Accept Button */}
+              <button
+                onClick={() => handleAcceptRequest(request)}
+                className="
+                flex items-center justify-center px-10 font-semibold py-1.5 rounded-lg bg-green-600 text-white 
+                shadow-md gap-2 hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
+                active:shadow-md transition-all duration-200"
+              >
+                Accept
+              </button>
+
+              {/* Reject Button */}
+              <button
+                onClick={() => handleRejectRequest(request)}
+                className="
+                flex items-center justify-center px-10 font-semibold py-1.5 rounded-lg bg-gray-500 text-white 
+                shadow-md gap-2 hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
+                active:shadow-md transition-all duration-200"
+              >
+                Reject
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -314,7 +353,7 @@ const RequestCard = ({ request, UserEmail, RefetchAll }) => {
             ))}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

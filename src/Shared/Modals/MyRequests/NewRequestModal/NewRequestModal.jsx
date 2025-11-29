@@ -1,5 +1,5 @@
 // React Components
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 // React Hook Form
 import { useForm } from "react-hook-form";
@@ -109,6 +109,7 @@ const NewRequestModal = ({
   UsersBasicInfoData,
   AssetBasicInfoData,
 }) => {
+  const modalRef = useRef(null);
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
 
@@ -142,7 +143,6 @@ const NewRequestModal = ({
   // My Assets 
   const MyAssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
 
-  // Handle Universal Submit
   const handleUniversalSubmit = async (data, action_type) => {
     setFormError(null);
     setIsLoading(true);
@@ -150,6 +150,7 @@ const NewRequestModal = ({
     try {
       if (!UserEmail) {
         setFormError("Session error: User email missing.");
+        modalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
 
@@ -160,7 +161,7 @@ const NewRequestModal = ({
         requested_at: new Date().toISOString(),
       };
 
-      // ---- POST DUPLICATE CHECK WITH PARAMS ----
+      // ---- POST DUPLICATE CHECK ----
       const duplicateCheck = await axiosPublic.post("/Requests/CheckDuplicate", {
         asset_value: payload.asset?.value || payload.general?.current_asset?.value,
         requested_by_id: UserId,
@@ -168,6 +169,7 @@ const NewRequestModal = ({
 
       if (duplicateCheck.data?.success === false) {
         setFormError(duplicateCheck.data?.message || "Duplicate request detected.");
+        modalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         return; // stop submission
       }
 
@@ -187,6 +189,9 @@ const NewRequestModal = ({
         err.message ||
         `Failed to make ${action_type} request.`;
       setFormError(serverError);
+
+      // Scroll to top of modal on error
+      modalRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     } finally {
       setIsLoading(false);
     }
