@@ -69,8 +69,14 @@ const Navbar = () => {
     case "/Admin/Profile":
       pageTitle = "Admin Profile";
       break;
+    case "/Employee/Dashboard":
+      pageTitle = "Employee Dashboard";
+      break;
+    case "/Employee/MyRequests":
+      pageTitle = "Employee My Requests";
+      break;
     default:
-      pageTitle = "Admin Dashboard";
+      pageTitle = "Unknown Page";
   }
 
 
