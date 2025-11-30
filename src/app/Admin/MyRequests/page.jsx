@@ -90,12 +90,15 @@ const MyRequestsPage = () => {
   } = useInfiniteQuery({
     queryKey: ["MyRequestData", session?.user?.email],
     queryFn: async ({ pageParam = 1 }) => {
+      const email = session?.user?.email;
+      const employeeId = session?.user?.employee_id;
       const res = await axiosPublic.get(
-        `/Requests?requested_by=${session?.user?.email}&page=${pageParam}&limit=5`
+        `/Requests?page=${pageParam}&limit=5&requested_by=${email}&assigned_to=${employeeId}`
       );
       return res.data;
     },
-    getNextPageParam: (lastPage) => lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!session?.user?.email,
   });
 
@@ -183,9 +186,10 @@ const MyRequestsPage = () => {
         RefetchAll={RefetchAll}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
-        isFetchingNextPage={isFetchingNextPage}
         UserRole={session?.user?.role}
         UserEmail={session?.user?.email}
+        UserId={session?.user?.employee_id}
+        isFetchingNextPage={isFetchingNextPage}
       />
 
       {/* Add Request Modal */}
@@ -212,6 +216,7 @@ export default MyRequestsPage;
 const MyRequestsList = ({
   data,
   error,
+  UserId,
   isError,
   UserRole,
   isLoading,
@@ -221,6 +226,7 @@ const MyRequestsList = ({
   fetchNextPage,
   isFetchingNextPage,
 }) => {
+  
   // Handle loading
   if (isLoading) return <Loading />;
 
@@ -255,6 +261,7 @@ const MyRequestsList = ({
       {/* Requests */}
       {allRequests.length > 0 ? allRequests.map((request, i) => (
         <RequestCard
+          UserId={UserId}
           request={request}
           UserRole={UserRole}
           UserEmail={UserEmail}
