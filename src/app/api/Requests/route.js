@@ -6,7 +6,7 @@ import { generateId } from "@/Utils/generateId";
 // Helper to get current UTC timestamp
 const getTimestamp = () => new Date().toISOString();
 
-// GET: Fetch all Requests with optional search, pagination & requested_by filter
+// GET: Fetch all Requests with optional search, pagination, requested_by OR assigned_to
 export const GET = async (request) => {
   try {
     const db = await connectDB();
@@ -15,6 +15,7 @@ export const GET = async (request) => {
     const {
       search,
       requested_by,
+      assigned_to,
       page = 1,
       limit = 10,
     } = Object.fromEntries(new URL(request.url).searchParams.entries());
@@ -23,34 +24,50 @@ export const GET = async (request) => {
     const limitNum = Number(limit) || 10;
 
     const filters = {};
+    const orConditions = [];
 
-    // Filter by search term (asset label)
+    // Search by asset label
     if (search) {
       filters["asset.label"] = { $regex: search, $options: "i" };
     }
 
-    // Filter by requested_by if provided
+    // requested_by condition
     if (requested_by) {
-      filters["requested_by.email"] = requested_by;
+      orConditions.push({ "requested_by.email": requested_by });
+    }
+
+    // assigned_to condition
+    if (assigned_to) {
+      orConditions.push({ "assign_to.value": assigned_to });
+    }
+
+    // Apply OR only if conditions exist
+    if (orConditions.length > 0) {
+      filters["$or"] = orConditions;
     }
 
     const total = await collection.countDocuments(filters);
 
     const requests = await collection
       .find(filters)
-      .sort({ created_at: -1, _id: -1 }) // added _id for tie-breaking
+      .sort({ created_at: -1, _id: -1 })
       .skip((pageNum - 1) * limitNum)
       .limit(limitNum)
       .toArray();
 
+    // Ensure unique by request_id (optional safety)
+    const unique = Array.from(
+      new Map(requests.map((r) => [r.request_id, r])).values()
+    );
+
     return NextResponse.json(
       {
         success: true,
-        data: requests,
-        total,
+        data: unique,
+        total: unique.length,
         page: pageNum,
         limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
+        totalPages: Math.ceil(unique.length / limitNum),
       },
       { status: 200 }
     );
