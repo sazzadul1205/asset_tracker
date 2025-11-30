@@ -30,8 +30,8 @@ import { actionTypeColors, formatDate, getTitle, statusColors } from './RequestC
 
 
 const RequestCard = ({
-  request,
   UserId,
+  request,
   UserRole,
   UserEmail,
   RefetchAll,

@@ -29,7 +29,6 @@ const RequestMessage = ({
     }
   };
 
-
   return (
     <div>
       {request?.action_type && (
@@ -58,12 +57,12 @@ const RequestMessage = ({
             UserEmail === request?.requested_by?.email ? (
               <div className="flex gap-2 items-center">
                 <span className="font-bold">Request Asset:</span>
-                When approved, this asset will be transferred to <b>the assigned user</b>.
+                When approved, this asset will be transferred to <b>you</b>.
               </div>
             ) : (
               <div className="flex gap-2 items-center">
                 <span className="font-bold">Request Asset:</span>
-                When approved, this asset will be transferred to <b>you</b>.
+                When approved, this asset will be transferred to  <AssignToRole email={request?.requested_by?.email} showOnlyName />.
               </div>
             )
           )}
