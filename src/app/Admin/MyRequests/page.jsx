@@ -72,7 +72,8 @@ const MyRequestsPage = () => {
     isLoading: RequestCountIsLoading,
   } = useQuery({
     queryKey: ["RequestCountData", session?.user?.email],
-    queryFn: () => axiosPublic.get(`/Requests/Count?email=${session?.user?.email}`).then(res => res.data),
+    queryFn: () => axiosPublic.get(`/Requests/Count`).
+      then(res => res.data),
     keepPreviousData: true,
     enabled: !!session?.user?.email,
   });
@@ -90,10 +91,8 @@ const MyRequestsPage = () => {
   } = useInfiniteQuery({
     queryKey: ["MyRequestData", session?.user?.email],
     queryFn: async ({ pageParam = 1 }) => {
-      const email = session?.user?.email;
-      const employeeId = session?.user?.employee_id;
       const res = await axiosPublic.get(
-        `/Requests?page=${pageParam}&limit=5&requested_by=${email}&assigned_to=${employeeId}`
+        `/Requests?page=${pageParam}&limit=5`
       );
       return res.data;
     },
@@ -124,15 +123,78 @@ const MyRequestsPage = () => {
 
   /** Dashboard Cards */
   const dashboardCards = [
-    { label: "All Requests", key: "all", value: RequestCountData.total || 0, icon: IoFolderOpenOutline, iconBg: "bg-slate-100", iconColor: "text-slate-700" },
-    { label: "Assign Assets Request", key: "assign", value: RequestCountData.detailed.assign || 0, icon: IoPersonAddOutline, iconBg: "bg-blue-100", iconColor: "text-blue-700" },
-    { label: "Request Assets Request", key: "request", value: RequestCountData.detailed.request || 0, icon: IoDocumentTextOutline, iconBg: "bg-green-100", iconColor: "text-green-700" },
-    { label: "Return Assets Request", key: "return", value: RequestCountData.detailed.return || 0, icon: IoReturnDownBackOutline, iconBg: "bg-yellow-100", iconColor: "text-yellow-700" },
-    { label: "Repair Assets Request", key: "repair", value: RequestCountData.detailed.repair || 0, icon: IoBuildOutline, iconBg: "bg-orange-100", iconColor: "text-orange-700" },
-    { label: "Retire Assets Request", key: "retire", value: RequestCountData.detailed.retire || 0, icon: IoCloseCircleOutline, iconBg: "bg-red-100", iconColor: "text-red-700" },
-    { label: "Transfer Assets Request", key: "transfer", value: RequestCountData.detailed.transfer || 0, icon: IoRepeatOutline, iconBg: "bg-purple-100", iconColor: "text-purple-700" },
-    { label: "Update Assets Request", key: "update", value: RequestCountData.detailed.update || 0, icon: IoCreateOutline, iconBg: "bg-teal-100", iconColor: "text-teal-700" },
-    { label: "Dispose Assets Request", key: "dispose", value: RequestCountData.detailed.dispose || 0, icon: IoTrashOutline, iconBg: "bg-gray-100", iconColor: "text-gray-700" }
+    {
+      label: "All Requests",
+      key: "all",
+      value: RequestCountData.total || 0,
+      icon: IoFolderOpenOutline,
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-700"
+    },
+    {
+      label: "Assign Assets Request",
+      key: "assign",
+      value: RequestCountData.detailed.assign || 0,
+      icon: IoPersonAddOutline,
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-700"
+    },
+    {
+      label: "Request Assets Request",
+      key: "request",
+      value: RequestCountData.detailed.request || 0,
+      icon: IoDocumentTextOutline,
+      iconBg: "bg-green-100",
+      iconColor: "text-green-700"
+    },
+    {
+      label: "Return Assets Request",
+      key: "return",
+      value: RequestCountData.detailed.return || 0,
+      icon: IoReturnDownBackOutline,
+      iconBg: "bg-yellow-100",
+      iconColor: "text-yellow-700"
+    },
+    {
+      label: "Repair Assets Request",
+      key: "repair",
+      value: RequestCountData.detailed.repair || 0,
+      icon: IoBuildOutline,
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-700"
+    },
+    {
+      label: "Retire Assets Request",
+      key: "retire",
+      value: RequestCountData.detailed.retire || 0,
+      icon: IoCloseCircleOutline,
+      iconBg: "bg-red-100",
+      iconColor: "text-red-700"
+    },
+    {
+      label: "Transfer Assets Request",
+      key: "transfer",
+      value: RequestCountData.detailed.transfer || 0,
+      icon: IoRepeatOutline,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-700"
+    },
+    {
+      label: "Update Assets Request",
+      key: "update",
+      value: RequestCountData.detailed.update || 0,
+      icon: IoCreateOutline,
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-700"
+    },
+    {
+      label: "Dispose Assets Request",
+      key: "dispose",
+      value: RequestCountData.detailed.dispose || 0,
+      icon: IoTrashOutline,
+      iconBg: "bg-gray-100",
+      iconColor: "text-gray-700"
+    }
   ];
 
   const rows = [dashboardCards.slice(0, 5), dashboardCards.slice(5, 9)];
@@ -226,7 +288,7 @@ const MyRequestsList = ({
   fetchNextPage,
   isFetchingNextPage,
 }) => {
-  
+
   // Handle loading
   if (isLoading) return <Loading />;
 
