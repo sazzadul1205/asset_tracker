@@ -19,6 +19,7 @@ import { IoTrashOutline } from 'react-icons/io5';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
 
 // Components
+import RequestButton from './RequestButton/RequestButton';
 import RequestMessage from './RequestMessage/RequestMessage';
 import BarcodeGenerator from '@/app/Admin/Assets/Barcode/Barcode';
 import AssignToRole from '@/app/Admin/Assets/AssignToRole/AssignToRole';
@@ -30,6 +31,7 @@ import { actionTypeColors, formatDate, getTitle, statusColors } from './RequestC
 
 const RequestCard = ({
   request,
+  UserId,
   UserRole,
   UserEmail,
   RefetchAll,
@@ -69,12 +71,6 @@ const RequestCard = ({
       error(err?.response?.data?.error || "Something went wrong while deleting!");
     }
   };
-
-  // Check if the current user is the requester
-  const isRequester = UserEmail === request?.requested_by?.email;
-
-  // Check if the current user is a privileged user
-  const isPrivileged = UserRole === "Admin" || UserRole === "Manager";
 
   return (
     <div className="mx-5 my-5 p-6 bg-white border border-gray-300 rounded-lg text-black transform transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
@@ -138,35 +134,14 @@ const RequestCard = ({
             </button>
           )}
 
-
-          {/* Accept and Reject Buttons */}
-          {isRequester && !isPrivileged ? (
-            <></>
-          ) : (
-            <>
-              {/* Accept Button */}
-              <button
-                onClick={() => handleAcceptRequest(request)}
-                className="
-                flex items-center justify-center px-10 font-semibold py-1.5 rounded-lg bg-green-600 text-white 
-                shadow-md gap-2 hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
-                active:shadow-md transition-all duration-200"
-              >
-                Accept
-              </button>
-
-              {/* Reject Button */}
-              <button
-                onClick={() => handleRejectRequest(request)}
-                className="
-                flex items-center justify-center px-10 font-semibold py-1.5 rounded-lg bg-gray-500 text-white 
-                shadow-md gap-2 hover:bg-gray-600 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
-                active:shadow-md transition-all duration-200"
-              >
-                Reject
-              </button>
-            </>
-          )}
+          {/* Request Buttons */}
+          <RequestButton
+            UserId={UserId}
+            request={request}
+            UserRole={UserRole}
+            UserEmail={UserEmail}
+            RefetchAll={RefetchAll}
+          />
         </div>
       </div>
 
