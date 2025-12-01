@@ -77,7 +77,7 @@ const RequestMessage = ({
             ) : (
               <div className="flex gap-2 items-center">
                 <span className="font-bold">Return Asset:</span>
-                This asset is being returned by <b>{request?.requested_by?.email}</b>.
+                This asset is being returned by  <AssignToRole email={request?.requested_by?.email} showOnlyName />.
               </div>
             )
           )}

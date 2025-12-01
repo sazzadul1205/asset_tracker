@@ -25,23 +25,18 @@ const RequestButton = ({
 
     // Case 1: Assign request → user-specific
     if (request?.action_type === "assign") {
-      return (
-        request?.assign_to?.value === UserId &&
-        !statusBlocked
-      );
+      return request?.assign_to?.value === UserId && !statusBlocked;
     }
 
-    // Case 2: Normal request → only admin/manager can act
-    if (request?.action_type === "request") {
-      return (
-        (UserRole === "Admin" || UserRole === "Manager") &&
-        !statusBlocked
-      );
+    // Case 2: Normal request or return → only admin/manager can act
+    if (["request", "return"].includes(request?.action_type)) {
+      return (UserRole === "Admin" || UserRole === "Manager") && !statusBlocked;
     }
 
     return false;
   })();
 
+  // If buttons shouldn't be shown, return null
   if (!shouldShowButtons) return null;
 
 
@@ -85,8 +80,8 @@ const RequestButton = ({
         return error(res.data.error || "Failed to approve the request.");
       }
 
-      // 2) Resolve asset tag
-      const assetTag = request?.asset?.value; // example: "AST-TEST-012"
+      // 2) Fetch asset data
+      const assetTag = request?.asset?.value; // e.g., "AST-TEST-012"
       const assetRes = await axiosPublic.get(`/Assets/${assetTag}`);
       const assetData = assetRes?.data?.data;
 
@@ -94,38 +89,39 @@ const RequestButton = ({
         return error("Asset not found or missing asset_id.");
       }
 
-      const realAssetId = assetData.asset_id; // example: "ASS1001"
+      const realAssetId = assetData.asset_id;
 
-      // 3) Decide who the asset will be assigned to
-      let employeeIdToAssign;
+      // 3) Determine employee assignment or return logic
+      let payload = { updated_by: UserEmail };
+      let message = "Request accepted successfully!";
 
       if (request?.action_type === "assign") {
-        // assign flow
-        employeeIdToAssign = request?.assign_to?.value;
+        payload.employee_id = request?.assign_to?.value;
+        message = "Assign request accepted and asset assigned successfully!";
       } else if (request?.action_type === "request") {
-        // normal request flow → assign to requesting user
-        employeeIdToAssign = request?.requested_by?.id;
+        payload.employee_id = request?.requested_by?.id;
+        message = "Request approved and asset assigned successfully!";
+      } else if (request?.action_type === "return") {
+        payload.condition_rating = request?.condition_rating || assetData.condition_rating;
+        // Clear assigned_to for return
+        payload.employee_id = null;
+        message = "Return request processed successfully!";
       }
 
-      if (!employeeIdToAssign) {
-        return error("Unable to determine who to assign the asset to.");
-      }
+      // 4) Call relevant asset endpoint
+      const endpoint =
+        request?.action_type === "return"
+          ? `/Assets/Return/${realAssetId}`
+          : `/Assets/Assign/${realAssetId}`;
 
-      // 4) Assign asset
-      const assignRes = await axiosPublic.put(
-        `/Assets/Assign/${realAssetId}`,
-        {
-          employee_id: employeeIdToAssign,
-          updated_by: UserEmail,
-        }
-      );
+      const assignRes = await axiosPublic.put(endpoint, payload);
 
       if (assignRes.status !== 200 || !assignRes.data.success) {
-        error(assignRes.data.error || "Status updated, but asset assign failed.");
+        error(assignRes.data.error || "Status updated, but asset operation failed.");
       }
 
       RefetchAll?.();
-      success("Request accepted and asset assigned successfully!");
+      success(message);
 
     } catch (err) {
       console.error("Accept request error:", err);
@@ -134,7 +130,6 @@ const RequestButton = ({
       setLoadingAccept(false);
     }
   };
-
 
   return (
     <div className='flex items-center gap-2'>

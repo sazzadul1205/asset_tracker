@@ -26,7 +26,6 @@ const Navbar = () => {
   const {
     data: MyUserData,
     error: MyUserError,
-    refetch: MyUserRefetch,
     isLoading: MyUserIsLoading,
   } = useQuery({
     queryKey: ["MyUserData", session?.user?.employee_id],
@@ -73,7 +72,10 @@ const Navbar = () => {
       pageTitle = "Employee Dashboard";
       break;
     case "/Employee/MyRequests":
-      pageTitle = "Employee My Requests";
+      pageTitle = "My Requests";
+      break;
+    case "/Employee/MyAssets":
+      pageTitle = "My Assets";
       break;
     default:
       pageTitle = "Unknown Page";
