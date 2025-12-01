@@ -15,13 +15,13 @@ import {
   MdPersonOutline,
 } from "react-icons/md";
 
-// Icons
-
 // Assets - Logo
 import Logo from "../../../public/Logo/Website_Logo.png";
 
 // Assets - Icons
+import MyAssetsIcon from "../../../public/Icons/Admin/MyAssetsIcon";
 import MyRequestsIcon from "../../../public/Icons/Admin/MyRequestsIcon";
+
 // Shared Components
 import Navbar from "@/Shared/Navbar/Navbar";
 
@@ -40,7 +40,11 @@ const EmployeeLayout = ({ children }) => {
       icon: <MdOutlineDashboard className="text-xl" />,
       href: "/Employee/Dashboard",
     },
-
+    {
+      name: "My Assets",
+      icon: <MyAssetsIcon className="w-5 h-5" />,
+      href: "/Employee/MyAssets",
+    },
     {
       name: "My Requests",
       icon: <MyRequestsIcon className="w-5 h-5" />,

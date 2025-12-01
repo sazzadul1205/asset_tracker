@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 
 // Icons
 import { FiSearch } from "react-icons/fi";
-import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaEye } from 'react-icons/fa';
+import { FaBoxOpen, FaEye } from 'react-icons/fa';
 
 // Tooltip 
 import { Tooltip } from "react-tooltip";
