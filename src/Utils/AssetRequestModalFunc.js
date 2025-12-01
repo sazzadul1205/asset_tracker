@@ -15,9 +15,9 @@ export function RemoveAssigned(data) {
  * @param {string} email - Email to filter by
  * @returns {Array} Filtered assets
  */
-export function getAssetsByEmail(data, email) {
-  if (!Array.isArray(data) || !email) return [];
+export function getAssetsByEmail(data, UserId) {
+  if (!Array.isArray(data) || !UserId) return [];
   return data.filter(
-    (asset) => asset.assigned_to?.toLowerCase() === email.toLowerCase()
+    (asset) => asset.assigned_to?.toLowerCase() === UserId.toLowerCase()
   );
 }

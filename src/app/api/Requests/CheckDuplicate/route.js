@@ -8,21 +8,24 @@ export const POST = async (req) => {
     const collection = db.collection("Requests");
 
     // Extract only the params sent
-    const { asset_value, requested_by_id } = await req.json();
+    const { asset_value, requested_by_id, action_type } = await req.json();
 
-    if (!asset_value || !requested_by_id) {
+    if (!asset_value || !requested_by_id || !action_type) {
       return NextResponse.json(
         {
           success: false,
-          message: "asset_value and requested_by_id are required",
+          message: "asset_value, requested_by_id and action_type are required",
         },
         { status: 400 }
       );
     }
 
+    // Check active duplicates (ignore accepted/rejected)
     const existing = await collection.findOne({
       "asset.value": asset_value,
       "requested_by.id": requested_by_id,
+      action_type, // only match same type
+      status: { $nin: ["accepted", "rejected"] }, // ignore completed requests
     });
 
     if (existing) {
