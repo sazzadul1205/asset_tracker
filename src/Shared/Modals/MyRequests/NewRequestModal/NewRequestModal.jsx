@@ -141,8 +141,9 @@ const NewRequestModal = ({
   const AllAssetData = RemoveAssigned(AssetBasicInfoData);
 
   // My Assets 
-  const MyAssetData = getAssetsByEmail(AssetBasicInfoData, UserEmail);
+  const MyAssetData = getAssetsByEmail(AssetBasicInfoData, UserId);
 
+  // Universal Submit Handler
   const handleUniversalSubmit = async (data, action_type) => {
     setFormError(null);
     setIsLoading(true);
@@ -163,8 +164,10 @@ const NewRequestModal = ({
 
       // ---- POST DUPLICATE CHECK ----
       const duplicateCheck = await axiosPublic.post("/Requests/CheckDuplicate", {
-        asset_value: payload.asset?.value || payload.general?.current_asset?.value,
+        asset_value: payload.asset?.value ||
+          payload.general?.current_asset?.value,
         requested_by_id: UserId,
+        action_type,
       });
 
       if (duplicateCheck.data?.success === false) {
