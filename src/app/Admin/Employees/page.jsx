@@ -11,14 +11,15 @@ import { useSession } from 'next-auth/react';
 // Icons
 import { MdEdit } from 'react-icons/md';
 import { FiSearch } from "react-icons/fi";
-import { FaAngleLeft, FaAngleRight, FaBoxOpen, FaEye, FaPlus, FaRegTrashAlt } from 'react-icons/fa';
+import { FaBoxOpen, FaEye, FaPlus, FaRegTrashAlt } from 'react-icons/fa';
 
-// Tooltip 
-import { Tooltip } from "react-tooltip";
-import 'react-tooltip/dist/react-tooltip.css';
 
 // Tanstack
 import { useQuery } from '@tanstack/react-query';
+
+// Date Fns
+import { formatDistanceToNow } from "date-fns";
+
 
 // Shared
 import Error from '@/Shared/Error/Error';
@@ -132,10 +133,6 @@ const EmployeesPage = () => {
     }
   };
 
-
-  console.log("AllUsersData", AllUsersData);
-
-
   return (
     <div>
       {/* Header */}
@@ -190,6 +187,8 @@ const EmployeesPage = () => {
                 { label: "Position", align: "left" },
                 { label: "Role", align: "left" },
                 { label: "Status", align: "center" },
+                { label: "Last Login", align: "center" },
+                { label: "Fixed Account", align: "center" },
                 { label: "Action", align: "center" },
               ].map((col, idx) => (
                 <th
@@ -211,7 +210,7 @@ const EmployeesPage = () => {
           <tbody>
             {AllUsersIsLoading || status === "loading" ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center">
+                <td colSpan={8} className="py-12 text-center">
                   <Loading height="min-h-[500px]" background_color="bg-white" />
                 </td>
               </tr>
@@ -261,13 +260,10 @@ const EmployeesPage = () => {
 
                   {/* Department */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm">
-                    {user?.contact?.department}
-                  </td>
+                    <UserDepartmentView department={user?.contact?.department} /></td>
 
                   {/* Position */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm">
-                    {user?.contact?.position}
-                  </td>
+                  <td className="py-3 px-4 whitespace-nowrap text-sm">{user?.contact?.position}</td>
 
                   {/* Role / Access Level */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm">
@@ -280,15 +276,31 @@ const EmployeesPage = () => {
                   <td className="py-3 px-4 whitespace-nowrap text-sm text-center">
                     <span
                       className={`inline-flex items-center justify-center w-24 py-1 rounded-xl text-sm font-semibold
-                        ${user?.employment?.status === "active" ? "bg-green-100 text-green-700" : ""}
-                      ${user?.employment?.status === "inactive" ? "bg-gray-200 text-gray-700" : ""}
-                      ${user?.employment?.status === "pending" ? "bg-yellow-100 text-yellow-700" : ""}
-                      ${user?.employment?.status === "archived" ? "bg-red-100 text-red-700" : ""}`}
+              ${user?.employment?.status === "active" ? "bg-green-100 text-green-700" : ""}
+              ${user?.employment?.status === "inactive" ? "bg-gray-200 text-gray-700" : ""}
+              ${user?.employment?.status === "pending" ? "bg-yellow-100 text-yellow-700" : ""}
+              ${user?.employment?.status === "archived" ? "bg-red-100 text-red-700" : ""}`}
                     >
                       {user?.employment?.status
                         ?.charAt(0)
                         .toUpperCase() + user?.employment?.status?.slice(1)}
                     </span>
+                  </td>
+
+                  {/* Last Login */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-center">
+                    {user?.employment?.last_login
+                      ? formatDistanceToNow(new Date(user.employment.last_login), { addSuffix: true })
+                      : "Never"}
+                  </td>
+
+                  {/* Fixed Account */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-center">
+                    {user?.employment?.fixed ? (
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs">Fixed</span>
+                    ) : (
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-xs">Normal</span>
+                    )}
                   </td>
 
                   {/* Actions */}
@@ -329,7 +341,7 @@ const EmployeesPage = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-12 text-center">
+                <td colSpan={8} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <FaBoxOpen className="text-gray-400 w-12 h-12" />
                     <p className="text-gray-500 text-lg font-semibold">No employees found</p>
@@ -341,6 +353,7 @@ const EmployeesPage = () => {
               </tr>
             )}
           </tbody>
+
 
           {/* Table footer with dynamic pagination */}
           <TableBottomPagination
