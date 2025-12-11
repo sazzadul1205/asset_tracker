@@ -122,17 +122,20 @@ const RequestCard = ({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Delete Button (only for creator) */}
-          {UserEmail === request?.requested_by?.email && (
-            <button
-              onClick={() => handleDeleteRequest(request)}
-              className="
-              flex items-center justify-center px-2 font-semibold py-1.5 rounded-lg bg-red-600 text-white 
-              shadow-md gap-2 hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
-              active:shadow-md transition-all duration-200"            >
-              <IoTrashOutline className="text-2xl" />
-            </button>
-          )}
+          {/* Delete Button (only for creator AND only when pending) */}
+          {UserEmail === request?.requested_by?.email &&
+            (!request?.status || request?.status === "pending") && (
+              <button
+                onClick={() => handleDeleteRequest(request)}
+                className="
+                flex items-center justify-center px-2 font-semibold py-1.5 rounded-lg bg-red-600 text-white 
+                shadow-md gap-2 hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-px 
+                active:shadow-md transition-all duration-200"
+              >
+                <IoTrashOutline className="text-2xl" />
+              </button>
+            )}
+
 
           {/* Request Buttons */}
           <RequestButton

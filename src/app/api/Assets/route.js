@@ -82,31 +82,31 @@ export const POST = async (request) => {
   try {
     const data = await request.json();
 
-    // Validate required fields
-    if (!data.asset_tag || !data.asset_tag.trim()) {
+    // Basic validation
+    if (!data.tag || !data.tag.trim()) {
       return NextResponse.json(
         { success: false, message: "Asset Tag is required" },
         { status: 400 }
       );
     }
 
-    if (!data.asset_name || !data.asset_name.trim()) {
+    if (!data.details?.name || !data.details.name.trim()) {
       return NextResponse.json(
         { success: false, message: "Asset Name is required" },
         { status: 400 }
       );
     }
 
-    if (!data.asset_category) {
+    if (!data.details?.category) {
       return NextResponse.json(
         { success: false, message: "Asset Category is required" },
         { status: 400 }
       );
     }
 
-    if (!data.created_by) {
+    if (!data.audit?.created_by) {
       return NextResponse.json(
-        { success: false, message: "Creator info (created_by) is required" },
+        { success: false, message: "Creator info is required" },
         { status: 400 }
       );
     }
@@ -114,10 +114,11 @@ export const POST = async (request) => {
     const db = await connectDB();
     const collection = db.collection("Assets");
 
-    // Check for duplicate asset_tag
+    // Check duplicate tag (case-insensitive)
     const exists = await collection.findOne({
-      asset_tag: { $regex: new RegExp(`^${data.asset_tag.trim()}$`, "i") },
+      tag: { $regex: new RegExp(`^${data.tag.trim()}$`, "i") },
     });
+
     if (exists) {
       return NextResponse.json(
         { success: false, message: "Asset with this tag already exists" },
@@ -126,40 +127,54 @@ export const POST = async (request) => {
     }
 
     // Generate unique Asset ID
-    let uniqueAssetId;
+    let uniqueId;
     const allIds = await collection
-      .find({}, { projection: { asset_id: 1 } })
+      .find({}, { projection: { id: 1 } })
       .toArray();
-    const existingIds = allIds.map((item) => item.asset_id);
+    const existingIds = allIds.map((item) => item.id);
 
     do {
-      uniqueAssetId = generateId(6, "ASS", { numbersOnly: true });
-    } while (existingIds.includes(uniqueAssetId));
+      uniqueId = generateId(6, "ASS", { numbersOnly: true });
+    } while (existingIds.includes(uniqueId));
 
-    // Create newAsset object
+    // Build new grouped object
     const newAsset = {
-      asset_id: uniqueAssetId,
-      asset_tag: data.asset_tag.trim(),
-      serial_number: data.serial_number?.trim() || "",
-      asset_name: data.asset_name.trim(),
-      asset_category: data.asset_category,
-      asset_brand: data.asset_brand?.trim() || "",
-      asset_model: data.asset_model?.trim() || "",
-      assigned_to: data.assigned_to || null,
-      purchase_date: data.purchase_date || null,
-      purchase_cost: Number(data.purchase_cost) || 0,
-      warranty_expiry: data.warranty_expiry || null,
-      supplier: data.Supplier?.trim() || "",
-      location: data.Location?.trim() || "",
-      status: data.status || "unAssigned",
-      condition_rating: data.condition_rating || "unAssigned",
-      asset_description: data.asset_description?.trim() || "",
-      asset_notes: data.asset_notes?.trim() || "",
-      created_by: data.created_by,
-      created_at: getTimestamp(),
-      updated_at: getTimestamp(),
+      id: uniqueId,
+      tag: data.tag.trim(),
+      serial: data.serial?.trim() || "",
+
+      details: {
+        name: data.details?.name?.trim() || "",
+        category: data.details?.category || "",
+        brand: data.details?.brand?.trim() || "",
+        model: data.details?.model?.trim() || "",
+        description: data.details?.description?.trim() || "",
+        notes: data.details?.notes?.trim() || "",
+      },
+
+      ownership: {
+        assigned_to: data.ownership?.assigned_to || null,
+        location: data.ownership?.location?.trim() || "Unassigned",
+        status: data.ownership?.status || "Unassigned",
+        condition: data.ownership?.condition || "Unassigned",
+      },
+
+      purchase: {
+        date: data.purchase?.date || null,
+        cost: Number(data.purchase?.cost) || 0,
+        supplier: data.purchase?.supplier?.trim() || "",
+        warranty_expiry: data.purchase?.warranty_expiry || null,
+      },
+
+      audit: {
+        created_by: data.audit.created_by,
+        created_at: getTimestamp(),
+        updated_by: data.audit.created_by,
+        updated_at: getTimestamp(),
+      },
     };
 
+    // Insert into DB
     const result = await collection.insertOne(newAsset);
 
     if (!result.acknowledged) {
@@ -171,7 +186,7 @@ export const POST = async (request) => {
         success: true,
         message: "Asset added successfully",
         assetId: result.insertedId,
-        asset_id: uniqueAssetId,
+        id: uniqueId,
         asset: newAsset,
       },
       { status: 201 }

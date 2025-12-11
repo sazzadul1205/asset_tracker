@@ -4,7 +4,6 @@
 // React Components
 import { useEffect, useState } from "react";
 
-
 // Next Components
 import { useRouter } from "next/navigation";
 
@@ -33,23 +32,15 @@ export const useAuth = (redirectIfAuthenticated = false) => {
 
     const checkSession = async () => {
       const session = await getSession();
-      if (session) {
-        if (!skipAlreadyLoggedInToast) {
-          info("Already logged in!"); // Only show if not skipping
-        }
+      if (!session) return;
 
-        const role = session.user.role || "Employee";
-        switch (role) {
-          case "Admin":
-            router.replace("/Admin/Dashboard");
-            break;
-          case "Manager":
-            router.replace("/Manager/Dashboard");
-            break;
-          default:
-            router.replace("/Employee/Dashboard");
-        }
-      }
+      if (!skipAlreadyLoggedInToast) info("Already logged in!");
+
+      const role = (session.user.role || "Employee").toLowerCase();
+
+      if (role === "admin") router.replace("/Admin/Dashboard");
+      else if (role === "manager") router.replace("/Manager/Dashboard");
+      else router.replace("/Employee/Dashboard");
     };
 
     checkSession();
@@ -156,3 +147,4 @@ export const useAuth = (redirectIfAuthenticated = false) => {
 
   return { login, signUp, logout, loading };
 };
+

@@ -6,10 +6,15 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "i.ibb.co",
-        pathname: "/**", // allow all paths on this host
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "ibb.co.com",
+        pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;
+export default nextConfig;  

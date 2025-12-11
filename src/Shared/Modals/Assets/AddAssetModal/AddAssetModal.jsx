@@ -66,7 +66,7 @@ const AddAssetModal = ({
     document.getElementById("Add_Asset_Modal")?.close();
   };
 
-  // Submit handler (ASSET CREATION)
+  // Handle Submit
   const onSubmit = async (data) => {
     setFormError(null);
     setIsLoading(true);
@@ -77,17 +77,42 @@ const AddAssetModal = ({
         return;
       }
 
-      // Build employee payload
+      // Build final grouped payload for backend
       const payload = {
-        ...data,
-        created_by: UserEmail,
-        assigned_to: "UnAssigned",
+        tag: data.asset_tag?.trim(),
+        serial: data.serial_number?.trim() || "",
+
+        details: {
+          name: data.asset_name?.trim(),
+          category: data.asset_category,
+          brand: data.asset_brand?.trim() || "",
+          model: data.asset_model?.trim() || "",
+          description: data.asset_description?.trim() || "",
+          notes: data.asset_notes?.trim() || "",
+        },
+
+        ownership: {
+          assigned_to: "UnAssigned",
+          location: data.location || "Unassigned",
+          status: data.status || "unAssigned",
+          condition: data.condition_rating || "unAssigned",
+        },
+
+        purchase: {
+          date: data.purchase_date || null,
+          cost: Number(data.purchase_cost) || 0,
+          supplier: data.supplier?.trim() || "",
+          warranty_expiry: data.warranty_expiry || null,
+        },
+
+        audit: {
+          created_by: UserEmail,
+        }
       };
 
-      // Create employee
+      // Send request
       const response = await axiosPublic.post("/Assets", payload);
 
-      // Check response
       if (response.status === 201 || response.status === 200) {
         handleClose();
         RefetchAll?.();
@@ -95,19 +120,21 @@ const AddAssetModal = ({
       } else {
         setFormError(response.data?.message || "Failed to create asset.");
       }
+
     } catch (error) {
-      console.error("Employee creation error:", error);
+      console.error("Asset creation error:", error);
 
       const serverError =
         error.response?.data?.message ||
         error.message ||
-        "Failed to create employee.";
+        "Failed to create asset.";
 
       setFormError(serverError);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
+
 
   return (
     <div
@@ -179,7 +206,6 @@ const AddAssetModal = ({
           register={register}
           placeholder="Select Asset Category"
           options={[
-            { label: "Unassigned", value: "unAssigned" },
             ...(AssetCategoryOptionData || []).map(item => ({
               label: item.label,
               value: item.value
@@ -257,7 +283,6 @@ const AddAssetModal = ({
           register={register}
           placeholder="Select Department"
           options={[
-            { label: "Unassigned", value: "" },
             ...DepartmentOptionData,
           ]}
           rules={{ required: "Location is required" }}
@@ -273,7 +298,6 @@ const AddAssetModal = ({
           register={register}
           placeholder="Select Status"
           options={[
-            { label: "Unassigned", value: "unAssigned" },
             ...assetStatusOptions
           ]}
           rules={{ required: "Status is required" }}

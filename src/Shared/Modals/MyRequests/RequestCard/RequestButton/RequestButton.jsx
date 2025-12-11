@@ -66,70 +66,86 @@ const RequestButton = ({
 
   // ---------------- Accept Request Handler ----------------
   const handleAcceptRequest = async (request_id) => {
-    if (!request_id) return error("Invalid request selected!");
+    if (!request_id) return error("Invalid request!");
     setLoadingAccept(true);
 
     try {
-      // 1) Update Request Status
+      // ---- STEP 1: Update request status → accepted ----
       const res = await axiosPublic.patch(`/Requests/UpdateStatus/${request_id}`, {
         status: "accepted",
       });
 
-      if (res.status !== 200 || !res.data.success) {
+      if (!res.data?.success) {
         setLoadingAccept(false);
-        return error(res.data.error || "Failed to approve the request.");
+        return error(res.data.error || "Failed to accept request.");
       }
 
-      // 2) Fetch asset data
-      const assetTag = request?.asset?.value; // e.g., "AST-TEST-012"
+      // ---- STEP 2: Get asset info ----
+      const assetTag = request?.asset?.value;
       const assetRes = await axiosPublic.get(`/Assets/${assetTag}`);
-      const assetData = assetRes?.data?.data;
+      const asset = assetRes?.data?.data;
 
-      if (!assetData || !assetData.asset_id) {
-        return error("Asset not found or missing asset_id.");
+      if (!asset || !asset.asset_id) {
+        return error("Asset not found!");
       }
 
-      const realAssetId = assetData.asset_id;
+      const assetId = asset.asset_id;
 
-      // 3) Determine employee assignment or return logic
+      // ---- STEP 3: Build update payload ----
       let payload = { updated_by: UserEmail };
-      let message = "Request accepted successfully!";
+      let endpoint = "";
+      let message = "";
 
-      if (request?.action_type === "assign") {
-        payload.employee_id = request?.assign_to?.value;
-        message = "Assign request accepted and asset assigned successfully!";
-      } else if (request?.action_type === "request") {
-        payload.employee_id = request?.requested_by?.id;
-        message = "Request approved and asset assigned successfully!";
-      } else if (request?.action_type === "return") {
-        payload.condition_rating = request?.condition_rating || assetData.condition_rating;
-        // Clear assigned_to for return
-        payload.employee_id = null;
-        message = "Return request processed successfully!";
+      switch (request?.action_type) {
+        case "assign":
+          payload.employee_id = request?.assign_to?.value;
+          endpoint = `/Assets/Assign/${assetId}`;
+          message = "Asset assigned successfully.";
+          break;
+
+        case "request":
+          payload.employee_id = request?.requested_by?.id;
+          endpoint = `/Assets/Assign/${assetId}`;
+          message = "Asset assigned to requester.";
+          break;
+
+        case "return":
+          payload.employee_id = null;
+          payload.condition_rating =
+            request?.condition_rating || asset?.condition_rating;
+          endpoint = `/Assets/Return/${assetId}`;
+          message = "Asset returned successfully.";
+          break;
+
+        case "repair":
+          payload.status = "in_repair";
+          payload.employee_id = null;
+          payload.repair_notes = request?.notes;
+          endpoint = `/Assets/Repair/${assetId}`;
+          message = "Asset sent for repair.";
+          break;
+
+        default:
+          return error("Invalid request type.");
       }
 
-      // 4) Call relevant asset endpoint
-      const endpoint =
-        request?.action_type === "return"
-          ? `/Assets/Return/${realAssetId}`
-          : `/Assets/Assign/${realAssetId}`;
+      // ---- STEP 4: Update Asset ----
+      const updateRes = await axiosPublic.put(endpoint, payload);
 
-      const assignRes = await axiosPublic.put(endpoint, payload);
-
-      if (assignRes.status !== 200 || !assignRes.data.success) {
-        error(assignRes.data.error || "Status updated, but asset operation failed.");
+      if (!updateRes?.data?.success) {
+        return error(updateRes.data.error || "Asset update failed.");
       }
 
       RefetchAll?.();
       success(message);
-
     } catch (err) {
-      console.error("Accept request error:", err);
-      error(err?.response?.data?.error || "Something went wrong while approving!");
+      console.error(err);
+      error(err?.response?.data?.error || "Something went wrong.");
     } finally {
       setLoadingAccept(false);
     }
   };
+
 
   return (
     <div className='flex items-center gap-2'>
