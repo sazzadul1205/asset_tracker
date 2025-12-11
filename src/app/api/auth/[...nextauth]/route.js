@@ -1,4 +1,5 @@
 // api/auth/[...nextauth]/route.js
+
 // MongoDB Connect
 import { connectDB } from "@/lib/connectDB";
 
@@ -8,20 +9,20 @@ import NextAuth from "next-auth";
 // Credentials Provider
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Bcrypt
+// Bcrypt for password hashing
 import bcrypt from "bcrypt";
 
 const handler = NextAuth({
-  // Secret
+  // Secret key for JWT
   secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
 
-  // Providers
+  // Auth Providers
   providers: [
     CredentialsProvider({
-      // Name
+      // Provider name
       name: "Credentials",
 
-      // Credentials
+      // Fields for login form
       credentials: {
         email: { label: "Email", type: "email", placeholder: "your@email.com" },
         password: {
@@ -31,49 +32,56 @@ const handler = NextAuth({
         },
       },
 
-      // Check credentials
+      // Authorization function
       async authorize(credentials) {
-        // Check credentials
         const { email, password } = credentials;
+
+        // Validate input
         if (!email || !password) throw new Error("Email and password required");
 
-        // Check if user exists
+        // Connect to DB
         const db = await connectDB();
-        const user = await db.collection("Users").findOne({ email });
 
-        // Check if user exists
+        // Find user by email (nested field)
+        const user = await db
+          .collection("Users")
+          .findOne({ "identity.email": email });
+
         if (!user) throw new Error("User not found");
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        // Compare password
+        const isPasswordValid = await bcrypt.compare(
+          password,
+          user.security.password
+        );
         if (!isPasswordValid) throw new Error("Invalid password");
 
         // Update last_login timestamp
-        await db.collection("Users").updateOne(
-          { email },
-          {
-            $set: {
-              last_login: new Date().toISOString(), // current time in ISO format
-            },
-          }
-        );
+        await db
+          .collection("Users")
+          .updateOne(
+            { "identity.email": email },
+            { $set: { last_login: new Date() } }
+          );
 
-        // Return session-safe fields
+        // Return safe fields for session
         return {
-          email: user.email,
-          employee_id: user.employee_id,
-          access_level: user.access_level || "Employee",
+          email: user.identity.email,
+          employee_id: user.identity.employee_id,
+          access_level: user.employment.access_level || "Employee",
+          full_name: user.identity.full_name,
         };
       },
     }),
   ],
 
-  // Session
+  // Session settings
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
-  // Pages
+  // Custom pages
   pages: {
     signIn: "/Auth/Login",
   },
@@ -86,6 +94,7 @@ const handler = NextAuth({
         token.email = user.email;
         token.employee_id = user.employee_id;
         token.role = user.access_level || "Employee";
+        token.full_name = user.full_name;
       }
       return token;
     },
@@ -99,11 +108,12 @@ const handler = NextAuth({
           email: token.email,
           employee_id: token.employee_id,
           role: token.role || "Employee",
+          full_name: token.full_name,
         },
       };
     },
   },
 });
 
-// Export
+// Export handler for GET and POST
 export { handler as GET, handler as POST };

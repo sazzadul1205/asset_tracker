@@ -2,6 +2,14 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
+/**
+ * GET Method - Fetch basic user info
+ *
+ * Features:
+ * 1. Works with nested `identity` fields
+ * 2. Filter fixed users with `includeFixed` or `onlyFixed` query params
+ * 3. Optionally return only specific fields via `fields` query param
+ */
 export const GET = async (req) => {
   try {
     const db = await connectDB();
@@ -9,34 +17,44 @@ export const GET = async (req) => {
 
     const { searchParams } = new URL(req.url);
 
-    // Query params:
+    // Query params
     const includeFixed = searchParams.get("includeFixed") === "true";
     const onlyFixed = searchParams.get("onlyFixed") === "true";
 
-    // Build MongoDB filter
-    let filter = {};
+    // Optional param: return only specified fields
+    const fieldsParam = searchParams.get("fields"); // e.g. "full_name,email"
+    const requestedFields = fieldsParam
+      ? fieldsParam.split(",").map((f) => f.trim())
+      : ["full_name", "email", "employee_id"]; // default fields
 
+    // Build MongoDB filter for fixed users
+    let filter = {};
     if (onlyFixed) {
-      filter.fixed = true; // return ONLY fixed
+      filter.fixed = true; // return only fixed
     } else if (!includeFixed) {
       filter.$or = [{ fixed: false }, { fixed: { $exists: false } }];
     }
 
-    // Fields to return
-    const projection = {
-      _id: 0,
-      email: 1,
-      full_name: 1,
-      employee_id: 1,
-    };
+    // Build projection dynamically based on requested fields inside `identity`
+    let projection = {};
+    requestedFields.forEach((f) => {
+      projection[`identity.${f}`] = 1;
+    });
 
+    // Query the DB
     const users = await collection.find(filter, { projection }).toArray();
 
+    // Transform nested identity fields to flat structure
+    const transformedUsers = users.map((user) => {
+      let obj = {};
+      requestedFields.forEach((f) => {
+        obj[f] = user.identity?.[f] || null;
+      });
+      return obj;
+    });
+
     return NextResponse.json(
-      {
-        success: true,
-        data: users,
-      },
+      { success: true, data: transformedUsers },
       { status: 200 }
     );
   } catch (error) {

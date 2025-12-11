@@ -52,7 +52,6 @@ const AddEmployeeModal = ({
 
       if (selectedDept && selectedDept.positions) {
         setPositionOptions([
-          { label: "Unassigned", value: "unAssigned" },
           ...selectedDept.positions
             .filter((pos) => pos.position_name !== "Manager") // exclude Manager
             .map((pos) => ({
@@ -80,36 +79,48 @@ const AddEmployeeModal = ({
     document.getElementById("Add_Employee_Modal")?.close();
   };
 
-  // Submit handler (EMPLOYEE CREATION)
+  // Handle Submit
   const onSubmit = async (data) => {
     setFormError(null);
     setIsLoading(true);
 
+    // Create Employee
     try {
+      // Check if UserEmail is available
       if (!UserEmail) {
         setFormError("Session error: User email missing.");
         return;
       }
 
-      // Build employee payload
+      // Build grouped payload for the new API
       const payload = {
-        full_name: data.full_name,
-        email: data.email,
-        employee_id: data.employee_id,
-        phone: data.phone,
-        department: data.department || "unAssigned",
-        position: data.position || "unAssigned",
-        hire_date: data.hire_date,
-        status: data.status,
-        access_level: data.access_level || "unAssigned",
-        password: data.password,
-        created_by: UserEmail,
+        identity: {
+          full_name: data.full_name,
+          email: data.email,
+          employee_id: data.employee_id,
+        },
+        contact: {
+          phone: data.phone,
+          department: data.department || "unAssigned",
+          position: data.position || "unAssigned",
+        },
+        employment: {
+          hire_date: data.hire_date,
+          status: data.status,
+          access_level: data.access_level || "Employee",
+        },
+        security: {
+          password: data.password,
+        },
+        audit: {
+          created_by: UserEmail,
+        },
       };
 
-      // Create employee
+      // Create Employee
       const response = await axiosPublic.post("/Users", payload);
 
-      // Check response
+      // Handle response
       if (response.status === 201 || response.status === 200) {
         success("Employee created successfully.");
         RefetchAll?.();
@@ -119,13 +130,7 @@ const AddEmployeeModal = ({
       }
     } catch (err) {
       console.error("Employee creation error:", err);
-
-      const serverError =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to create employee.";
-
-      setFormError(serverError);
+      setFormError(err.response?.data?.message || err.message || "Failed to create employee.");
     } finally {
       setIsLoading(false);
     }
@@ -220,7 +225,6 @@ const AddEmployeeModal = ({
           register={register}
           placeholder="Select Department"
           options={[
-            { label: "Unassigned", value: "unAssigned" },
             ...DepartmentsBasicInfoData.map(d => ({
               label: d.department_name,
               value: d.dept_id
@@ -236,7 +240,7 @@ const AddEmployeeModal = ({
           type="select"
           register={register}
           placeholder="Select Position"
-          options={positionOptions} // dynamically includes Unassigned
+          options={positionOptions}
           rules={{ required: "Position is required" }}
           disabled={!positionOptions.length}
         />
@@ -269,25 +273,6 @@ const AddEmployeeModal = ({
           ]}
           rules={{ required: "Status is required" }}
           error={errors.status}
-        />
-
-        {/* Access Level */}
-        <SharedInput
-          label="Access Level"
-          name="access_level"
-          type="select"
-          register={register}
-          placeholder="Select Level"
-          options={[
-            // { value: "admin", label: "Admin" },
-            // { value: "manager", label: "Manager" },
-            { value: "employee", label: "Employee" },
-            { value: "intern", label: "Intern" },
-            { value: "guest", label: "Guest" },
-            { value: "supervisor", label: "Supervisor" },
-          ]}
-          rules={{ required: "Access Level is required" }}
-          error={errors.access_level}
         />
 
         {/* Password */}

@@ -2,27 +2,43 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
-// GET Method - Fetch user by email
+/**
+ * GET Method - Fetch user by email
+ *
+ * Steps:
+ * 1. Validate email param
+ * 2. Fetch user from DB using identity.email
+ * 3. Remove sensitive info before returning
+ */
 export const GET = async (req, context) => {
   try {
-    const params = await context.params; // <-- await here
-    const { email } = params;
+    // Extract email from URL params
+    const { email } = context.params;
 
+    // Validate
     if (!email) {
       return NextResponse.json(
-        { message: "Employee ID is required" },
+        { message: "Email is required" },
         { status: 400 }
       );
     }
 
+    // Connect to MongoDB
     const db = await connectDB();
-    const user = await db.collection("Users").findOne({ email });
 
+    // Fetch user by email inside identity object
+    const user = await db
+      .collection("Users")
+      .findOne({ "identity.email": email });
+
+    // Check if user exists
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const { password, ...safeUser } = user; // Remove sensitive info
+    // Remove sensitive info like password before returning
+    const { security, ...safeUser } = user;
+
     return NextResponse.json(safeUser, { status: 200 });
   } catch (error) {
     console.error("Error fetching user:", error);

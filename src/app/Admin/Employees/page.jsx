@@ -33,6 +33,7 @@ import ViewEmployeeModal from '@/Shared/Modals/Employees/ViewEmployeeModal/ViewE
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
+import TableBottomPagination from '@/Shared/TableBottomPagination/TableBottomPagination';
 
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -131,6 +132,10 @@ const EmployeesPage = () => {
     }
   };
 
+
+  console.log("AllUsersData", AllUsersData);
+
+
   return (
     <div>
       {/* Header */}
@@ -189,7 +194,12 @@ const EmployeesPage = () => {
               ].map((col, idx) => (
                 <th
                   key={idx}
-                  className={`px-6 py-4 text-xs font-medium text-gray-500 uppercase ${col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right"}`}
+                  className={`px-6 py-4 text-xs font-medium text-gray-500 uppercase ${col.align === "left"
+                    ? "text-left"
+                    : col.align === "center"
+                      ? "text-center"
+                      : "text-right"
+                    }`}
                 >
                   {col.label}
                 </th>
@@ -200,40 +210,35 @@ const EmployeesPage = () => {
           {/* Table Body */}
           <tbody>
             {AllUsersIsLoading || status === "loading" ? (
-              // Loading
               <tr>
                 <td colSpan={6} className="py-12 text-center">
-                  <Loading
-                    height='min-h-[500px]'
-                    background_color='bg-white'
-                  />
+                  <Loading height="min-h-[500px]" background_color="bg-white" />
                 </td>
               </tr>
             ) : Users?.length > 0 ? (
-              Users.map((users) => (
+              Users.map((user) => (
                 <tr
-                  key={users._id}
+                  key={user._id}
                   className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
                 >
-                  {/* Icon, name, and ID */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
+                  {/* Icon, name, and email */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left">
                     <div className="flex items-center gap-4">
-                      {/* Icon container */}
                       <div
-                        className="shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-gray-300 text-gray-800 font-bold text-lg"
-                        style={{ backgroundColor: users.selectedColor || "#e2e8f0" }}
+                        className="shrink-0 w-12 h-12 flex items-center justify-center rounded-full text-lg font-bold"
+                        style={{ backgroundColor: user?.selectedColor || "#e2e8f0" }}
                       >
-                        {users.profile_image ? (
+                        {user?.profile_image ? (
                           <Image
-                            src={users.profile_image}
-                            alt={users.full_name}
+                            src={user?.profile_image}
+                            alt={user?.identity?.full_name}
                             width={32}
                             height={32}
                             className="object-contain rounded-full"
                           />
                         ) : (
                           <span>
-                            {users.full_name
+                            {user?.identity?.full_name
                               ?.trim()
                               ?.split(" ")
                               ?.map((w) => w[0])
@@ -243,94 +248,82 @@ const EmployeesPage = () => {
                           </span>
                         )}
                       </div>
-
-                      {/* Text content */}
                       <div className="flex flex-col">
                         <h3 className="font-semibold text-gray-800 text-sm md:text-base">
-                          {users.full_name}
+                          {user?.identity?.full_name}
                         </h3>
                         <p className="text-gray-500 text-xs md:text-sm">
-                          {users?.email || "N/A"}
+                          {user?.identity?.email || "N/A"}
                         </p>
                       </div>
                     </div>
                   </td>
 
                   {/* Department */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    <UserDepartmentView department={users.department} />
+                  <td className="py-3 px-4 whitespace-nowrap text-sm">
+                    {user?.contact?.department}
                   </td>
 
                   {/* Position */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    {users.position}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm">
+                    {user?.contact?.position}
                   </td>
 
-                  {/* Role */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-left cursor-default">
-                    {users.access_level?.charAt(0).toUpperCase() + users.access_level?.slice(1)}
+                  {/* Role / Access Level */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm">
+                    {user?.employment?.access_level
+                      ?.charAt(0)
+                      .toUpperCase() + user?.employment?.access_level?.slice(1)}
                   </td>
 
                   {/* Status */}
-                  <td className="py-3 px-4 whitespace-nowrap text-sm text-center cursor-default">
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-center">
                     <span
-                      className={`
-                          inline-flex items-center justify-center w-24 py-1 rounded-xl text-sm font-semibold
-                          ${users.status === "active" ? "bg-green-100 text-green-700" : ""}
-                          ${users.status === "inactive" ? "bg-gray-200 text-gray-700" : ""}
-                          ${users.status === "pending" ? "bg-yellow-100 text-yellow-700" : ""}
-                          ${users.status === "archived" ? "bg-red-100 text-red-700" : ""}
-                          `}
+                      className={`inline-flex items-center justify-center w-24 py-1 rounded-xl text-sm font-semibold
+                        ${user?.employment?.status === "active" ? "bg-green-100 text-green-700" : ""}
+                      ${user?.employment?.status === "inactive" ? "bg-gray-200 text-gray-700" : ""}
+                      ${user?.employment?.status === "pending" ? "bg-yellow-100 text-yellow-700" : ""}
+                      ${user?.employment?.status === "archived" ? "bg-red-100 text-red-700" : ""}`}
                     >
-                      {users.status?.charAt(0).toUpperCase() + users.status?.slice(1)}
+                      {user?.employment?.status
+                        ?.charAt(0)
+                        .toUpperCase() + user?.employment?.status?.slice(1)}
                     </span>
                   </td>
 
                   {/* Actions */}
                   <td className="py-3 px-4 whitespace-nowrap text-center">
-                    {/* Buttons container */}
                     <div className="flex items-center justify-center gap-3">
                       {/* View */}
                       <button
-                        data-tooltip-id={`view-tooltip-${users._id}`}
-                        data-tooltip-content="View Employee Details"
                         onClick={() => {
-                          setSelectedEmployee(users);
+                          setSelectedEmployee(user);
                           document.getElementById("View_Employee_Modal").showModal();
                         }}
-                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
                       >
                         <FaEye className="text-sm" />
                       </button>
 
                       {/* Edit */}
                       <button
-                        data-tooltip-id={`edit-tooltip-${users._id}`}
-                        data-tooltip-content="Edit Employee Details"
                         onClick={() => {
-                          setSelectedEmployee(users);
+                          setSelectedEmployee(user);
                           document.getElementById("Edit_Employee_Modal").showModal();
                         }}
-                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
                       >
                         <MdEdit className="text-sm" />
                       </button>
 
                       {/* Delete */}
                       <button
-                        data-tooltip-content="Delete Employee"
-                        data-tooltip-id={`delete-tooltip-${users._id}`}
-                        onClick={() => handleDeleteEmployee(users)}
-                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md hover:shadow-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                        onClick={() => handleDeleteEmployee(user)}
+                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
                       >
                         <FaRegTrashAlt className="text-sm" />
                       </button>
                     </div>
-
-                    {/* Tooltip components with unique IDs */}
-                    <Tooltip id={`view-tooltip-${users._id}`} place="top" effect="solid" />
-                    <Tooltip id={`edit-tooltip-${users._id}`} place="top" effect="solid" />
-                    <Tooltip id={`delete-tooltip-${users._id}`} place="top" effect="solid" />
                   </td>
                 </tr>
               ))
@@ -338,69 +331,25 @@ const EmployeesPage = () => {
               <tr>
                 <td colSpan={6} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center gap-3">
-                    {/* Icon */}
                     <FaBoxOpen className="text-gray-400 w-12 h-12" />
-
-                    {/* Main message */}
-                    <p className="text-gray-500 text-lg font-semibold">
-                      No employees found
-                    </p>
-
-                    {/* Subtext for guidance */}
+                    <p className="text-gray-500 text-lg font-semibold">No employees found</p>
                     <p className="text-gray-400 text-sm">
                       Adjust your filters or add a new employee to get started.
                     </p>
                   </div>
                 </td>
               </tr>
-
             )}
           </tbody>
 
           {/* Table footer with dynamic pagination */}
-          <tfoot>
-            <tr>
-              <td colSpan={6} className="px-6 py-4 border-t border-gray-200">
-                <div className="flex items-center justify-between text-black">
-                  <div>
-                    <p className="text-sm">
-                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
-                    </p>
-                    <p className="text-xs font-semibold text-gray-500">Employees</p>
-                  </div>
-
-                  {/* Pagination */}
-                  <div className="flex items-center justify-end space-x-2 mt-4">
-                    {/* Previous Button */}
-                    <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    >
-                      <FaAngleLeft /> Prev
-                    </button>
-
-                    {/* Page Number Display */}
-                    <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
-                      Page {currentPage} of {totalPages}
-                    </div>
-
-                    {/* Next Button */}
-                    <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    >
-                      Next <FaAngleRight />
-                    </button>
-                  </div>
-
-                </div>
-              </td>
-            </tr>
-          </tfoot>
+          <TableBottomPagination
+            totalItems={totalItems}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            setCurrentPage={setCurrentPage}
+          />
         </table>
       </div>
 

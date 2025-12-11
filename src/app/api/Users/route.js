@@ -9,41 +9,31 @@ export async function POST(req) {
     const db = await connectDB();
     const body = await req.json();
 
-    const {
-      full_name,
-      email,
-      employee_id,
-      phone,
-      department,
-      position,
-      hire_date,
-      status,
-      access_level,
-      password,
-      created_by = "system", // optional – you can override
-    } = body;
+    const { identity, contact, employment, security, audit } = body;
 
     // 1. Validate inputs
     if (
-      !full_name ||
-      !email ||
-      !employee_id ||
-      !phone ||
-      !department ||
-      !position ||
-      !hire_date ||
-      !status ||
-      !access_level ||
-      !password
+      !identity?.full_name ||
+      !identity?.email ||
+      !identity?.employee_id ||
+      !contact?.phone ||
+      !contact?.department ||
+      !contact?.position ||
+      !employment?.hire_date ||
+      !employment?.status ||
+      !employment?.access_level ||
+      !security?.password
     ) {
       return NextResponse.json(
-        { message: "All fields are required" },
+        { message: "All required fields must be provided" },
         { status: 400 }
       );
     }
 
-    // 2. Check duplicates
-    const existingEmail = await db.collection("Users").findOne({ email });
+    // 2. Check for duplicate email
+    const existingEmail = await db
+      .collection("Users")
+      .findOne({ "identity.email": identity.email });
     if (existingEmail) {
       return NextResponse.json(
         { message: "Email already exists" },
@@ -51,8 +41,10 @@ export async function POST(req) {
       );
     }
 
-    const existingEmpID = await db.collection("Users").findOne({ employee_id });
-
+    // 3. Check for duplicate employee ID
+    const existingEmpID = await db
+      .collection("Users")
+      .findOne({ "identity.employee_id": identity.employee_id });
     if (existingEmpID) {
       return NextResponse.json(
         { message: "Employee ID already exists" },
@@ -60,28 +52,32 @@ export async function POST(req) {
       );
     }
 
-    // 3. Encrypt password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // 4. Hash the password
+    const hashedPassword = await bcrypt.hash(security.password, 10);
 
-    // 4. Prepare user object
+    // 5. Build the full user object according to the new format
     const newUser = {
-      full_name,
-      email,
-      employee_id,
-      phone,
-      department,
-      position,
-      hire_date: new Date(hire_date),
-      status,
-      access_level,
-      password: hashedPassword,
+      identity,
+      contact,
+      employment: {
+        ...employment,
+        hire_date: new Date(employment.hire_date),
+        last_login: null, // track future logins
+        fixed: employment.fixed || false, // optional, default false
+      },
+      security: {
+        password: hashedPassword,
+        old_passwords: [], // empty array for password history
+        password_changed_at: null, // timestamp for future password changes
+      },
+      audit: {
+        created_by: audit?.created_by || "system",
+      },
       created_at: new Date(),
       updated_at: new Date(),
-      created_by,
     };
 
-    // 5. Insert into DB
+    // 6. Insert into the database
     await db.collection("Users").insertOne(newUser);
 
     return NextResponse.json(
@@ -91,7 +87,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("AddUser Error:", error);
     return NextResponse.json(
-      { message: "Failed to add user" },
+      { message: "Failed to add user", error: error.message },
       { status: 500 }
     );
   }
