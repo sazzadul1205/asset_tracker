@@ -32,6 +32,7 @@ import ViewDepartmentModal from '@/Shared/Modals/Department/ViewDepartmentModal/
 // Hooks
 import { useToast } from '@/Hooks/Toasts';
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
+import TableBottomPagination from '@/Shared/TableBottomPagination/TableBottomPagination';
 
 const DepartmentPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -100,6 +101,7 @@ const DepartmentPage = () => {
   };
 
   // Delete Department Handler
+
   const handleDeleteDepartment = async (department) => {
     const isConfirmed = await confirm(
       "Are you sure?",
@@ -113,25 +115,32 @@ const DepartmentPage = () => {
     if (!isConfirmed) return;
 
     try {
-      // 1) Unassign the current manager (if exists)
-      if (department?.manager?.employee_id) {
-        await axiosPublic.put(`/Users/${department.manager.employee_id}`, {
-          fixed: false,
-          position: "UnAssigned",
-          access_level: "Employee",
-          department: "UnAssigned",
+      const managerId = department?.manager?.employee_id;
+
+      // 1) Unassign manager properly using your new UpdateDepartment route
+      if (managerId) {
+        await axiosPublic.put(`/Users/UpdateDepartment/${managerId}`, {
+          contact: {
+            department: "UnAssigned",
+          },
+          employment: {
+            department: "UnAssigned",
+            position: "UnAssigned",
+            access_level: "Employee",
+            fixed: false,
+          },
         });
       }
 
       // 2) Delete the department
       const res = await axiosPublic.delete(`/Departments/${department._id}`);
 
-      // 3) Check response
+      // 3) Final response check
       if (res.status === 200) {
         RefetchAll?.();
         success("Department deleted successfully!");
       } else {
-        error("Failed to delete the Department.");
+        error("Failed to delete the department.");
       }
 
     } catch (err) {
@@ -139,6 +148,8 @@ const DepartmentPage = () => {
       error(err?.response?.data?.error || "Something went wrong!");
     }
   };
+
+
 
   return (
     <div>
@@ -343,49 +354,14 @@ const DepartmentPage = () => {
           </tbody>
 
           {/* Table footer with dynamic pagination */}
-          <tfoot>
-            <tr>
-              <td colSpan={6} className="px-6 py-4 border-t border-gray-200">
-                <div className="flex items-center justify-between text-black">
-                  <div>
-                    <p className="text-sm">
-                      Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
-                    </p>
-                    <p className="text-xs font-semibold text-gray-500">Department</p>
-                  </div>
-
-                  {/* Pagination */}
-                  <div className="flex items-center justify-end space-x-2 mt-4">
-                    {/* Previous Button */}
-                    <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    >
-                      <FaAngleLeft /> Prev
-                    </button>
-
-                    {/* Page Number Display */}
-                    <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
-                      Page {currentPage} of {totalPages}
-                    </div>
-
-                    {/* Next Button */}
-                    <button
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:shadow-sm transition ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    >
-                      Next <FaAngleRight />
-                    </button>
-                  </div>
-
-                </div>
-              </td>
-            </tr>
-          </tfoot>
+          <TableBottomPagination
+            colSpan={8}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            setCurrentPage={setCurrentPage}
+          />
         </table>
       </div>
 

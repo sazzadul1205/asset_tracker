@@ -225,6 +225,7 @@ const AddEmployeeModal = ({
           register={register}
           placeholder="Select Department"
           options={[
+            { label: "UnAssigned", value: "UnAssigned" },
             ...DepartmentsBasicInfoData.map(d => ({
               label: d.department_name,
               value: d.dept_id
@@ -240,7 +241,9 @@ const AddEmployeeModal = ({
           type="select"
           register={register}
           placeholder="Select Position"
-          options={positionOptions}
+          options={[
+            ...positionOptions
+          ]}
           rules={{ required: "Position is required" }}
           disabled={!positionOptions.length}
         />
@@ -273,6 +276,22 @@ const AddEmployeeModal = ({
           ]}
           rules={{ required: "Status is required" }}
           error={errors.status}
+        />
+
+        {/* Access Level */}
+        <SharedInput
+          label="Access Level"
+          name="access_level"
+          type="select"
+          register={register}
+          placeholder="Select Level"
+          options={[
+            // { value: "admin", label: "Admin" },
+            { value: "Manager", label: "Manager" },
+            { value: "Employee", label: "Employee" },
+          ]}
+          rules={{ required: "Access Level is required" }}
+          error={errors.access_level}
         />
 
         {/* Password */}

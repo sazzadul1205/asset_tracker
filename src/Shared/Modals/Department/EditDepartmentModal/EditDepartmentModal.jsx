@@ -88,7 +88,6 @@ const EditDepartmentModal = ({
     document.getElementById("Edit_Department_Modal")?.close();
   };
 
-  // Handle Submit
   const onSubmit = async (data) => {
     setFormError(null);
     setIsLoading(true);
@@ -99,27 +98,22 @@ const EditDepartmentModal = ({
         return;
       }
 
-      // ------------------------------------
-      // Detect manager change
-      // ------------------------------------
-      const oldManager = selectedDepartment.manager;
-      let newManager = null;
+      const oldManager = selectedDepartment?.manager || null;
 
-      if (data.department_manager && data.department_manager.value) {
-        newManager = BasicUserInfoData.find(
-          (user) => user.employee_id === data.department_manager.value
-        );
-      }
-
-      if (!newManager) newManager = oldManager; // fallback
+      const newManager =
+        BasicUserInfoData.find(
+          (u) => u.employee_id === data?.department_manager?.value
+        ) || oldManager;
 
       const managerChanged =
-        newManager.employee_id !== oldManager.employee_id;
+        oldManager?.employee_id &&
+        newManager?.employee_id &&
+        oldManager.employee_id !== newManager.employee_id;
 
-      // ------------------------------------
-      // Handle icon upload
-      // ------------------------------------
-      let uploadedImageUrl = placeholderIcon;
+      // --------------------------
+      // ICON UPLOAD
+      // --------------------------
+      let finalIcon = placeholderIcon;
 
       if (iconImage) {
         const url = await uploadImage(iconImage);
@@ -127,71 +121,93 @@ const EditDepartmentModal = ({
           setFormError("Failed to upload icon image.");
           return;
         }
-        uploadedImageUrl = url;
+        finalIcon = url;
       }
 
-      // ------------------------------------
-      // Department payload
-      // ------------------------------------
+      // --------------------------
+      // DEPARTMENT PAYLOAD
+      // --------------------------
       const DepartmentPayload = {
-        selectedColor,
-        created_by: UserEmail,
-        manager: newManager,
-        iconImage: uploadedImageUrl,
-        positions: data.positions || [],
         department_name: data.department_name.trim(),
-        department_budget: Number(data.department_budget),
         department_description: data.department_description?.trim() || "",
+        department_budget: Number(data.department_budget),
+        selectedColor,
+        iconImage: finalIcon,
+        manager: newManager,
+        positions: data.positions || [],
         updated_at: new Date().toISOString(),
       };
 
-      // ------------------------------------
-      // 1) If manager changed → unassign old manager
-      // ------------------------------------
-      await axiosPublic.put(`/Users/${oldManager.employee_id}`, {
-        fixed: false,
-        position: "UnAssigned",
-        access_level: "Employee",
-        department: "UnAssigned",
-      });
-
-      // Use either the returned dept_id or the original
       const deptId = selectedDepartment.dept_id;
 
-      // ------------------------------------
-      // 2) If manager changed → assign new manager
-      // ------------------------------------
-      await axiosPublic.put(`/Users/${newManager?.employee_id}`, {
-        fixed: true,
-        position: "Manager",
-        access_level: "Manager",
-        department: deptId,
-      });
+      // --------------------------
+      // MANAGER CHANGED → UPDATE USERS
+      // --------------------------
+      if (managerChanged) {
+        // 1️⃣ UNASSIGN OLD MANAGER
+        await axiosPublic.put(
+          `/Users/UpdateDepartment/${oldManager.employee_id}`,
+          {
+            contact: {
+              department: "UnAssigned",
+              position: "UnAssigned",
+            },
+            employment: {
+              department: "UnAssigned",
+              position: "UnAssigned",
+              access_level: "Employee",
+              fixed: false,
+            },
+          }
+        );
 
-      // ------------------------------------
-      // 3) Update department
-      // ------------------------------------
-      const departmentResponse = await axiosPublic.put(
+        // 2️⃣ ASSIGN NEW MANAGER
+        await axiosPublic.put(
+          `/Users/UpdateDepartment/${newManager.employee_id}`,
+          {
+            contact: {
+              department: deptId,
+              position: "Manager",
+            },
+            employment: {
+              department: deptId,
+              position: "Manager",
+              access_level: "Manager",
+              fixed: true,
+            },
+          }
+        );
+      }
+
+      // --------------------------
+      // UPDATE DEPARTMENT
+      // --------------------------
+      const deptRes = await axiosPublic.put(
         `/Departments/${selectedDepartment._id}`,
         DepartmentPayload
       );
 
-      if (departmentResponse.status === 200 || departmentResponse.status === 201) {
-        handleClose();
-        RefetchAll?.();
-        success("Department updated successfully!");
-      } else {
-        setFormError(
-          departmentResponse.data?.message || "Failed to update department"
-        );
+      if (![200, 201].includes(deptRes.status)) {
+        setFormError(deptRes.data?.message || "Failed to update department");
+        return;
       }
+
+      // --------------------------
+      // SUCCESS
+      // --------------------------
+      handleClose();
+      RefetchAll?.();
+      success("Department updated successfully!");
+
     } catch (err) {
-      console.error("Error submitting form:", err);
-      setFormError(err.response?.data?.message || "Failed to submit form");
+      console.error("Submit Error:", err);
+      setFormError(err.response?.data?.message || err.message || "Failed to submit form");
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   return (
     <div

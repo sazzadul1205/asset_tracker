@@ -1,4 +1,6 @@
 import React from "react";
+
+// Icons
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 /**
@@ -15,8 +17,11 @@ import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
  * @param {number} itemsPerPage - Number of items per page
  * @param {function} setCurrentPage - Function to update the current page
  * @param {string} [paginationText] - Optional label for the items section (default: "Items")
+ * @param {number} [colSpan] - Number of columns to span (default: 7)
+ * @returns {JSX.Element} JSX element representing the table footer
  */
 const TableBottomPagination = ({
+  colSpan = 7,
   totalItems,
   totalPages,
   currentPage,
@@ -35,7 +40,7 @@ const TableBottomPagination = ({
   return (
     <tfoot>
       <tr>
-        <td colSpan={7} className="px-6 py-4 border-t border-gray-200">
+        <td colSpan={colSpan} className="px-6 py-4 border-t border-gray-200">
           <div className="flex items-center justify-between text-black">
             {/* Display current item range and optional label */}
             <div>

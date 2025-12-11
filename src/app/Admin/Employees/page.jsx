@@ -357,6 +357,7 @@ const EmployeesPage = () => {
 
           {/* Table footer with dynamic pagination */}
           <TableBottomPagination
+            colSpan={8}
             totalItems={totalItems}
             totalPages={totalPages}
             currentPage={currentPage}

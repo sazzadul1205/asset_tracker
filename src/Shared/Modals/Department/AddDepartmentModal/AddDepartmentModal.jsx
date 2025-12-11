@@ -71,27 +71,23 @@ const AddDepartmentModal = ({
     setIsLoading(true);
 
     try {
-      // Check if UserEmail is present
       if (!UserEmail) {
         setFormError("User email not found. Please log in.");
         return;
       }
 
-      // Lookup full manager info by selected value
+      // Find selected manager
       const selectedManager = BasicUserInfoData.find(
-        user => user.employee_id === data.department_manager.value
+        (user) => user.employee_id === data.department_manager.value
       );
 
-      // Check if selected manager is found
       if (!selectedManager) {
         setFormError("Selected manager not found.");
         return;
       }
 
-      // Upload Icon
+      // Upload icon if provided
       let uploadedImageUrl = placeholderIcon;
-
-      // Upload only if a new image is selected
       if (iconImage) {
         const url = await uploadImage(iconImage);
         if (!url) {
@@ -101,7 +97,7 @@ const AddDepartmentModal = ({
         uploadedImageUrl = url;
       }
 
-      // Prepare Department payload
+      // 1️⃣ Create Department
       const DepartmentPayload = {
         selectedColor,
         created_by: UserEmail,
@@ -113,49 +109,76 @@ const AddDepartmentModal = ({
         department_description: data.department_description?.trim() || "",
       };
 
-      // Send DepartmentPayload
       const departmentResponse = await axiosPublic.post("/Departments", DepartmentPayload);
-
-      // Grab the dept_id from response
       const deptId = departmentResponse.data?.dept_id;
 
       if (!deptId) {
         throw new Error("Failed to get department ID from response.");
       }
 
-      // Prepare User payload
+      // 2️⃣ Update Manager User - STRICT FORMAT
       const UserPayload = {
+        identity: {
+          full_name: selectedManager.identity.full_name,
+          email: selectedManager.identity.email,
+          employee_id: selectedManager.identity.employee_id,
+        },
+        contact: {
+          phone: selectedManager.contact.phone || "N/A",
+          department: deptId,
+          position: "Manager",
+        },
+        employment: {
+          hire_date: selectedManager.employment.hire_date
+            ? new Date(selectedManager.employment.hire_date)
+            : new Date(),
+          status: "active",
+          access_level: "Manager",
+          last_login: selectedManager.employment.last_login || null,
+          fixed: true,
+        },
+        security: {
+          password: selectedManager.security.password,
+          old_passwords: selectedManager.security.old_passwords || [],
+          password_changed_at: selectedManager.security.password_changed_at || null,
+        },
+        audit: {
+          created_by: selectedManager.audit.created_by || "system",
+          updated_by: UserEmail,
+        },
+        created_at: selectedManager.created_at
+          ? new Date(selectedManager.created_at)
+          : new Date(),
+        updated_at: new Date(),
         fixed: true,
-        position: "Manager",
-        access_level: "Manager",
-        department: deptId, // use dept_id instead of name
       };
 
-      // Send UserPayload
       const userResponse = await axiosPublic.put(
         `/Users/${selectedManager.employee_id}`,
         UserPayload
       );
 
-      if (
-        departmentResponse.status === 201 ||
-        departmentResponse.status === 200 ||
-        userResponse.status === 201 ||
-        userResponse.status === 200
-      ) {
+      // 3️⃣ Success check
+      if ([200, 201].includes(departmentResponse.status) && [200, 201].includes(userResponse.status)) {
         handleClose();
         RefetchAll?.();
         success("Department created successfully!");
       } else {
-        setFormError(departmentResponse.data?.message || "Failed to create department");
+        setFormError(
+          departmentResponse.data?.message ||
+          userResponse.data?.message ||
+          "Failed to create department"
+        );
       }
     } catch (err) {
       console.error("Error submitting form:", err);
-      setFormError(err.response?.data?.message || "Failed to submit form");
+      setFormError(err.response?.data?.message || err.message || "Failed to submit form");
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   return (
     <div

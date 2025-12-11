@@ -4,6 +4,9 @@ import React from 'react';
 // Next Components
 import Image from 'next/image';
 
+// Date Fns
+import { formatDistanceToNow } from "date-fns";
+
 // Icons
 import { ImCross } from 'react-icons/im';
 import {
@@ -16,9 +19,9 @@ import {
   FaUserShield,
   FaBriefcase,
   FaUserCheck,
-  FaCalendarCheck,
   FaSyncAlt,
   FaUserPlus,
+  FaClock,
 } from "react-icons/fa";
 import { MdEmail } from 'react-icons/md';
 
@@ -69,15 +72,15 @@ const ViewEmployeeModal = ({
           >
             {selectedEmployee?.profile_image ? (
               <Image
-                src={selectedEmployee?.profile_image}
-                alt={selectedEmployee?.full_name}
+                src={selectedEmployee.profile_image}
+                alt={selectedEmployee?.identity?.full_name || "User"}
                 width={32}
                 height={32}
                 className="object-contain rounded-full"
               />
             ) : (
               <span>
-                {selectedEmployee?.full_name
+                {selectedEmployee?.identity?.full_name
                   ?.trim()
                   ?.split(" ")
                   ?.map((w) => w[0])
@@ -91,10 +94,18 @@ const ViewEmployeeModal = ({
           {/* Text content */}
           <div className="flex flex-col">
             <h3 className="font-semibold text-gray-800 text-sm md:text-base">
-              {selectedEmployee?.full_name}
+              {selectedEmployee?.identity?.full_name || "No Name"}
             </h3>
             <p className="text-gray-500 text-xs md:text-sm">
-              {selectedEmployee?.email || "N/A"}
+              {selectedEmployee?.identity?.email || "N/A"}
+            </p>
+            <p className="text-gray-400 text-xs md:text-sm">
+              Last Login:{" "}
+              {selectedEmployee?.employment?.last_login
+                ? formatDistanceToNow(new Date(selectedEmployee.employment.last_login), {
+                  addSuffix: true,
+                })
+                : "Never"}
             </p>
           </div>
         </div>
@@ -110,41 +121,35 @@ const ViewEmployeeModal = ({
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-2 gap-4 mt-4" >
+      <div className="grid grid-cols-2 gap-4 mt-4">
         {/* Personal Information */}
-        <div className='border border-gray-300 rounded-2xl shadow-lg p-6'>
-          {/* Header */}
-          <h3 className='font-semibold tracking-tight text-lg mb-4'>
-            Personal Information
-          </h3>
-
-          {/* Content */}
+        <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
+          <h3 className="font-semibold tracking-tight text-lg mb-4">Personal Information</h3>
           <div className="space-y-5">
-
             {/* Full Name */}
             <div className="flex items-center gap-3">
               <FaUser className="text-gray-500 w-5 h-5" />
               <div>
-                <p className='text-sm text-gray-500'>Full Name</p>
-                <p className='font-medium'>{selectedEmployee?.full_name || "N/A"}</p>
+                <p className="text-sm text-gray-500">Full Name</p>
+                <p className="font-medium">{selectedEmployee?.identity?.full_name || "N/A"}</p>
               </div>
             </div>
 
-            {/* Email Address */}
+            {/* Email */}
             <div className="flex items-center gap-3">
               <MdEmail className="text-gray-500 w-5 h-5" />
               <div>
-                <p className='text-sm text-gray-500'>Email Address</p>
-                <p className='font-medium'>{selectedEmployee?.email || "N/A"}</p>
+                <p className="text-sm text-gray-500">Email</p>
+                <p className="font-medium">{selectedEmployee?.identity?.email || "N/A"}</p>
               </div>
             </div>
 
-            {/* Phone Number */}
+            {/* Phone */}
             <div className="flex items-center gap-3">
               <FaPhoneAlt className="text-gray-500 w-5 h-5" />
               <div>
-                <p className='text-sm text-gray-500'>Phone Number</p>
-                <p className='font-medium'>{selectedEmployee?.phone || "N/A"}</p>
+                <p className="text-sm text-gray-500">Phone</p>
+                <p className="font-medium">{selectedEmployee?.contact?.phone || "N/A"}</p>
               </div>
             </div>
 
@@ -152,8 +157,8 @@ const ViewEmployeeModal = ({
             <div className="flex items-center gap-3">
               <FaHashtag className="text-gray-500 w-5 h-5" />
               <div>
-                <p className='text-sm text-gray-500'>Employee ID</p>
-                <p className='font-medium'>{selectedEmployee?.employee_id || "N/A"}</p>
+                <p className="text-sm text-gray-500">Employee ID</p>
+                <p className="font-medium">{selectedEmployee?.identity?.employee_id || "N/A"}</p>
               </div>
             </div>
           </div>
@@ -161,12 +166,7 @@ const ViewEmployeeModal = ({
 
         {/* Work Information */}
         <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">
-            Work Information
-          </h3>
-
-          {/* Content */}
+          <h3 className="font-semibold tracking-tight text-lg mb-4">Work Information</h3>
           <div className="space-y-5">
             {/* Department */}
             <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ const ViewEmployeeModal = ({
               <div>
                 <p className="text-sm text-gray-500">Department</p>
                 <p className="font-medium">
-                  <UserDepartmentView department={selectedEmployee?.department} />
+                  <UserDepartmentView department={selectedEmployee?.contact?.department} />
                 </p>
               </div>
             </div>
@@ -184,20 +184,17 @@ const ViewEmployeeModal = ({
               <FaBriefcase className="text-gray-500 w-5 h-5" />
               <div>
                 <p className="text-sm text-gray-500">Position</p>
-                <p className="font-medium">{selectedEmployee?.position || "N/A"}</p>
+                <p className="font-medium">{selectedEmployee?.contact?.position || "N/A"}</p>
               </div>
             </div>
 
-            {/* Role */}
+            {/* Role / Access Level */}
             <div className="flex items-center gap-3">
               <FaUserShield className="text-gray-500 w-5 h-5" />
               <div>
-                <p className="text-sm text-gray-500">Role:</p>
-                <p>
-                  {selectedEmployee?.access_level
-                    ? accessLevelBadge(selectedEmployee.access_level)
-                    : <span className="text-gray-500 text-sm">N/A</span>
-                  }
+                <p className="text-sm text-gray-500">Role</p>
+                <p className="font-medium">
+                  {selectedEmployee?.employment?.access_level || "N/A"}
                 </p>
               </div>
             </div>
@@ -208,15 +205,12 @@ const ViewEmployeeModal = ({
               <div>
                 <p className="text-sm text-gray-500">Hire Date</p>
                 <p className="font-medium">
-                  {selectedEmployee?.hire_date
-                    ? new Date(selectedEmployee.hire_date).toLocaleString("en-GB", {
+                  {selectedEmployee?.employment?.hire_date
+                    ? new Date(selectedEmployee.employment.hire_date).toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    }).replace(",", "").toUpperCase()
+                    })
                     : "N/A"}
                 </p>
               </div>
@@ -226,99 +220,38 @@ const ViewEmployeeModal = ({
 
         {/* Account Status */}
         <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">
-            Account Status
-          </h3>
-
-          {/* Content */}
+          <h3 className="font-semibold tracking-tight text-lg mb-4">Account Status</h3>
           <div className="space-y-5">
             {/* Status */}
             <div className="flex items-center gap-3">
-              <FaUserCheck className="text-gray-500 w-5 h-5" /> {/* Icon matches status */}
+              <FaUserCheck className="text-gray-500 w-5 h-5" />
               <div>
                 <p className="text-sm text-gray-500">Status</p>
                 <p className="font-medium">
-                  {setSelectedEmployee?.department_status ? (
-                    <span
-                      className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${setSelectedEmployee.department_status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : setSelectedEmployee.department_status === "Inactive"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                        }`}
-                    >
-                      {setSelectedEmployee.department_status}
+                  {selectedEmployee?.employment?.status
+                    ? <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${selectedEmployee.employment.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : selectedEmployee.employment.status === "inactive"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                      }`}>
+                      {selectedEmployee.employment.status.charAt(0).toUpperCase() + selectedEmployee.employment.status.slice(1)}
                     </span>
-                  ) : (
-                    <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                      Active
-                    </span>
-                  )}
+                    : "N/A"}
                 </p>
               </div>
             </div>
 
-            {/* Employee ID */}
+            {/* Last Login */}
             <div className="flex items-center gap-3">
-              <FaIdBadge className="text-gray-500 w-5 h-5" /> {/* Icon matches employee ID */}
+              <FaClock className="text-gray-500 w-5 h-5" />
               <div>
-                <p className='text-sm text-gray-500'>Employee ID</p>
-                <p className='font-medium'>{selectedEmployee?.employee_id || "N/A"}</p>
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className='bg-gray-50 p-4 rounded-lg' >
-              {/* Header */}
-              <h4 className='text-sm font-medium text-gray-700 mb-2' >Account Summary </h4>
-
-              {/* Content */}
-              <div className='space-y-2 text-sm' >
-                {/* Role */}
-                <div className='flex justify-between items-center' >
-                  <span className='text-gray-600 flex items-center gap-1'>
-                    <FaBriefcase className="w-4 h-4" /> Role
-                  </span>
-                  <span className='font-medium' >
-                    {selectedEmployee?.position || "N/A"}
-                  </span>
-                </div>
-
-                {/* Status */}
-                <div className='flex justify-between items-center' >
-                  <span className='text-gray-600 flex items-center gap-1'>
-                    <FaUserCheck className="w-4 h-4" /> Status
-                  </span>
-                  <span className='font-medium' >
-                    {setSelectedEmployee?.department_status ? (
-                      <span
-                        className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${setSelectedEmployee?.department_status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : setSelectedEmployee?.department_status === "Inactive"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                          }`}
-                      >
-                        {setSelectedEmployee?.department_status}
-                      </span>
-                    ) : (
-                      <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    )}
-                  </span>
-                </div>
-
-                {/* Department */}
-                <div className='flex justify-between items-center' >
-                  <span className='text-gray-600 flex items-center gap-1'>
-                    <FaBuilding className="w-4 h-4" /> Department
-                  </span>
-                  <span className='font-medium' >
-                    <UserDepartmentView department={selectedEmployee?.department} />
-                  </span>
-                </div>
+                <p className="text-sm text-gray-500">Last Login</p>
+                <p className="font-medium">
+                  {selectedEmployee?.employment?.last_login
+                    ? formatDistanceToNow(new Date(selectedEmployee.employment.last_login), { addSuffix: true })
+                    : "Never"}
+                </p>
               </div>
             </div>
           </div>
@@ -326,28 +259,20 @@ const ViewEmployeeModal = ({
 
         {/* Timeline */}
         <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">
-            Timeline
-          </h3>
-
-          {/* Content */}
+          <h3 className="font-semibold tracking-tight text-lg mb-4">Timeline</h3>
           <div className="space-y-5">
-            {/* Account Created */}
+            {/* Created At */}
             <div className="flex items-center gap-3">
               <FaUserPlus className="text-gray-500 w-5 h-5" />
               <div>
                 <p className="text-sm text-gray-500">Account Created</p>
-                <p className='font-medium'>
+                <p className="font-medium">
                   {selectedEmployee?.created_at
-                    ? new Date(selectedEmployee.created_at).toLocaleString("en-GB", {
+                    ? new Date(selectedEmployee.created_at).toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    }).replace(",", "").toUpperCase()
+                    })
                     : "N/A"}
                 </p>
               </div>
@@ -358,36 +283,13 @@ const ViewEmployeeModal = ({
               <FaSyncAlt className="text-gray-500 w-5 h-5" />
               <div>
                 <p className="text-sm text-gray-500">Last Updated</p>
-                <p className='font-medium'>
+                <p className="font-medium">
                   {selectedEmployee?.updated_at
-                    ? new Date(selectedEmployee.updated_at).toLocaleString("en-GB", {
+                    ? new Date(selectedEmployee.updated_at).toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    }).replace(",", "").toUpperCase()
-                    : "N/A"}
-                </p>
-              </div>
-            </div>
-
-            {/* Hire Date */}
-            <div className="flex items-center gap-3">
-              <FaCalendarCheck className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Hire Date</p>
-                <p className='font-medium'>
-                  {selectedEmployee?.hire_date
-                    ? new Date(selectedEmployee.hire_date).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    }).replace(",", "").toUpperCase()
+                    })
                     : "N/A"}
                 </p>
               </div>
@@ -397,80 +299,96 @@ const ViewEmployeeModal = ({
       </div>
 
       {/* Additional Information */}
-      <div className='border border-gray-300 rounded-2xl shadow-lg p-6 w-full mt-4'>
+      <div className="border border-gray-300 rounded-2xl shadow-lg p-6 w-full mt-4">
         {/* Header */}
-        <h3 className='font-semibold tracking-tight text-lg mb-4'>
-          Additional Information
-        </h3>
+        <h3 className="font-semibold tracking-tight text-lg mb-4">Additional Information</h3>
 
         {/* Content */}
         <div className="grid grid-cols-2 gap-4 mt-4">
           {/* Contact Details */}
           <div>
-            {/* Header */}
-            <h3 className='text-sm font-medium text-gray-700 mb-2'>
-              Contact Details
-            </h3>
-
-            {/* Content */}
-            <div className='space-y-2 text-sm'>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Contact Details</h3>
+            <div className="space-y-2 text-sm">
               {/* Email */}
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <MdEmail className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>{selectedEmployee?.email || "N/A"}</p>
+                <p className="text-gray-600">{selectedEmployee?.identity?.email || "N/A"}</p>
               </div>
 
               {/* Phone */}
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <FaPhoneAlt className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>{selectedEmployee?.phone || "N/A"}</p>
+                <p className="text-gray-600">{selectedEmployee?.contact?.phone || "N/A"}</p>
               </div>
 
               {/* Employee ID */}
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <FaIdBadge className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>{selectedEmployee?.employee_id || "N/A"}</p>
+                <p className="text-gray-600">{selectedEmployee?.identity?.employee_id || "N/A"}</p>
+              </div>
+
+              {/* Last Login */}
+              <div className="flex items-center gap-2">
+                <FaClock className="text-gray-500 w-4 h-4" />
+                <p className="text-gray-600">
+                  {selectedEmployee?.employment?.last_login
+                    ? formatDistanceToNow(new Date(selectedEmployee.employment.last_login), { addSuffix: true })
+                    : "Never"}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Work Details */}
           <div>
-            {/* Header */}
-            <h3 className='text-sm font-medium text-gray-700 mb-2'>
-              Work Details
-            </h3>
-
-            {/* Content */}
-            <div className='space-y-2 text-sm'>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Work Details</h3>
+            <div className="space-y-2 text-sm">
               {/* Department */}
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <FaBuilding className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>
-                  <UserDepartmentView department={selectedEmployee?.department} />
+                <p className="text-gray-600">
+                  <UserDepartmentView department={selectedEmployee?.contact?.department} />
                 </p>
               </div>
 
-              {/* Position / Role */}
-              <div className='flex items-center gap-2'>
+              {/* Position */}
+              <div className="flex items-center gap-2">
                 <FaBriefcase className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>{selectedEmployee?.position || "N/A"}</p>
+                <p className="text-gray-600">{selectedEmployee?.contact?.position || "N/A"}</p>
               </div>
 
               {/* Access Level */}
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <FaUserShield className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>
-                  {selectedEmployee?.access_level
-                    ? accessLevelBadge(selectedEmployee.access_level)
+                <p className="text-gray-600">
+                  {selectedEmployee?.employment?.access_level
+                    ? accessLevelBadge(selectedEmployee.employment.access_level)
                     : <span className="text-gray-500 text-sm">N/A</span>
                   }
+                </p>
+              </div>
+
+              {/* Employment Status */}
+              <div className="flex items-center gap-2">
+                <FaUserCheck className="text-gray-500 w-4 h-4" />
+                <p className="text-gray-600">
+                  {selectedEmployee?.employment?.status
+                    ? <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${selectedEmployee.employment.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : selectedEmployee.employment.status === "inactive"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                      }`}>
+                      {selectedEmployee.employment.status.charAt(0).toUpperCase() + selectedEmployee.employment.status.slice(1)}
+                    </span>
+                    : "N/A"}
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 };

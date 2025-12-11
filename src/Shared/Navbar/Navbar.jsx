@@ -17,12 +17,11 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 const Navbar = () => {
   const axiosPublic = useAxiosPublic();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
-  // Get Current Route
   const pathname = usePathname();
 
-  // Fetch Asset Category Options
+  // Fetch current user data
   const {
     data: MyUserData,
     error: MyUserError,
@@ -37,9 +36,8 @@ const Navbar = () => {
     enabled: !!session?.user?.employee_id,
   });
 
-  // Dynamic title based on route
+  // Dynamic page title
   let pageTitle = "Admin Dashboard";
-
   switch (pathname) {
     case "/Admin/AssetsCategory":
       pageTitle = "Admin Assets Category";
@@ -81,33 +79,33 @@ const Navbar = () => {
       pageTitle = "Unknown Page";
   }
 
-
   return (
     <nav className="navbar bg-white shadow-2xl px-6 py-3 sticky top-0 z-50">
-      {/* Left: Dynamic Page Title */}
+      {/* Left: Page Title */}
       <div className="flex-1">
-        <p className="text-xl font-bold text-gray-800 Roboto-slab-display">
-          {pageTitle}
-        </p>
+        <p className="text-xl font-bold text-gray-800 Roboto-slab-display">{pageTitle}</p>
       </div>
 
       {/* Right: User Info */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3 text-black">
           {/* User Avatar */}
-          <div className="w-11 h-11 rounded-full ring ring-gray-200 ring-offset-2 overflow-hidden">
-            {MyUserIsLoading ? (
-              <div className="w-11 h-11 bg-gray-200 animate-pulse rounded-full" />
-            ) : (
-              <Image
-                alt="User Avatar"
-                src={User_Fallback}
-                width={44}
-                height={44}
-                className="object-cover"
-              />
-            )}
+          <div
+            className="w-11 h-11 rounded-full ring ring-gray-200 ring-offset-2 flex 
+          items-center justify-center bg-gray-300 text-gray-800 font-bold"
+          >
+            {MyUserIsLoading
+              ? <div className="w-11 h-11 bg-gray-200 animate-pulse rounded-full" />
+              : (MyUserData?.identity?.full_name
+                ?.trim()
+                ?.split(" ")
+                ?.map((w) => w[0])
+                ?.join("")
+                ?.substring(0, 2)
+                ?.toUpperCase() || "NA")
+            }
           </div>
+
 
           {/* User Details */}
           <div className="border-l-2 pl-3 border-gray-300">
@@ -123,11 +121,9 @@ const Navbar = () => {
               <p className="text-red-500 text-sm">Failed to load user</p>
             ) : (
               <>
-                {/* User Name */}
-                <h3 className="font-semibold">{MyUserData?.full_name || "John Doe"}</h3>
-                {/* User Email & Role */}
+                <h3 className="font-semibold">{MyUserData?.identity?.full_name || "Unknown User"}</h3>
                 <p className="text-sm text-gray-600 font-medium">
-                  {MyUserData?.email || "H2nBp@example.com"} ({MyUserData?.position || "Employee"})
+                  {MyUserData?.identity?.email || "Unknown Email"} ({MyUserData?.contact?.position || "-"})
                 </p>
               </>
             )}

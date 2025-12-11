@@ -42,6 +42,15 @@ const EditEmployeeModal = ({
     formState: { errors, isSubmitting },
   } = useForm();
 
+  // Close modal
+  const handleClose = () => {
+    reset();
+    setFormError(null);
+    setPositionOptions([]);
+    setSelectedEmployee(null);
+    document.getElementById("Edit_Employee_Modal")?.close();
+  };
+
   // Watchers
   const watchedDepartment = watch("department", null); // default null
 
@@ -52,21 +61,17 @@ const EditEmployeeModal = ({
         (d) => d.dept_id === watchedDepartment
       );
 
-      if (selectedDept && selectedDept.positions) {
+      if (selectedDept?.positions) {
         setPositionOptions([
           { label: "Unassigned", value: "unAssigned" },
           ...selectedDept.positions
-            .filter((pos) => pos.position_name !== "Manager") // exclude Manager
-            .map((pos) => ({
-              label: pos.position_name,
-              value: pos.position_name,
-            })),
+            .filter((pos) => pos.position_name !== "Manager")
+            .map((pos) => ({ label: pos.position_name, value: pos.position_name })),
         ]);
       } else {
         setPositionOptions([{ label: "Unassigned", value: "unAssigned" }]);
       }
 
-      // Reset selected position when department changes
       setValue("position", "unAssigned");
     } else {
       setPositionOptions([{ label: "Unassigned", value: "unAssigned" }]);
@@ -77,49 +82,35 @@ const EditEmployeeModal = ({
   // Pre-fill form when selectedEmployee changes
   useEffect(() => {
     if (selectedEmployee) {
-      // Set all fields
       reset({
-        full_name: selectedEmployee.full_name || "",
-        email: selectedEmployee.email || "",
-        employee_id: selectedEmployee.employee_id || "",
-        phone: selectedEmployee.phone || "",
-        department: selectedEmployee.department || "unAssigned",
-        position: selectedEmployee.position || "unAssigned",
-        hire_date: selectedEmployee.hire_date ? new Date(selectedEmployee.hire_date) : "",
-        status: selectedEmployee.status || "active",
-        access_level: selectedEmployee.access_level || "unAssigned",
-        password: "", // optional, leave blank to reset password
+        full_name: selectedEmployee.identity?.full_name || "",
+        email: selectedEmployee.identity?.email || "",
+        employee_id: selectedEmployee.identity?.employee_id || "",
+        phone: selectedEmployee.contact?.phone || "",
+        department: selectedEmployee.contact?.department || "unAssigned",
+        position: selectedEmployee.contact?.position || "unAssigned",
+        hire_date: selectedEmployee.employment?.hire_date ? new Date(selectedEmployee.employment.hire_date) : "",
+        status: selectedEmployee.employment?.status || "active",
+        access_level: selectedEmployee.employment?.access_level || "unAssigned",
+        password: "", // optional, leave blank unless updating
       });
 
-      // Set position options based on department
       const dept = DepartmentsBasicInfoData.find(
-        (d) => d.dept_id === selectedEmployee.department
+        (d) => d.dept_id === selectedEmployee.contact?.department
       );
 
-      if (dept && dept.positions) {
+      if (dept?.positions) {
         setPositionOptions([
           { label: "Unassigned", value: "unAssigned" },
           ...dept.positions
-            .filter((pos) => pos.position_name !== "Manager") // exclude Manager
-            .map((pos) => ({
-              label: pos.position_name,
-              value: pos.position_name,
-            })),
+            .filter((pos) => pos.position_name !== "Manager")
+            .map((pos) => ({ label: pos.position_name, value: pos.position_name })),
         ]);
       } else {
         setPositionOptions([{ label: "Unassigned", value: "unAssigned" }]);
       }
     }
   }, [selectedEmployee, DepartmentsBasicInfoData, reset]);
-
-  // Close modal
-  const handleClose = () => {
-    reset();
-    setFormError(null);
-    setPositionOptions([]);
-    setSelectedEmployee(null);
-    document.getElementById("Edit_Employee_Modal")?.close();
-  };
 
   // Submit handler (EMPLOYEE UPDATE)
   const onSubmit = async (data) => {
@@ -132,31 +123,40 @@ const EditEmployeeModal = ({
         return;
       }
 
-      if (!selectedEmployee?.employee_id) {
+      if (!selectedEmployee?.identity?.employee_id) {
         setFormError("No employee selected for update.");
         return;
       }
 
-      // Build employee payload
+      // Build payload respecting new data structure
       const payload = {
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        department: data.department || "unAssigned",
-        position: data.position || "unAssigned",
-        hire_date: data.hire_date,
-        status: data.status,
-        access_level: data.access_level || "unAssigned",
-        password: data.password || undefined, // only send if changed
-        updated_by: UserEmail,
+        identity: {
+          full_name: data.full_name,
+          email: data.email,
+        },
+        contact: {
+          phone: data.phone,
+          department: data.department || "unAssigned",
+          position: data.position || "unAssigned",
+        },
+        employment: {
+          hire_date: data.hire_date,
+          status: data.status,
+          access_level: data.access_level || "unAssigned",
+        },
+        updated_at: new Date(),
+        audit: {
+          updated_by: UserEmail,
+        },
       };
 
-      // Remove password if it's empty (so it won't overwrite existing)
-      if (!payload.password) delete payload.password;
+      // Only include password if provided
+      if (data.password) {
+        payload.security = { password: data.password };
+      }
 
-      // Send PUT request to update the employee
       const response = await axiosPublic.put(
-        `/Users/${selectedEmployee.employee_id}`,
+        `/Users/${selectedEmployee.identity.employee_id}`,
         payload
       );
 
@@ -176,6 +176,7 @@ const EditEmployeeModal = ({
       setIsLoading(false);
     }
   };
+
 
   return (
     <div
@@ -335,15 +336,12 @@ const EditEmployeeModal = ({
           placeholder="Select Level"
           options={[
             // { value: "admin", label: "Admin" },
-            // { value: "manager", label: "Manager" },
-            { value: "employee", label: "Employee" },
-            { value: "intern", label: "Intern" },
-            { value: "guest", label: "Guest" },
-            { value: "supervisor", label: "Supervisor" },
+            { value: "Manager", label: "Manager" },
+            { value: "Employee", label: "Employee" },
           ]}
           rules={{ required: "Access Level is required" }}
           error={errors.access_level}
-          disabled={selectedEmployee?.fixed || !positionOptions.length} // disable if fixed or no positions
+          disabled={selectedEmployee?.fixed || !positionOptions.length}
         />
 
         {/* Password */}
