@@ -44,10 +44,15 @@ export const GET = async (req, context) => {
  */
 export const PUT = async (req, context) => {
   try {
+    console.log("====== [PUT USER] Incoming Request ======");
+
     const params = await context.params;
     const { employee_id } = params;
 
+    console.log("➡ Employee ID received:", employee_id);
+
     if (!employee_id) {
+      console.log("❌ ERROR: Employee ID missing!");
       return NextResponse.json(
         { message: "Employee ID is required" },
         { status: 400 }
@@ -55,28 +60,66 @@ export const PUT = async (req, context) => {
     }
 
     const db = await connectDB();
+    console.log("✔ Connected to DB");
+
     const data = await req.json();
+    console.log("➡ Incoming Body:", data);
+
     data.updated_at = new Date();
 
     // Build update object
     const updateDoc = {};
+    console.log("➡ Building update document...");
 
-    // Only update fields provided in the request body
-    if (data.identity) updateDoc.identity = data.identity;
-    if (data.contact) updateDoc.contact = data.contact;
-    if (data.employment) updateDoc.employment = data.employment;
-    if (data.audit) updateDoc.audit = data.audit;
-    if (data.fixed !== undefined) updateDoc.fixed = data.fixed;
-    if (data.security) updateDoc.security = data.security; 
-    if (data.last_login) updateDoc.last_login = data.last_login;
+    if (data.identity) {
+      updateDoc.identity = data.identity;
+      console.log("   • identity updated");
+    }
+    if (data.contact) {
+      updateDoc.contact = data.contact;
+      console.log("   • contact updated");
+    }
+    if (data.employment) {
+      updateDoc.employment = data.employment;
+      console.log("   • employment updated");
+    }
+    if (data.audit) {
+      updateDoc.audit = data.audit;
+      console.log("   • audit updated");
+    }
+    if (data.fixed !== undefined) {
+      updateDoc.fixed = data.fixed;
+      console.log("   • fixed updated:", data.fixed);
+    }
+    if (data.security) {
+      updateDoc.security = data.security;
+      console.log("   • security updated");
+    }
+    if (data.last_login) {
+      updateDoc.last_login = data.last_login;
+      console.log("   • last_login updated");
+    }
+
+    console.log("➡ Final updateDoc:", updateDoc);
+
+    console.log(
+      "➡ Searching for user with identity.employee_id =",
+      employee_id
+    );
 
     const result = await db
       .collection("Users")
       .updateOne({ "identity.employee_id": employee_id }, { $set: updateDoc });
 
+    console.log("➡ MongoDB result:", result);
+
     if (result.matchedCount === 0) {
+      console.log("❌ No user matched the provided employee_id");
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
+
+    console.log("✔ User updated successfully!");
+    console.log("----------------------------------------");
 
     return NextResponse.json(
       {
@@ -86,7 +129,7 @@ export const PUT = async (req, context) => {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error("❌ Error updating user:", error);
     return NextResponse.json(
       { message: "Failed to update user", error: error.message },
       { status: 500 }

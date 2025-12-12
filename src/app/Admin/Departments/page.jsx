@@ -103,6 +103,8 @@ const DepartmentPage = () => {
   // Delete Department Handler
 
   const handleDeleteDepartment = async (department) => {
+    if (!department) return;
+
     const isConfirmed = await confirm(
       "Are you sure?",
       "This action will permanently delete the Department!",
@@ -117,11 +119,12 @@ const DepartmentPage = () => {
     try {
       const managerId = department?.manager?.employee_id;
 
-      // 1) Unassign manager properly using your new UpdateDepartment route
+      // 1️⃣ Unassign manager properly
       if (managerId) {
-        await axiosPublic.put(`/Users/UpdateDepartment/${managerId}`, {
+        await axiosPublic.put(`/Users/${managerId}`, {
           contact: {
             department: "UnAssigned",
+            position: "UnAssigned",
           },
           employment: {
             department: "UnAssigned",
@@ -129,27 +132,26 @@ const DepartmentPage = () => {
             access_level: "Employee",
             fixed: false,
           },
+          updated_at: new Date().toISOString(),
         });
       }
 
-      // 2) Delete the department
+      // 2️⃣ Delete the department
       const res = await axiosPublic.delete(`/Departments/${department._id}`);
 
-      // 3) Final response check
-      if (res.status === 200) {
+      // 3️⃣ Check response
+      if (res.status === 200 || res.data.success) {
         RefetchAll?.();
         success("Department deleted successfully!");
       } else {
-        error("Failed to delete the department.");
+        error(res.data?.message || "Failed to delete the department.");
       }
 
     } catch (err) {
       console.error(err);
-      error(err?.response?.data?.error || "Something went wrong!");
+      error(err?.response?.data?.error || err?.message || "Something went wrong!");
     }
   };
-
-
 
   return (
     <div>

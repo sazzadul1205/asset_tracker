@@ -65,119 +65,81 @@ const AddDepartmentModal = ({
     document.getElementById("Add_Department_Modal")?.close();
   };
 
+  // Helper function to generate dept_id
+  const generateDeptId = (name) => {
+    if (!name) return `DP-XX-${Math.floor(1000 + Math.random() * 9000)}`;
+    const initials = name.trim().slice(0, 2).toUpperCase(); // first 2 letters
+    const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+    return `DP-${initials}-${randomNum}`;
+  };
+
   // Handle Submit
   const onSubmit = async (data) => {
-    setFormError(null);
     setIsLoading(true);
 
     try {
-      if (!UserEmail) {
-        setFormError("User email not found. Please log in.");
-        return;
-      }
+      // 1️⃣ Upload department icon if any
+      const iconUrl = await uploadImage(iconImage);
 
-      // Find selected manager
-      const selectedManager = BasicUserInfoData.find(
-        (user) => user.employee_id === data.department_manager.value
-      );
+      // 2️⃣ Generate unique dept_id
+      const dept_id = generateDeptId(data.department_name);
 
-      if (!selectedManager) {
-        setFormError("Selected manager not found.");
-        return;
-      }
-
-      // Upload icon if provided
-      let uploadedImageUrl = placeholderIcon;
-      if (iconImage) {
-        const url = await uploadImage(iconImage);
-        if (!url) {
-          setFormError("Failed to upload icon image.");
-          return;
-        }
-        uploadedImageUrl = url;
-      }
-
-      // 1️⃣ Create Department
-      const DepartmentPayload = {
-        selectedColor,
-        created_by: UserEmail,
-        manager: selectedManager,
-        iconImage: uploadedImageUrl,
-        positions: data.positions || [],
-        department_name: data.department_name.trim(),
+      // 3️⃣ Build Department payload
+      const departmentPayload = {
+        dept_id: dept_id, // include the generated ID
+        department_name: data.department_name,
+        department_description: data.department_description,
+        manager: {
+          employee_id: data.department_manager.value,
+          full_name: data.department_manager.label,
+        },
         department_budget: Number(data.department_budget),
-        department_description: data.department_description?.trim() || "",
+        positions: data.positions,
+        created_by: "CurrentUserID", // replace with actual user id
+        iconImage: iconUrl || "",
+        selectedColor: selectedColor || "#ffffff",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      const departmentResponse = await axiosPublic.post("/Departments", DepartmentPayload);
-      const deptId = departmentResponse.data?.dept_id;
+      // 4️⃣ Submit Department via axios
+      await axiosPublic.post("/Departments", departmentPayload);
 
-      if (!deptId) {
-        throw new Error("Failed to get department ID from response.");
-      }
+      // 5️⃣ Prepare User update payload
+      const currentUser = BasicUserInfoData.find(u => u.email === UserEmail);
+      if (!currentUser) throw new Error("User not found");
 
-      // 2️⃣ Update Manager User - STRICT FORMAT
-      const UserPayload = {
-        identity: {
-          full_name: selectedManager.identity.full_name,
-          email: selectedManager.identity.email,
-          employee_id: selectedManager.identity.employee_id,
-        },
+      const employee_id = currentUser.employee_id;
+
+      const userUpdatePayload = {
         contact: {
-          phone: selectedManager.contact.phone || "N/A",
-          department: deptId,
+          department: dept_id,
           position: "Manager",
         },
         employment: {
-          hire_date: selectedManager.employment.hire_date
-            ? new Date(selectedManager.employment.hire_date)
-            : new Date(),
-          status: "active",
           access_level: "Manager",
-          last_login: selectedManager.employment.last_login || null,
           fixed: true,
         },
-        security: {
-          password: selectedManager.security.password,
-          old_passwords: selectedManager.security.old_passwords || [],
-          password_changed_at: selectedManager.security.password_changed_at || null,
-        },
-        audit: {
-          created_by: selectedManager.audit.created_by || "system",
-          updated_by: UserEmail,
-        },
-        created_at: selectedManager.created_at
-          ? new Date(selectedManager.created_at)
-          : new Date(),
-        updated_at: new Date(),
-        fixed: true,
+        updated_at: new Date().toISOString(),
       };
 
-      const userResponse = await axiosPublic.put(
-        `/Users/${selectedManager.employee_id}`,
-        UserPayload
-      );
+      // 6️⃣ Update User via PUT
+      await axiosPublic.put(`/Users/${employee_id}`, userUpdatePayload);
 
-      // 3️⃣ Success check
-      if ([200, 201].includes(departmentResponse.status) && [200, 201].includes(userResponse.status)) {
-        handleClose();
-        RefetchAll?.();
-        success("Department created successfully!");
-      } else {
-        setFormError(
-          departmentResponse.data?.message ||
-          userResponse.data?.message ||
-          "Failed to create department"
-        );
-      }
+      // 7️⃣ Success toast
+      success("Department created and user updated successfully!");
+
+      // Reset form
+      handleClose();
+      RefetchAll();
+
     } catch (err) {
-      console.error("Error submitting form:", err);
-      setFormError(err.response?.data?.message || err.message || "Failed to submit form");
+      console.error("Submission Error:", err);
+      setFormError(err.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
-
 
 
   return (
