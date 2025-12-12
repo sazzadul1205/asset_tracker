@@ -1,11 +1,20 @@
 // Auth/Login
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+// React Components
 import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+
+// Next Components
+import Image from 'next/image';
+
+// Shared
 import Shared_Input from '@/Shared/Shared_Input/input';
+
+// Hooks
 import useAuth from '@/hooks/useAuth';
+
+// Assets
 import Logo from "../../../../public/Logo/Website_Logo.png";
 
 const LoginPage = () => {
