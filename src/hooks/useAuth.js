@@ -66,6 +66,32 @@ const useAuth = (redirectIfAuthenticated = false) => {
     }
   };
 
+  // SignUp function
+  const signUp = async (data) => {
+    setLoading(true);
+
+    try {
+      if (data.password !== data.confirmPassword) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return false;
+      }
+
+      await axiosPublic.post("/Users/CreateAccount", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+
+      // Auto-login after signup
+      await login(data.email, data.password);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Sign up failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   //  Logout using NextAuth
   const logout = async () => {
     await signOut({ redirect: true, callbackUrl: "/auth/login" });

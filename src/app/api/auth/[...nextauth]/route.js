@@ -78,7 +78,7 @@ export const authOptions = {
 
         // Find user using your real schema
         const user = await db
-          .collection("Users")
+          .collection("users")
           .findOne({ "credentials.email": email });
 
         if (!user) throw new Error("User not found");
@@ -93,7 +93,7 @@ export const authOptions = {
 
         // Update last login
         await db
-          .collection("Users")
+          .collection("users")
           .updateOne(
             { "credentials.email": email },
             { $set: { "credentials.lastLogin": new Date() } }
