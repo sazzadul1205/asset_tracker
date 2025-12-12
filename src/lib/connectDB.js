@@ -36,7 +36,7 @@ if (!global._mongoClient) {
 // Connect and return the DB
 export async function connectDB() {
   const client = await global._mongoClientPromise;
-  const dbName = process.env.MONGODB_DB || "AssetTracker";
+  const dbName = process.env.MONGODB_DB || "assets_tracker";
   const db = client.db(dbName);
 
   if (process.env.NODE_ENV === "development") {
