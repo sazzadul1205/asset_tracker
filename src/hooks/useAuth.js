@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, signOut, useSession, getSession } from "next-auth/react";
 
 /**
  * useAuth - Secure authentication hook with role-based redirects
