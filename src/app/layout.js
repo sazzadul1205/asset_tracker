@@ -1,7 +1,14 @@
 // src/app/layout.jsx
 import "./globals.css";
+
+// Fonts
 import { Geist, Geist_Mono } from "next/font/google";
+
+
+
+// Providers
 import SessionWrapper from "./SessionWrapper";
+import QueryProvider from "@/Providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +31,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionWrapper>{children}</SessionWrapper>
+        <QueryProvider>
+          <SessionWrapper>{children}</SessionWrapper>
+        </QueryProvider>
       </body>
     </html>
   );
