@@ -1,15 +1,42 @@
+// Shared/Navbar/Navbar.jsx
 "use client";
 
-import React from "react";
-import { useSession } from "next-auth/react";
+// React
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+
+// Next Auth
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
+
+// Hooks
 import useAxiosPublic from "@/hooks/useAxiosPublic";
 
-const Navbar = ({ pageTitle = "Dashboard" }) => {
+const Navbar = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session } = useSession();
 
-  console.log(session?.user?.userId);
+  const pathname = usePathname();
+
+
+  // Convert path to title: /admin/companySettings -> Company Settings
+  const pageTitle = useMemo(() => {
+    if (!pathname) return "Dashboard";
+
+    // remove empty parts
+    const parts = pathname.split("/").filter(Boolean);
+
+    // get last part
+    const lastPart = parts[parts.length - 1];
+
+    // Convert camelCase or kebab-case to Title Case
+    const title = lastPart
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    return title || "Dashboard";
+  }, [pathname]);
 
   // Fetch current user data
   const {
@@ -33,9 +60,6 @@ const Navbar = ({ pageTitle = "Dashboard" }) => {
     },
     enabled: !!session?.user?.userId,
   });
-
-  console.log("MyUserData :", MyUserData);
-
 
   // Compute initials for avatar
   const getUserInitials = (fullName) => {
@@ -79,9 +103,12 @@ const Navbar = ({ pageTitle = "Dashboard" }) => {
               <p className="text-sm text-red-500 font-medium">Failed to load user</p>
             ) : (
               <>
+                {/* Name */}
                 <p className="font-semibold leading-tight">
                   {MyUserData?.personal?.name || "Unknown User"}
                 </p>
+
+                {/* Email and Role */}
                 <p className="text-sm text-gray-600 font-medium truncate">
                   {MyUserData?.credentials?.email || "Unknown Email"}
                   <span className="text-gray-400"> · </span>
