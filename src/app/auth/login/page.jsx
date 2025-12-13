@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 // Shared
-import Shared_Input from '@/Shared/Shared_Input/input';
+import Shared_Input from '@/Shared/Shared_Input/Shared_Input';
 
 // Hooks
 import useAuth from '@/hooks/useAuth';
