@@ -1,10 +1,11 @@
 // app/admin/layout.jsx
 "use client";
 
-import { SessionProvider } from 'next-auth/react';
-import Image from 'next/image';
+// next components
 import Link from 'next/link';
-import React from 'react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { SessionProvider } from 'next-auth/react';
 
 
 // Icons
@@ -23,8 +24,12 @@ import EmployeesIcon from "../../../public/Icons/Admin/EmployeesIcon";
 import DepartmentIcon from "../../../public/Icons/Admin/DepartmentIcon";
 import MyRequestsIcon from "../../../public/Icons/Admin/MyRequestsIcon";
 import CompanySettingsIcon from "../../../public/Icons/Admin/CompanySettingsIcon";
+
+// Hooks
 import useAuth from '@/hooks/useAuth';
-import { usePathname } from 'next/navigation';
+
+// Components
+import Navbar from '@/Shared/Navbar/Navbar';
 
 
 const AdminLayout = ({ children }) => {
@@ -37,47 +42,47 @@ const AdminLayout = ({ children }) => {
     {
       name: "Dashboard",
       icon: <MdOutlineDashboard className="text-xl" />,
-      href: "/Admin/Dashboard",
+      href: "/admin/dashboard",
     },
     {
       name: "My Assets",
       icon: <MyAssetsIcon className="w-5 h-5" />,
-      href: "/Admin/MyAssets",
+      href: "/admin/myAssets",
     },
     {
       name: "My Requests",
       icon: <MyRequestsIcon className="w-5 h-5" />,
-      href: "/Admin/MyRequests",
+      href: "/admin/myRequests",
     },
     {
       name: "Assets",
       icon: <FaBox className="text-xl" />,
-      href: "/Admin/Assets",
+      href: "/admin/assets",
     },
     {
       name: "Asset Category",
       icon: <FaInbox className="text-xl" />,
-      href: "/Admin/AssetsCategory",
+      href: "/admin/assetsCategory",
     },
     {
       name: "Transactions",
       icon: <GrTransaction className="text-xl" />,
-      href: "/Admin/Transactions",
+      href: "/admin/transactions",
     },
     {
       name: "Employees",
       icon: <EmployeesIcon className="w-5 h-5" />,
-      href: "/Admin/Employees",
+      href: "/admin/employees",
     },
     {
       name: "Departments",
       icon: <DepartmentIcon className="w-5 h-5" />,
-      href: "/Admin/Departments",
+      href: "/admin/departments",
     },
     {
       name: "Company Settings",
       icon: <CompanySettingsIcon className="w-5 h-5" />,
-      href: "/Admin/CompanySettings",
+      href: "/admin/companySettings",
     },
   ];
 
@@ -118,10 +123,10 @@ const AdminLayout = ({ children }) => {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-4 px-4 py-2 text-gray-700 font-medium text-md rounded-xl cursor-pointer transition-colors
+                    className={`flex items-center gap-4 px-4 py-2  font-medium text-md rounded-xl cursor-pointer transition-colors
                       ${pathname === item.href
                         ? "bg-blue-100 text-blue-600"
-                        : "hover:bg-blue-50 hover:text-blue-600"
+                        : "hover:bg-blue-50 hover:text-blue-600 "
                       }`}
                   >
                     {item.icon}
@@ -171,7 +176,7 @@ const AdminLayout = ({ children }) => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          {/* <Navbar /> */}
+          <Navbar />
           {children}
         </main>
       </div>
