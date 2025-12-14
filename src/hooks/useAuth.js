@@ -1,8 +1,13 @@
 // hooks/useAuth.js
 "use client";
 
+// React Components
 import { useState, useEffect } from "react";
+
+// Next
 import { useRouter } from "next/navigation";
+
+// NextAuth
 import { signIn, signOut, useSession, getSession } from "next-auth/react";
 
 /**
@@ -11,9 +16,11 @@ import { signIn, signOut, useSession, getSession } from "next-auth/react";
  */
 const useAuth = (redirectIfAuthenticated = false) => {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const [loading, setLoading] = useState(false);
+
+  // States 
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
 
   // Redirect if already authenticated based on role
   useEffect(() => {
