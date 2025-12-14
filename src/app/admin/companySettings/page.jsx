@@ -1,15 +1,22 @@
 "use client";
 
+// React Components
+import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+
+// Hooks
+import { useToast } from "@/hooks/useToast";
 import useAxiosPublic from "@/hooks/useAxiosPublic";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { useToast } from "@/hooks/useToast";
+
+// Shared
 import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
 import Shared_Input from "@/Shared/Shared_Input/Shared_Input";
+import Shared_Button from "@/Shared/Shared_Button/Shared_Button";
 import Shared_Input_Image from "@/Shared/Shared_Input_Image/Shared_Input_Image";
-import { useQuery } from "@tanstack/react-query";
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+
 
 const CompanySettingsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -26,14 +33,17 @@ const CompanySettingsPage = () => {
   const [companyLogo, setCompanyLogo] = useState(null);
   const [companyPreview, setCompanyPreview] = useState(null);
 
+  // Check if logo has changed
+  const hasLogoChanged = companyFile instanceof File;
+
   // Form
   const {
+    reset,
     register,
-    handleSubmit,
     setValue,
-    formState: { errors },
+    handleSubmit,
+    formState: { errors, isDirty },
   } = useForm();
-
 
   // Fetch Company
   const {
@@ -44,11 +54,10 @@ const CompanySettingsPage = () => {
     queryKey: ["CompanyData"],
     queryFn: async () => {
       const res = await axiosPublic.get("/company");
-      return res.data; // return the company data directly
+      return res.data;
     },
-    retry: false, // optional: avoid retrying on error
+    retry: false,
   });
-
 
   // Load existing company data on mount
   useEffect(() => {
@@ -118,7 +127,22 @@ const CompanySettingsPage = () => {
 
       // 4. SUCCESS — only reached if EVERYTHING worked
       success("Company updated successfully");
+
+      // reset form dirty state
+      reset({
+        organization_name: formData.organization_name,
+        admin_email: formData.admin_email,
+        phone_number: formData.phone_number,
+        address: formData.address,
+        currency_code: formData.currency_code,
+        currency_locale: formData.currency_locale,
+        fraction_digits: formData.fraction_digits,
+        date_format: formData.date_format,
+      });
+
+      // reset logo state
       setCompanyFile(null);
+      setCompanyPreview(null);
     } catch (err) {
       console.error(err);
       error(err.message || "Something went wrong");
@@ -126,7 +150,6 @@ const CompanySettingsPage = () => {
       setIsLoading(false);
     }
   };
-
 
   // Loading
   if (CompanyIsLoading) {
@@ -155,6 +178,7 @@ const CompanySettingsPage = () => {
         <div className="grid grid-cols-2 gap-10">
           {/* Left Column */}
           <div className="space-y-4">
+            {/* Organization Name */}
             <Shared_Input
               label="Organization Name"
               name="organization_name"
@@ -169,6 +193,7 @@ const CompanySettingsPage = () => {
               errors={errors}
             />
 
+            {/* Phone Number */}
             <Shared_Input
               label="Phone Number"
               name="phone_number"
@@ -185,8 +210,9 @@ const CompanySettingsPage = () => {
               errors={errors}
             />
 
-            {/* Currency */}
+            {/* Currency and Locale */}
             <div className="grid grid-cols-2 gap-4">
+              {/* Currency */}
               <Shared_Input
                 label="Currency Code"
                 name="currency_code"
@@ -204,6 +230,8 @@ const CompanySettingsPage = () => {
                 rules={{ required: "Currency Code is required" }}
                 errors={errors}
               />
+
+              {/* Currency Locale */}
               <Shared_Input
                 label="Currency Locale"
                 name="currency_locale"
@@ -223,6 +251,7 @@ const CompanySettingsPage = () => {
               />
             </div>
 
+            {/* Fraction Digits */}
             <Shared_Input
               label="Fraction Digits"
               name="fraction_digits"
@@ -234,6 +263,7 @@ const CompanySettingsPage = () => {
               errors={errors}
             />
 
+            {/* Date Format */}
             <Shared_Input
               label="Date Format"
               name="date_format"
@@ -283,6 +313,7 @@ const CompanySettingsPage = () => {
           </div>
         </div>
 
+        {/* Address */}
         <Shared_Input
           label="Address"
           name="address"
@@ -295,20 +326,14 @@ const CompanySettingsPage = () => {
 
         {/* Submit */}
         <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-          <button
+          <Shared_Button
             type="submit"
-            disabled={isLoading || uploadingImage}
-            className={`px-6 h-11 font-semibold text-white rounded-lg shadow-md transition-all duration-200 flex items-center justify-center ${isLoading || uploadingImage
-              ? "bg-blue-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 active:scale-[0.98]"
-              }`}
+            loading={isLoading || uploadingImage}
+            disabled={!isDirty && !hasLogoChanged}
+            minWidth="120px"
           >
-            {isLoading || uploadingImage ? (
-              <span className="loading loading-spinner loading-sm"></span>
-            ) : (
-              "Save Changes"
-            )}
-          </button>
+            Save Changes
+          </Shared_Button>
         </div>
       </form>
     </div>

@@ -91,7 +91,7 @@ const AdminLayout = ({ children }) => {
     {
       name: "Profile",
       icon: <MdPersonOutline className="text-xl" />,
-      href: "/Admin/Profile",
+      href: "/Admin/profile",
     },
     {
       name: "Logout",
@@ -149,7 +149,7 @@ const AdminLayout = ({ children }) => {
                     // Logout Button
                     <button
                       onClick={item.action}
-                      className="flex items-center gap-3 w-full text-left rounded-xl py-2.5 px-3 transition-colors text-red-500 hover:text-red-700 hover:bg-red-100"
+                      className="flex items-center gap-3 w-full text-left rounded-xl py-2.5 px-3 transition-colors text-red-500 hover:text-red-700 hover:bg-red-100 cursor-pointer"
                     >
                       {item.icon}
                       {item.name}
