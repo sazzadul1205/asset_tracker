@@ -2,6 +2,7 @@
 
 import useAxiosPublic from "@/hooks/useAxiosPublic";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useToast } from "@/hooks/useToast";
 import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
 import Shared_Input from "@/Shared/Shared_Input/Shared_Input";
@@ -12,7 +13,10 @@ import { useForm } from "react-hook-form";
 
 const CompanySettingsPage = () => {
   const axiosPublic = useAxiosPublic();
-  const { uploadImage, loading: uploadingImage } = useImageUpload();
+
+  // Hooks
+  const { uploadImage, loading: uploadingImage, error: uploadingImageError } = useImageUpload();
+  const { success, error } = useToast();
 
   // Loading
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +26,7 @@ const CompanySettingsPage = () => {
   const [companyLogo, setCompanyLogo] = useState(null);
   const [companyPreview, setCompanyPreview] = useState(null);
 
+  // Form
   const {
     register,
     handleSubmit,
@@ -73,21 +78,20 @@ const CompanySettingsPage = () => {
     setIsLoading(true);
 
     try {
-      // const userEmail = session?.user?.email;
-
-      // Always start with existing logo
       let uploadedImageUrl = companyLogo;
 
-      // Upload ONLY if new file selected
+      // 1. Upload image ONLY if a new file was selected
       if (companyFile instanceof File) {
         const url = await uploadImage(companyFile);
+
         if (!url) {
-          alert("Failed to upload logo.");
-          return;
+          throw new Error(uploadingImageError || "Logo upload failed");
         }
+
         uploadedImageUrl = url;
       }
 
+      // 2. Prepare payload
       const payload = {
         name: formData.organization_name,
         contact: {
@@ -109,17 +113,15 @@ const CompanySettingsPage = () => {
         },
       };
 
-      const res = await axiosPublic.put("/company", payload);
+      // 3. Update company (Axios throws if it fails)
+      await axiosPublic.put("/company", payload);
 
-      if (res.status === 200) {
-        alert("Company updated successfully!");
-        setCompanyFile(null);
-      } else {
-        alert("Failed to update company");
-      }
+      // 4. SUCCESS — only reached if EVERYTHING worked
+      success("Company updated successfully");
+      setCompanyFile(null);
     } catch (err) {
       console.error(err);
-      alert("Something went wrong!");
+      error(err.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +147,7 @@ const CompanySettingsPage = () => {
         </h3>
       </div>
 
+      {/* Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white border border-gray-200 px-6 py-4 mx-2 space-y-6"
@@ -250,6 +253,7 @@ const CompanySettingsPage = () => {
 
           {/* Right Column */}
           <div className="space-y-4">
+            {/* Admin Email */}
             <Shared_Input
               label="Admin Email"
               name="admin_email"
@@ -266,6 +270,7 @@ const CompanySettingsPage = () => {
               errors={errors}
             />
 
+            {/* Company Logo */}
             <Shared_Input_Image
               file={companyFile}
               setFile={setCompanyFile}

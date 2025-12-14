@@ -27,14 +27,13 @@ const Shared_Input_Image = ({
   errors,
   name,
 }) => {
-  const inputRef = useRef();
+  const inputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Handle file selection (from input or drag)
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
-    setFile(selectedFile); // Save real file for server
-    setPreviewUrl(URL.createObjectURL(selectedFile)); // For UI preview
+    setFile(selectedFile);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
   };
 
   const handleFileChange = (e) => handleFile(e.target.files[0]);
@@ -44,31 +43,28 @@ const Shared_Input_Image = ({
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+  const handleDragLeave = () => setIsDragging(false);
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (e.dataTransfer.files?.[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
   };
 
-  // Clean up object URLs when component unmounts or file changes
   useEffect(() => {
     return () => {
-      if (previewUrl && previewUrl.startsWith("blob:")) {
+      if (previewUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(previewUrl);
       }
     };
   }, [previewUrl]);
 
+  const isBlob = previewUrl?.startsWith("blob:");
+
   return (
     <div className="w-full">
-      {/* Label */}
       <label
         className={`block font-semibold pb-2 ${errors?.[name] ? "text-red-500" : "text-gray-700"
           }`}
@@ -76,11 +72,10 @@ const Shared_Input_Image = ({
         {label}
       </label>
 
-      {/* Upload Box */}
       <div
-        className={`border-2 border-dashed w-64 h-64 rounded-xl cursor-pointer transition-colors duration-300 flex items-center justify-center overflow-hidden relative ${isDragging
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-200 hover:border-gray-400 bg-gray-50"
+        className={`border-2 border-dashed w-64 h-64 rounded-xl cursor-pointer transition-colors flex items-center justify-center overflow-hidden relative ${isDragging
+          ? "border-blue-500 bg-blue-50"
+          : "border-gray-200 hover:border-gray-400 bg-gray-50"
           }`}
         onClick={() => inputRef.current.click()}
         onDragOver={handleDragOver}
@@ -88,12 +83,24 @@ const Shared_Input_Image = ({
         onDrop={handleDrop}
       >
         {previewUrl ? (
-          <Image
-            src={previewUrl}
-            alt="Uploaded"
-            fill
-            className="object-contain rounded-xl p-4"
-          />
+          isBlob ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="object-contain w-full h-full p-4"
+            />
+          ) : (
+            <Image
+              src={previewUrl}
+              alt="Uploaded"
+              fill
+              sizes="256px"
+              priority
+              className="object-contain rounded-xl p-4"
+            />
+
+          )
         ) : placeholderImage ? (
           <Image
             src={placeholderImage}
@@ -115,7 +122,6 @@ const Shared_Input_Image = ({
         />
       </div>
 
-      {/* Error Message */}
       {errors?.[name] && (
         <p className="mt-1 text-sm text-red-500 font-medium">
           {errors[name].message}
