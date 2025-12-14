@@ -1,3 +1,4 @@
+// src/app/admin/companySettings/page.jsx
 "use client";
 
 // React Components

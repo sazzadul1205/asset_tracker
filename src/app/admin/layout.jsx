@@ -91,7 +91,7 @@ const AdminLayout = ({ children }) => {
     {
       name: "Profile",
       icon: <MdPersonOutline className="text-xl" />,
-      href: "/Admin/profile",
+      href: "/admin/profile",
     },
     {
       name: "Logout",
