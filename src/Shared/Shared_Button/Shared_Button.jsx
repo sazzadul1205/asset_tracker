@@ -17,6 +17,7 @@ import clsx from "clsx";
  * @param {boolean} fullWidth - If true, button takes full width of its container. Default: false
  * @param {string} minWidth - Minimum width of the button. Useful to prevent width change when loading spinner appears. Default: "110px"
  * @param {string} className - Additional custom classes to apply. Default: ""
+ * @param {() => void} onClick - Optional click handler function. Default: undefined
  *
  * @returns {JSX.Element} - Styled button component
  */
@@ -29,6 +30,7 @@ const Shared_Button = ({
   fullWidth = false,
   minWidth = "110px",
   variant = "primary",
+  onClick, // optional onClick prop
 }) => {
   // Combine external `disabled` prop with internal `loading` state
   const isDisabled = disabled || loading;
@@ -56,6 +58,7 @@ const Shared_Button = ({
     <button
       type={type}                // Button type: "button", "submit", "reset"
       disabled={isDisabled}      // HTML disabled attribute
+      onClick={onClick}          // Optional click handler
       className={clsx(
         baseStyles,             // Base styles applied to all buttons
         variants[variant],      // Variant-specific styles

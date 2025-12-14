@@ -36,28 +36,23 @@ axiosPublic.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Server responded with a status outside 2xx
+      // Log server error
       console.error(
         `[Axios Public] Error ${error.response.status}:`,
         error.response.data
       );
+      // Reject with the actual server response instead of a generic message
+      return Promise.reject(error.response.data);
     } else if (error.request) {
-      // No response received
       console.error("[Axios Public] No response received:", error.request);
+      return Promise.reject({ error: "No response from server" });
     } else {
-      // Something else
       console.error("[Axios Public] Axios error:", error.message);
+      return Promise.reject({ error: error.message });
     }
-
-    // Optionally, wrap in a consistent error format
-    return Promise.reject({
-      message:
-        error.response?.data?.message || error.message || "Network Error",
-      status: error.response?.status || null,
-      original: error,
-    });
   }
 );
+
 const useAxiosPublic = () => {
   return axiosPublic;
 };
