@@ -1,9 +1,17 @@
+// src/app/admin/profile/Change_Password_Modal/Change_Password_Modal.jsx
+// React Components
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import useAxiosPublic from "@/hooks/useAxiosPublic";
+
+// Hooks
 import { useToast } from "@/hooks/useToast";
-import Shared_Button from "@/Shared/Shared_Button/Shared_Button";
+import useAxiosPublic from "@/hooks/useAxiosPublic";
+
+// Shared
 import Shared_Input from "@/Shared/Shared_Input/Shared_Input";
+import Shared_Button from "@/Shared/Shared_Button/Shared_Button";
+
+// Icons
 import { ImCross } from "react-icons/im";
 import { IoLockClosedOutline } from "react-icons/io5";
 
@@ -84,10 +92,13 @@ const Change_Password_Modal = ({ session }) => {
     >
       {/* Header */}
       <div className="flex items-center justify-between">
+        {/* Title */}
         <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
           <IoLockClosedOutline className="inline-block mr-2" />
           Change Password
         </h3>
+
+        {/* Close Button */}
         <button
           type="button"
           onClick={handleClose}
@@ -106,22 +117,34 @@ const Change_Password_Modal = ({ session }) => {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 pt-5">
+        {/* Hidden username field for browser password managers */}
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          value={session?.user?.email || ""}
+          readOnly
+          hidden
+        />
+
+        {/* Current Password */}
         <Shared_Input
           label="Current Password"
           name="currentPassword"
           register={register}
           placeholder="Enter your current password"
-          rule={true}
           rules={{ required: "Current password is required." }}
           type="password"
+          autoComplete="current-password"
           errors={errors}
         />
+
+        {/* New Password */}
         <Shared_Input
           label="New Password"
           name="newPassword"
           register={register}
           placeholder="Enter your new password"
-          rule={true}
           rules={{
             required: "New password is required.",
             validate: (value) => {
@@ -133,20 +156,23 @@ const Change_Password_Modal = ({ session }) => {
             },
           }}
           type="password"
+          autoComplete="new-password"
           errors={errors}
         />
+
+        {/* Confirm Password */}
         <Shared_Input
           label="Confirm Password"
           name="confirmPassword"
           register={register}
           placeholder="Confirm your new password"
-          rule={true}
           rules={{
             required: "Confirm password is required.",
             validate: (value) =>
               value === getValues("newPassword") || "Passwords do not match",
           }}
           type="password"
+          autoComplete="new-password"
           errors={errors}
         />
 

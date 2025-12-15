@@ -55,12 +55,13 @@ const ProfilePage = () => {
   const {
     data: MyUserData,
     error: MyUserError,
+    refetch: MyUserRefetch,
     isLoading: MyUserIsLoading,
   } = useQuery({
     queryKey: ["MyUserData", session?.user?.userId],
     queryFn: async () => {
       try {
-        const res = await axiosPublic.get(`/users/${session?.user?.userId}`);
+        const res = await axiosPublic.get(`/users/${session?.user?.userId} `);
         return res.data.data;
       } catch (err) {
         console.error(
@@ -80,8 +81,6 @@ const ProfilePage = () => {
   // Handle errors
   if (MyUserError) return <Error errors={[MyUserError]} />;
 
-  console.log(session);
-  
   return (
     <div>
       {/* Header */}
@@ -107,7 +106,7 @@ const ProfilePage = () => {
           {/* Edit Profile */}
           <Shared_Button
             variant="primary"
-            onClick={() => document.getElementById("Edit_Profile_Modal")?.showModal()}
+            onClick={() => document.getElementById("Edit_My_Profile_Modal")?.showModal()}
             className="bg-blue-500 hover:bg-blue-600"
           >
             <FaEdit className="inline-block mr-2" />
@@ -345,7 +344,11 @@ const ProfilePage = () => {
 
       {/* Edit My Profile Modal */}
       <dialog id="Edit_My_Profile_Modal" className="modal">
-        <Edit_My_Profile_Modal />
+        <Edit_My_Profile_Modal
+          session={session}
+          MyUserData={MyUserData}
+          MyUserRefetch={MyUserRefetch}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
