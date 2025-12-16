@@ -76,7 +76,11 @@ const ProfilePage = () => {
   });
 
   // Handle loading
-  if (status === "loading" || MyUserIsLoading) return <Loading />;
+  if (status === "loading" || MyUserIsLoading)
+    return <Loading
+      message="Loading your profile ..."
+      subText="Please wait while we fetch your data."
+    />;
 
   // Handle errors
   if (MyUserError) return <Error errors={[MyUserError]} />;

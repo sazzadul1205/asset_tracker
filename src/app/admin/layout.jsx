@@ -175,9 +175,14 @@ const AdminLayout = ({ children }) => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Navbar */}
           <Navbar />
-          {children}
+
+          {/* Page Content */}
+          <div className="flex-1 overflow-y-auto relative">
+            {children}
+          </div>
         </main>
       </div>
     </SessionProvider>
