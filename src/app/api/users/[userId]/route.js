@@ -66,10 +66,11 @@ export async function GET(request, context) {
    PATCH /api/users/[userId]
    Update user while enforcing MongoDB schema rules
    ============================================================ */
-export async function PATCH(request, context) {
+export async function PATCH(request, { params }) {
   try {
-    // Extract route parameter
-    const { userId } = await context.params;
+    // Extract route parameter correctly
+    const resolvedParams = await params;
+    const { userId } = resolvedParams;
 
     // Validate required parameter
     if (!userId) {
@@ -90,7 +91,6 @@ export async function PATCH(request, context) {
     const existingUser = await collection.findOne({
       "personal.userId": userId,
     });
-
     if (!existingUser) {
       return NextResponse.json(
         { success: false, message: "User not found" },
@@ -101,7 +101,7 @@ export async function PATCH(request, context) {
     /* ----------------------------------------------------------
        Build full update document
        - Merge existing data with payload
-       - Prevent schema violations
+       - Preserve all required fields for schema
        - userId is immutable
     ---------------------------------------------------------- */
     const update = {
@@ -109,18 +109,30 @@ export async function PATCH(request, context) {
         ...existingUser.personal,
         ...(payload.personal || {}),
         userId: existingUser.personal.userId, // must never change
+        hireDate: payload.personal?.hireDate
+          ? new Date(payload.personal.hireDate)
+          : existingUser.personal.hireDate,
       },
       credentials: {
         ...existingUser.credentials,
         ...(payload.credentials || {}),
+        // Preserve lastLogin if exists, otherwise set to now
+        lastLogin: existingUser.credentials.lastLogin || new Date(),
       },
       employment: {
         ...existingUser.employment,
         ...(payload.employment || {}),
+        // Preserve lastUpdatedBy or set default
+        lastUpdatedBy:
+          payload.employment?.lastUpdatedBy ||
+          existingUser.employment.lastUpdatedBy ||
+          "SYSTEM",
       },
       metadata: {
         ...existingUser.metadata,
-        updatedAt: new Date(), // always update timestamp
+        // Preserve createdAt, always update updatedAt
+        createdAt: existingUser.metadata?.createdAt || new Date(),
+        updatedAt: new Date(),
       },
     };
 
@@ -131,7 +143,6 @@ export async function PATCH(request, context) {
     ---------------------------------------------------------- */
     if (payload.credentials?.password) {
       update.credentials.oldPassword = existingUser.credentials.password;
-
       update.credentials.password = await bcrypt.hash(
         payload.credentials.password,
         10
@@ -139,46 +150,13 @@ export async function PATCH(request, context) {
     }
 
     /* ----------------------------------------------------------
-       Schema validation safety net
-       Ensures all required fields still exist
-    ---------------------------------------------------------- */
-    const requiredChecks = [
-      update.personal?.name,
-      update.personal?.phone,
-      update.personal?.hireDate,
-      update.personal?.status,
-      update.personal?.userId,
-      update.credentials?.email,
-      update.credentials?.password,
-      update.credentials?.lastLogin,
-      update.employment?.departmentId,
-      update.employment?.position,
-      update.employment?.role,
-      update.employment?.lastUpdatedBy,
-      update.metadata?.createdAt,
-      update.metadata?.updatedAt,
-    ];
-
-    if (requiredChecks.some((value) => value === undefined)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Update violates schema requirements",
-        },
-        { status: 400 }
-      );
-    }
-
-    /* ----------------------------------------------------------
-       Apply update
+       Apply update to MongoDB
     ---------------------------------------------------------- */
     await collection.updateOne({ "personal.userId": userId }, { $set: update });
 
+    // Return success response
     return NextResponse.json(
-      {
-        success: true,
-        message: "User updated successfully",
-      },
+      { success: true, message: "User updated successfully" },
       { status: 200 }
     );
   } catch (error) {

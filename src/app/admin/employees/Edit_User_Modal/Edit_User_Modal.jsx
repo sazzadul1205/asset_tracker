@@ -1,7 +1,7 @@
-// src/app/admin/employees/Add_New_User_Modal/Add_New_User_Modal.jsx
+// src/app/admin/employees/Edit_User_Modal/Edit_User_Modal.jsx
 
 // React Components
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 // Hooks
@@ -15,13 +15,17 @@ import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
 // Icons
 import { ImCross } from 'react-icons/im';
 
-const Add_New_User_Modal = ({ RefetchAll }) => {
+const Edit_User_Modal = ({
+  session,
+  RefetchAll,
+  selectedUser,
+}) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
 
   // States
   const [loading, setLoading] = useState(false);
-  const [globalError, setGlobalError] = useState("");
+  const [globalError, setGlobalError] = useState('');
 
   // React Hook Form
   const {
@@ -35,72 +39,97 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
     }
   } = useForm();
 
+  useEffect(() => {
+    if (!selectedUser) return;
+
+    reset({
+      personal: {
+        name: selectedUser?.personal?.name || '',
+        phone: selectedUser?.personal?.phone || '',
+        userId: selectedUser?.personal?.userId || '',
+        hireDate: selectedUser?.personal?.hireDate
+          ? new Date(selectedUser.personal.hireDate).toISOString().split('T')[0]
+          : '',
+        status: selectedUser?.personal?.status || '',
+        department: selectedUser?.employment?.departmentId || '',
+        position: selectedUser?.employment?.position || '',
+        role: selectedUser?.employment?.role || '',
+      },
+      credentials: {
+        email: selectedUser?.credentials?.email || '',
+        password: '', // never preload passwords
+      },
+    });
+  }, [selectedUser, reset]);
+
+
+  // Close modal
   const handleClose = () => {
     reset();
-    setGlobalError("");
-    document.getElementById("Add_New_User_Modal")?.close();
+    setGlobalError('');
+    document.getElementById('Edit_User_Modal')?.close();
   };
 
+  // Submit Handler
   const onSubmit = async (data) => {
-    setGlobalError("");
+    setGlobalError('');
     setLoading(true);
 
     try {
-      // Map department to departmentId
-      const departmentId = data.personal?.department || "";
-
-      // Convert hireDate to Date object
-      const hireDate = data.personal?.hireDate
-        ? { $date: new Date(data.personal.hireDate).toISOString() }
-        : null;
-
-      // Prepare payload
       const payload = {
         personal: {
-          name: data.personal?.name || "",
-          phone: data.personal?.phone || "",
-          hireDate: hireDate,
-          status: data.personal?.status || "active",
-          userId: data.personal?.userId || `USR-${Date.now()}`,
+          name: data.personal.name,
+          phone: data.personal.phone,
+          hireDate: data.personal.hireDate
+            ? new Date(data.personal.hireDate)
+            : null,
+          status: data.personal.status,
         },
+
         credentials: {
-          email: data.credentials?.email || "",
-          password: data.credentials?.password || "",
+          email: data.credentials.email,
+          ...(data.credentials.password && {
+            password: data.credentials.password,
+          }),
         },
+
         employment: {
-          departmentId: departmentId,
-          position: data.personal?.position || "",
-          role: data.personal?.role || "Employee",
-          lastUpdatedBy: data.personal?.userId || "",
-        },
-        metadata: {
-          createdAt: { $date: new Date().toISOString() },
-          updatedAt: { $date: new Date().toISOString() },
+          departmentId: data.personal.department,
+          position: data.personal.position,
+          role: data.personal.role,
+          lastUpdatedBy: session?.user?.userId || "SYSTEM",
         },
       };
 
-      await axiosPublic.post("/users", payload);
-      success("User added successfully!");
-      handleClose();
-    } catch (err) {
-      console.error(err);
+      const response = await axiosPublic.patch(
+        `/users/${selectedUser.personal.userId}`,
+        payload
+      );
+
+      if (response.status === 200) {
+        handleClose();
+        success("User updated successfully.");
+        RefetchAll();
+      }
+    } catch (error) {
+      console.error("Update user error:", error);
       setGlobalError(
-        err?.response?.data?.error || "Something went wrong, please try again."
+        error?.response?.data?.message || "Something went wrong."
       );
     } finally {
       setLoading(false);
-      RefetchAll();
     }
   };
 
+
   return (
     <div
-      id="Add_New_User_Modal"
+      id="Edit_User_Modal"
       className="modal-box w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="tracking-tight text-xl font-semibold text-gray-900">Add New User</h3>
+        <h3 className="tracking-tight text-xl font-semibold text-gray-900">Edit User</h3>
         <button type="button" onClick={handleClose} className="hover:text-red-500 transition-colors duration-300 cursor-pointer">
           <ImCross className="text-lg" />
         </button>
@@ -118,10 +147,12 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Full Name */}
         <Shared_Input
           label="Full Name"
+          idPrefix="edit"
           name="personal.name"
           register={register}
           placeholder="Enter your Full Name"
           rules={{ required: "Full Name is required." }}
+          autoComplete="name"
           type="text"
           errors={errors}
         />
@@ -129,10 +160,12 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Email */}
         <Shared_Input
           label="Email Address"
+          idPrefix="edit"
           name="credentials.email"
           register={register}
           placeholder="Enter your Email Address"
           rules={{ required: "Email Address is required." }}
+          autoComplete="email"
           type="email"
           errors={errors}
         />
@@ -140,21 +173,26 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Employee ID */}
         <Shared_Input
           label="Employee ID"
+          idPrefix="edit"
           name="personal.userId"
           register={register}
           placeholder="Enter your Employee ID"
           rules={{ required: "Employee ID is required." }}
+          autoComplete="userId"
           type="text"
           errors={errors}
+          disabled
         />
 
         {/* Phone Number */}
         <Shared_Input
           label="Phone Number"
+          idPrefix="edit"
           name="personal.phone"
           register={register}
           placeholder="Enter your Phone Number"
           rules={{ required: "Phone Number is required." }}
+          autoComplete="phone"
           type="text"
           errors={errors}
         />
@@ -162,10 +200,12 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Department */}
         <Shared_Input
           label="Department"
+          idPrefix="edit"
           name="personal.department"
           register={register}
           placeholder="Select Department"
           rules={{ required: "Department is required." }}
+          autoComplete="department"
           type="select"
           options={[
             { label: "Engineering", value: "EN-01" },
@@ -179,10 +219,12 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Position */}
         <Shared_Input
           label="Position"
+          idPrefix="edit"
           name="personal.position"
           register={register}
           placeholder="Select Position"
           rules={{ required: "Position is required." }}
+          autoComplete="position"
           type="select"
           options={[
             { label: "Manager", value: "manager" },
@@ -201,7 +243,9 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
           render={({ field }) => (
             <Shared_Input
               label="Hire Date"
+              idPrefix="edit"
               type="date"
+              autoComplete="hireDate"
               placeholder="Select your Hire Date"
               errors={errors}
               value={field.value}
@@ -213,10 +257,12 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Status */}
         <Shared_Input
           label="Status"
+          idPrefix="edit"
           name="personal.status"
           register={register}
           placeholder="Select Status"
           rules={{ required: "Status is required." }}
+          autoComplete="status"
           type="select"
           options={[
             { label: "Active", value: "active" },
@@ -231,10 +277,12 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Role */}
         <Shared_Input
           label="Role"
+          idPrefix="edit"
           name="personal.role"
           register={register}
           placeholder="Select Role"
           rules={{ required: "Role is required." }}
+          autoComplete="role"
           type="select"
           options={[
             { label: "Manager", value: "manager" },
@@ -246,12 +294,14 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
         {/* Password */}
         <Shared_Input
           label="Password"
+          idPrefix="edit"
           name="credentials.password"
           register={register}
           placeholder="Enter your Password"
-          rules={{ required: "Password is required." }}
           type="password"
+          autoComplete="new-password"
           errors={errors}
+          disabled
         />
 
         {/* Buttons */}
@@ -273,12 +323,13 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
             loading={isSubmitting || loading}
             minWidth="100px"
           >
-            Create New User
+            Update User
           </Shared_Button>
         </div>
       </form>
+
     </div>
   );
 };
 
-export default Add_New_User_Modal;
+export default Edit_User_Modal;
