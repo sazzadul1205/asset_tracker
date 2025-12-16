@@ -87,24 +87,25 @@ export async function POST(req) {
 export async function GET(request) {
   try {
     const db = await connectDB();
-    const collection = db.collection("users");
+    const usersCol = db.collection("users");
 
     const { searchParams } = new URL(request.url);
 
-    // Pagination
-    const page = Math.max(1, Number(searchParams.get("page")) || 1);
-    const limit = Math.min(100, Number(searchParams.get("limit")) || 10);
+    // Pagination (safe defaults)
+    const page = Math.max(parseInt(searchParams.get("page")) || 1, 1);
+    const limit = Math.min(parseInt(searchParams.get("limit")) || 10, 100);
+    const skip = (page - 1) * limit;
 
     // Filters
-    const search = searchParams.get("search");
+    const search = searchParams.get("search")?.trim();
     const status = searchParams.get("status");
     const role = searchParams.get("access_level");
     const department = searchParams.get("department");
 
-    // Explicit flag to include secrets
+    // Include sensitive fields?
     const includeSecrets = searchParams.get("includeSecrets") === "true";
 
-    // Build filters
+    // Build Mongo filter
     const filters = {};
 
     if (search) {
@@ -116,26 +117,27 @@ export async function GET(request) {
       ];
     }
 
-    if (role) filters["employment.role"] = role;
     if (status) filters["personal.status"] = status;
+    if (role) filters["employment.role"] = role;
     if (department) filters["employment.departmentId"] = department;
 
-    // Projection: exclude sensitive fields by default
+    // Projection (security first)
     const projection = includeSecrets
-      ? {} // return everything ONLY if explicitly requested
+      ? {}
       : {
           "credentials.password": 0,
           "credentials.oldPassword": 0,
         };
 
-    // Count total
-    const total = await collection.countDocuments(filters);
+    // Total count
+    const totalItems = await usersCol.countDocuments(filters);
+    const totalPages = Math.ceil(totalItems / limit);
 
-    // Fetch users
-    const users = await collection
+    // Fetch paginated data
+    const users = await usersCol
       .find(filters, { projection })
       .sort({ "metadata.createdAt": -1 })
-      .skip((page - 1) * limit)
+      .skip(skip)
       .limit(limit)
       .toArray();
 
@@ -146,16 +148,18 @@ export async function GET(request) {
         pagination: {
           page,
           limit,
-          total,
-          totalPages: Math.ceil(total / limit),
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
         },
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("GET /api/users failed:", error);
+    console.error("GET /api/users error:", error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }
