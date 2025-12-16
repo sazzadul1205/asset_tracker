@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+// React Components
+import React, { useRef, useEffect, useState } from "react";
+
+// Icons
 import { FiSearch } from "react-icons/fi";
 
+// React Hook Form
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 /**
  * Shared_Input - Reusable React Hook Form Input Component
@@ -45,6 +51,12 @@ const Shared_Input = ({
   defaultValue = "",
 }) => {
   const id = `input-${name}`;
+
+  // States
+  const [dateValue, setDateValue] = useState(defaultValue ? new Date(defaultValue) : null);
+
+
+  // Ref
   const textareaRef = useRef(null);
 
   // Auto-resize textarea
@@ -169,6 +181,38 @@ const Shared_Input = ({
       </div>
     );
   }
+
+  // Date input
+  if (type === "date") {
+    return (
+      <div className={`form-control w-full ${className}`}>
+        {renderLabel()}
+        <DatePicker
+          id={id}
+          selected={dateValue}
+          onChange={(date) => {
+            setDateValue(date);
+            onChange && onChange(date);
+          }}
+          showMonthDropdown
+          showYearDropdown
+          dropdownMode="select"
+          placeholderText={placeholder || "Select date"}
+          className={`${baseClasses} w-full`} // add w-full here
+          disabled={disabled}
+          readOnly={readOnly}
+          dateFormat="dd MMM yyyy"
+          wrapperClassName="w-full"        // makes outer wrapper full width
+        />
+        {errors?.[name] && (
+          <p className="mt-1 text-sm text-red-500 font-medium">
+            {errors[name].message}
+          </p>
+        )}
+      </div>
+    );
+  }
+
 
   // Default input
   return (
