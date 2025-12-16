@@ -13,9 +13,9 @@ import { format, parseISO } from "date-fns";
 
 // Icons
 import {
+  FaEdit,
   FaRegUser,
   FaUserCheck,
-  FaEdit,
 } from 'react-icons/fa';
 import {
   MdWork,
@@ -278,7 +278,7 @@ const ProfilePage = () => {
                 <div className="flex flex-wrap gap-2 mt-1">
                   {(() => {
                     const status = MyUserData?.personal?.status ?? "-";
-                    let badgeColor = "bg-gray-100 text-gray-800"; // default
+                    let badgeColor = "bg-gray-100 text-gray-800";
 
                     switch (status.toLowerCase()) {
                       case "active":
