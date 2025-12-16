@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import { FiSearch } from "react-icons/fi";
+
 
 /**
  * Shared_Input - Reusable React Hook Form Input Component
@@ -28,9 +30,11 @@ const Shared_Input = ({
   name,
   label,
   errors,
+  onChange,
   register,
-  rule = true,
+  value = "",
   rules = {},
+  rule = true,
   autoComplete,
   options = [],
   type = "text",
@@ -134,6 +138,34 @@ const Shared_Input = ({
             {errors[name].message}
           </p>
         )}
+      </div>
+    );
+  }
+
+  // Search input (NOT part of form, icon is visual only)
+  if (type === "search") {
+    return (
+      <div className={`form-control w-full ${className}`}>
+        <div className="relative">
+          <input
+            id={id}
+            type="search"
+            placeholder={placeholder || "Search..."}
+            value={value ?? ""}
+            disabled={disabled}
+            readOnly={readOnly}
+            onChange={(e) => onChange?.(e.target.value)}
+            className={`${baseClasses} pr-10`}
+          />
+
+          {/* Search Icon (visual only) */}
+          <FiSearch
+            size={18}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none
+            ${isDisabledOrReadOnly ? "text-gray-300" : "text-gray-400"}
+          `}
+          />
+        </div>
       </div>
     );
   }
