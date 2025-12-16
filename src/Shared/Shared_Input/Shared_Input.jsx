@@ -43,6 +43,7 @@ const Shared_Input = ({
   rule = true,
   autoComplete,
   options = [],
+  idPrefix = "",
   type = "text",
   className = "",
   placeholder = "",
@@ -50,11 +51,9 @@ const Shared_Input = ({
   disabled = false,
   defaultValue = "",
 }) => {
-  const id = `input-${name}`;
-
-  // States
-  const [dateValue, setDateValue] = useState(defaultValue ? new Date(defaultValue) : null);
-
+  const id = idPrefix
+    ? `${idPrefix}-${name}`
+    : `input-${name}`;
 
   // Ref
   const textareaRef = useRef(null);
@@ -66,6 +65,7 @@ const Shared_Input = ({
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [type, defaultValue]);
+
 
   // Rule check
   if (typeof rule === "function" && !rule()) return null;
@@ -189,20 +189,17 @@ const Shared_Input = ({
         {renderLabel()}
         <DatePicker
           id={id}
-          selected={dateValue}
-          onChange={(date) => {
-            setDateValue(date);
-            onChange && onChange(date);
-          }}
+          selected={value ? new Date(value) : null}
+          onChange={(date) => onChange?.(date)}
           showMonthDropdown
           showYearDropdown
           dropdownMode="select"
           placeholderText={placeholder || "Select date"}
-          className={`${baseClasses} w-full`} // add w-full here
+          className={`${baseClasses} w-full`}
+          wrapperClassName="w-full"
           disabled={disabled}
           readOnly={readOnly}
           dateFormat="dd MMM yyyy"
-          wrapperClassName="w-full"        // makes outer wrapper full width
         />
         {errors?.[name] && (
           <p className="mt-1 text-sm text-red-500 font-medium">

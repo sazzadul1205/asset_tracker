@@ -3,6 +3,7 @@
 
 // React Components
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
 
 // Hooks
@@ -27,14 +28,22 @@ import { FaBoxOpen, FaEye, FaRegTrashAlt } from 'react-icons/fa';
 
 // Date Fns
 import { formatDistanceToNow } from 'date-fns';
+import Edit_User_Modal from './Edit_User_Modal/Edit_User_Modal';
+
 
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();
 
-  // State variables
+  // Session
+  const { data: session, status } = useSession();
+
+  // State variables -> Users
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
+
+  // State Variable -> Selected User
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // Fetch Users
   const {
@@ -61,7 +70,7 @@ const EmployeesPage = () => {
   const Users = data?.data || [];
 
   // Handle loading
-  if (isLoading)
+  if (isLoading || status === "loading")
     return <Loading
       message="Loading Users..."
       subText="Please wait while we fetch users data."
@@ -234,10 +243,10 @@ const EmployeesPage = () => {
                       {/* View */}
                       <button
                         onClick={() => {
-                          setSelectedEmployee(user);
+                          setSelectedUser(user);
                           document.getElementById("View_Employee_Modal").showModal();
                         }}
-                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
                       >
                         <FaEye className="text-sm" />
                       </button>
@@ -245,10 +254,10 @@ const EmployeesPage = () => {
                       {/* Edit */}
                       <button
                         onClick={() => {
-                          setSelectedEmployee(user);
-                          document.getElementById("Edit_Employee_Modal").showModal();
+                          setSelectedUser(user);
+                          document.getElementById("Edit_User_Modal").showModal();
                         }}
-                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
+                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
                       >
                         <MdEdit
                           className="text-sm" />
@@ -257,7 +266,7 @@ const EmployeesPage = () => {
                       {/* Delete */}
                       <button
                         onClick={() => handleDeleteEmployee(user)}
-                        className="flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
                       >
                         <FaRegTrashAlt className="text-sm" />
                       </button>
@@ -296,7 +305,19 @@ const EmployeesPage = () => {
 
       {/* Add New User */}
       <dialog id="Add_New_User_Modal" className="modal">
-        <Add_New_User_Modal />
+        <Add_New_User_Modal RefetchAll={RefetchAll} session={session} />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Edit User */}
+      <dialog id="Edit_User_Modal" className="modal">
+        <Edit_User_Modal
+          session={session}
+          RefetchAll={RefetchAll}
+          selectedUser={selectedUser}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
