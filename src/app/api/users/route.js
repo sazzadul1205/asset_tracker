@@ -9,58 +9,76 @@ import bcrypt from "bcrypt";
 export async function POST(req) {
   try {
     const db = await connectDB();
-    const {
-      name,
-      email,
-      password,
-      phone = "",
-      role = "Employee",
-      departmentId = "",
-      position = "",
-    } = await req.json();
+    const usersCollection = db.collection("users");
 
-    // Basic validation
-    if (!name || !email || !password) {
+    const body = await req.json();
+    const { personal, credentials, employment } = body;
+
+    // --- Validation ---
+    const missingFields = [];
+    if (!personal?.name) missingFields.push("personal.name");
+    if (!personal?.phone) missingFields.push("personal.phone");
+    if (!personal?.hireDate) missingFields.push("personal.hireDate");
+    if (!personal?.status) missingFields.push("personal.status");
+    if (!personal?.userId) missingFields.push("personal.userId");
+    if (!credentials?.email) missingFields.push("credentials.email");
+    if (!credentials?.password) missingFields.push("credentials.password");
+    if (!employment?.departmentId)
+      missingFields.push("employment.departmentId");
+    if (!employment?.position) missingFields.push("employment.position");
+    if (!employment?.role) missingFields.push("employment.role");
+    if (!employment?.lastUpdatedBy)
+      missingFields.push("employment.lastUpdatedBy");
+
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { success: false, error: "Name, email, and password are required" },
+        {
+          success: false,
+          error: `Missing required fields: ${missingFields.join(", ")}`,
+        },
         { status: 400 }
       );
     }
 
-    // Check if user exists
-    const existingUser = await db
-      .collection("Users")
-      .findOne({ "credentials.email": email });
-    if (existingUser) {
+    // --- Uniqueness checks ---
+    if (
+      await usersCollection.findOne({ "credentials.email": credentials.email })
+    ) {
       return NextResponse.json(
-        { success: false, error: "User already exists" },
-        { status: 400 }
+        { success: false, error: "Email already exists" },
+        { status: 409 }
+      );
+    }
+    if (await usersCollection.findOne({ "personal.userId": personal.userId })) {
+      return NextResponse.json(
+        { success: false, error: "UserId already exists" },
+        { status: 409 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // --- Hash password ---
+    const hashedPassword = await bcrypt.hash(credentials.password, 10);
 
-    // Build new user object following your strict schema
+    // --- Prepare user document ---
     const newUser = {
       personal: {
-        name,
-        phone,
-        hireDate: new Date(),
-        status: "active",
-        userId: `USR-${Date.now()}`,
+        name: personal.name,
+        phone: personal.phone,
+        hireDate: new Date(personal.hireDate?.$date || personal.hireDate),
+        status: personal.status,
+        userId: personal.userId,
       },
       credentials: {
-        email,
+        email: credentials.email,
         password: hashedPassword,
         oldPassword: "",
-        lastLogin: null,
+        lastLogin: new Date(),
       },
       employment: {
-        departmentId,
-        position,
-        role,
-        lastUpdatedBy: "SYSTEM",
+        departmentId: employment.departmentId,
+        position: employment.position,
+        role: employment.role,
+        lastUpdatedBy: employment.lastUpdatedBy,
       },
       metadata: {
         createdAt: new Date(),
@@ -68,14 +86,18 @@ export async function POST(req) {
       },
     };
 
-    await db.collection("Users").insertOne(newUser);
+    await usersCollection.insertOne(newUser);
 
     return NextResponse.json(
-      { success: true, message: "User created successfully", data: newUser },
+      {
+        success: true,
+        message: "User created successfully",
+        data: newUser,
+      },
       { status: 201 }
     );
   } catch (err) {
-    console.error("POST /api/users error:", err);
+    console.error("[POST /api/users] Error:", err);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
