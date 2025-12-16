@@ -1,4 +1,6 @@
+// Date Fns
 import { formatDistanceToNow } from 'date-fns';
+
 // Icons
 import { ImCross } from 'react-icons/im';
 import {
@@ -13,7 +15,6 @@ import {
   FaUserCheck,
   FaSyncAlt,
   FaUserPlus,
-  FaClock,
 } from "react-icons/fa";
 import { MdEmail } from 'react-icons/md';
 

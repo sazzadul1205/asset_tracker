@@ -33,6 +33,7 @@ const Edit_User_Modal = ({
     reset,
     control,
     register,
+    setError,
     handleSubmit,
     formState: {
       errors,
@@ -40,9 +41,13 @@ const Edit_User_Modal = ({
     }
   } = useForm();
 
+
+  // Preload data
   useEffect(() => {
+    // Check if user is selected
     if (!selectedUser) return;
 
+    // Preload data
     reset({
       personal: {
         name: selectedUser?.personal?.name || '',
@@ -74,28 +79,30 @@ const Edit_User_Modal = ({
 
   // Submit Handler
   const onSubmit = async (data) => {
-    setGlobalError('');
+    setGlobalError("");
     setLoading(true);
 
-    // Prepare payload
+    // Check if user is selected
     try {
+      if (!selectedUser?.personal?.userId) {
+        setGlobalError("User ID is missing. Cannot update user.");
+        setLoading(false);
+        return;
+      }
+
+      // Build payload
       const payload = {
         personal: {
           name: data.personal.name,
           phone: data.personal.phone,
-          hireDate: data.personal.hireDate
-            ? new Date(data.personal.hireDate)
-            : null,
+          hireDate: data.personal.hireDate ? new Date(data.personal.hireDate) : null,
           status: data.personal.status,
         },
-
         credentials: {
           email: data.credentials.email,
-          ...(data.credentials.password && {
-            password: data.credentials.password,
-          }),
+          // Only include password if user enters a new one
+          ...(data.credentials.password ? { password: data.credentials.password } : {}),
         },
-
         employment: {
           departmentId: data.personal.department,
           position: data.personal.position,
@@ -104,6 +111,7 @@ const Edit_User_Modal = ({
         },
       };
 
+      // PATCH request to update user
       const response = await axiosPublic.patch(
         `/users/${selectedUser.personal.userId}`,
         payload
@@ -115,15 +123,35 @@ const Edit_User_Modal = ({
         RefetchAll();
       }
     } catch (error) {
-      console.error("Update user error:", error);
-      setGlobalError(
-        error?.response?.data?.message || "Something went wrong."
-      );
+      console.error("[Axios Public] Error updating user:", error);
+
+      // Extract server error message
+      const serverError =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        error?.error ||
+        "Something went wrong. Please try again.";
+
+      setGlobalError(serverError);
+
+      // Highlight fields if server returned field-specific errors
+      if (serverError.toLowerCase().includes("email")) {
+        setError("credentials.email", { type: "server", message: serverError });
+      }
+      if (serverError.toLowerCase().includes("name")) {
+        setError("personal.name", { type: "server", message: serverError });
+      }
+      if (serverError.toLowerCase().includes("phone")) {
+        setError("personal.phone", { type: "server", message: serverError });
+      }
+      if (serverError.toLowerCase().includes("user id")) {
+        setError("personal.userId", { type: "server", message: serverError });
+      }
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div

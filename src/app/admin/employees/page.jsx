@@ -6,7 +6,9 @@ import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery } from '@tanstack/react-query';
 
+
 // Hooks
+import { useToast } from '@/hooks/useToast';
 import useAxiosPublic from '@/hooks/useAxiosPublic';
 
 // Shared
@@ -32,11 +34,15 @@ import Edit_User_Modal from './Edit_User_Modal/Edit_User_Modal';
 import View_User_Modal from './View_User_Modal/View_User_Modal';
 
 
+
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();
 
   // Session
   const { data: session, status } = useSession();
+
+  // Toast
+  const { success, error, confirm } = useToast();
 
   // State variables -> Users
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,6 +90,45 @@ const EmployeesPage = () => {
   const RefetchAll = () => {
     refetch();
   };
+
+  // Delete user (improved & safe)
+  const handleDeleteEmployee = async (user) => {
+    if (!user?.personal?.userId) {
+      error("Invalid user", "User ID not found");
+      return;
+    }
+
+    // Confirm dialog
+    const isConfirmed = await confirm(
+      "Delete User?",
+      `This will permanently delete ${user.personal.name}.`,
+      "Yes, Delete",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      await axiosPublic.delete(`/users/${user.personal.userId}`);
+
+      success(
+        "User Deleted",
+        `${user.personal.name} has been removed successfully`
+      );
+
+      refetch();
+    } catch (err) {
+      console.error("Delete user error:", err);
+
+      error(
+        "Delete Failed",
+        err?.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
+
 
   return (
     <div>
@@ -267,10 +312,23 @@ const EmployeesPage = () => {
                       {/* Delete */}
                       <button
                         onClick={() => handleDeleteEmployee(user)}
-                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                        disabled={
+                          user?.employment?.role?.toLowerCase() === "admin"
+                        }
+                        className={`flex items-center justify-center gap-1 px-3 py-2 text-xs rounded-lg shadow-md transition-all duration-200
+                          ${user?.employment?.role?.toLowerCase() === "admin"
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-red-600 text-white hover:bg-red-700 cursor-pointer"
+                          }`}
+                        title={
+                          user?.employment?.role?.toLowerCase() === "admin"
+                            ? "Admin users cannot be deleted"
+                            : "Delete user"
+                        }
                       >
                         <FaRegTrashAlt className="text-sm" />
                       </button>
+
                     </div>
                   </td>
                 </tr>

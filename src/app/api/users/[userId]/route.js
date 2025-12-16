@@ -173,3 +173,54 @@ export async function PATCH(request, { params }) {
     );
   }
 }
+
+/* ============================================================
+   DELETE /api/users/[userId]
+   Delete a user by personal.userId
+   ============================================================ */
+export async function DELETE(request, { params }) {
+  try {
+    // Dynamic route params must be awaited in App Router
+    const { userId } = await params;
+
+    // Validate required parameter
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Connect to MongoDB
+    const db = await connectDB();
+    const collection = db.collection("users");
+
+    // Delete the user
+    const result = await collection.deleteOne({ "personal.userId": userId });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Success response
+    return NextResponse.json(
+      { success: true, message: "User deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("DELETE /api/users/[userId] error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 }
+    );
+  }
+}

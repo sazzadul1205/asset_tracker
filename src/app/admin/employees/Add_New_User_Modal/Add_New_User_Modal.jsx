@@ -28,6 +28,7 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
     reset,
     control,
     register,
+    setError,
     handleSubmit,
     formState: {
       errors,
@@ -35,63 +36,90 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
     }
   } = useForm();
 
+  // Close modal
   const handleClose = () => {
     reset();
     setGlobalError("");
     document.getElementById("Add_New_User_Modal")?.close();
   };
 
+  // Submit Handler
   const onSubmit = async (data) => {
     setGlobalError("");
     setLoading(true);
 
     try {
-      // Map department to departmentId
-      const departmentId = data.personal?.department || "";
-
-      // Convert hireDate to Date object
-      const hireDate = data.personal?.hireDate
-        ? { $date: new Date(data.personal.hireDate).toISOString() }
-        : null;
+      // Generate userId if not provided
+      const userId = data.personal?.userId?.trim() || `USR-${Date.now()}`;
 
       // Prepare payload
       const payload = {
         personal: {
           name: data.personal?.name || "",
           phone: data.personal?.phone || "",
-          hireDate: hireDate,
+          hireDate: data.personal?.hireDate
+            ? new Date(data.personal.hireDate)
+            : null,
           status: data.personal?.status || "active",
-          userId: data.personal?.userId || `USR-${Date.now()}`,
+          userId,
         },
         credentials: {
           email: data.credentials?.email || "",
           password: data.credentials?.password || "",
         },
         employment: {
-          departmentId: departmentId,
+          departmentId: data.personal?.department || "",
           position: data.personal?.position || "",
           role: data.personal?.role || "Employee",
-          lastUpdatedBy: data.personal?.userId || "",
+          lastUpdatedBy: userId,
         },
         metadata: {
-          createdAt: { $date: new Date().toISOString() },
-          updatedAt: { $date: new Date().toISOString() },
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       };
 
-      await axiosPublic.post("/users", payload);
-      success("User added successfully!");
-      handleClose();
-    } catch (err) {
-      console.error(err);
-      setGlobalError(
-        err?.response?.data?.error || "Something went wrong, please try again."
-      );
+      // Send request
+      const response = await axiosPublic.post("/users", payload);
+
+      // Success
+      if (response.status === 200) {
+        success("User added successfully!");
+        handleClose();
+        RefetchAll();
+      }
+    } catch (error) {
+      console.error("[Axios Public] Error adding user:", error);
+
+      // Get server error message
+      const serverError =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        error?.error ||
+        "Something went wrong. Please try again.";
+
+      setGlobalError(serverError);
+
+      // Highlight fields based on server message
+      if (serverError.toLowerCase().includes("email")) {
+        setError("credentials.email", { type: "server", message: serverError });
+      }
+      if (serverError.toLowerCase().includes("name")) {
+        setError("personal.name", { type: "server", message: serverError });
+      }
+      if (serverError.toLowerCase().includes("phone")) {
+        setError("personal.phone", { type: "server", message: serverError });
+      }
+      if (serverError.toLowerCase().includes("user id")) {
+        setError("personal.userId", { type: "server", message: serverError });
+      }
     } finally {
       setLoading(false);
-      RefetchAll();
     }
   };
+
+
 
   return (
     <div
