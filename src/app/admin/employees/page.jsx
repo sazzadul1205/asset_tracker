@@ -29,6 +29,7 @@ import { FaBoxOpen, FaEye, FaRegTrashAlt } from 'react-icons/fa';
 // Date Fns
 import { formatDistanceToNow } from 'date-fns';
 import Edit_User_Modal from './Edit_User_Modal/Edit_User_Modal';
+import View_User_Modal from './View_User_Modal/View_User_Modal';
 
 
 const EmployeesPage = () => {
@@ -244,7 +245,7 @@ const EmployeesPage = () => {
                       <button
                         onClick={() => {
                           setSelectedUser(user);
-                          document.getElementById("View_Employee_Modal").showModal();
+                          document.getElementById("View_User_Modal").showModal();
                         }}
                         className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
                       >
@@ -317,13 +318,22 @@ const EmployeesPage = () => {
           session={session}
           RefetchAll={RefetchAll}
           selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
       </dialog>
 
-    </div >
+      {/* View User */}
+      <dialog id="View_User_Modal" className="modal">
+        <View_User_Modal selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+    </div>
   );
 };
 

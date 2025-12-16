@@ -19,6 +19,7 @@ const Edit_User_Modal = ({
   session,
   RefetchAll,
   selectedUser,
+  setSelectedUser,
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -67,6 +68,7 @@ const Edit_User_Modal = ({
   const handleClose = () => {
     reset();
     setGlobalError('');
+    setSelectedUser(null);
     document.getElementById('Edit_User_Modal')?.close();
   };
 
@@ -75,6 +77,7 @@ const Edit_User_Modal = ({
     setGlobalError('');
     setLoading(true);
 
+    // Prepare payload
     try {
       const payload = {
         personal: {
