@@ -1,14 +1,15 @@
 import React from "react";
+
 // Icons
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 const Table_Pagination = ({
   colSpan = 7,
   totalItems = 0,
+  setCurrentPage,
   totalPages = 0,
   currentPage = 1,
   itemsPerPage = 10,
-  setCurrentPage,
   paginationText = "Items",
 }) => {
   // If there is no data, normalize values
@@ -18,6 +19,7 @@ const Table_Pagination = ({
   const startItem =
     totalItems === 0 ? 0 : (safeCurrentPage - 1) * itemsPerPage + 1;
 
+  // Calculate visible item range
   const endItem =
     totalItems === 0
       ? 0
@@ -35,6 +37,7 @@ const Table_Pagination = ({
     }
   };
 
+  // Page handlers (safe guards included)
   const handleNext = () => {
     if (!isNextDisabled) {
       setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -44,7 +47,11 @@ const Table_Pagination = ({
   return (
     <tfoot>
       <tr>
+
+        {/* Pagination */}
         <td colSpan={colSpan} className="px-6 py-4 border-t border-gray-200">
+
+          {/* Controls */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-black">
 
             {/* Info */}
@@ -67,10 +74,10 @@ const Table_Pagination = ({
                 aria-label="Previous page"
                 disabled={isPrevDisabled}
                 onClick={handlePrev}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 transition
                   ${isPrevDisabled
                     ? "opacity-50 cursor-not-allowed bg-white"
-                    : "bg-white hover:bg-gray-100 hover:shadow-sm"
+                    : "bg-white hover:bg-gray-100 hover:shadow-sm cursor-pointer"
                   }`}
               >
                 <FaAngleLeft />
@@ -78,7 +85,7 @@ const Table_Pagination = ({
               </button>
 
               {/* Page Indicator */}
-              <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border font-medium">
+              <div className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300 font-medium">
                 Page {safeCurrentPage} of {totalPages}
               </div>
 
@@ -88,10 +95,10 @@ const Table_Pagination = ({
                 aria-label="Next page"
                 disabled={isNextDisabled}
                 onClick={handleNext}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 transition
                   ${isNextDisabled
                     ? "opacity-50 cursor-not-allowed bg-white"
-                    : "bg-white hover:bg-gray-100 hover:shadow-sm"
+                    : "bg-white hover:bg-gray-100 hover:shadow-sm cursor-pointer"
                   }`}
               >
                 Next
