@@ -50,7 +50,6 @@ const Shared_Input = ({
   name,
   label,
   errors,
-  control,
   onChange,
   register,
   value = "",
@@ -134,25 +133,48 @@ const Shared_Input = ({
     const el = inputRef.current;
     if (!el) return;
 
-    const rawValue = e.target.value.replace(/[^\d.]/g, "");
-    const cursorPosition = el.selectionStart;
-    const digitsBeforeCursor = e.target.value.slice(0, cursorPosition).replace(/[^\d]/g, "").length;
+    const raw = e.target.value;
 
-    const formatted = formatValue(rawValue);
+    // Get cursor position before formatting
+    const selectionStart = el.selectionStart;
+
+    // Remove all non-digit except decimal
+    const numericString = raw.replace(/[^\d.]/g, "");
+
+    // Convert to number
+    const numValue = parseFloat(numericString);
+
+    // Format number for display
+    const formatted = isNaN(numValue)
+      ? "0.00"
+      : numValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Count digits before cursor in the raw input
+    let digitsBeforeCursor = 0;
+    for (let i = 0; i < selectionStart; i++) {
+      if (/\d/.test(raw[i])) digitsBeforeCursor++;
+    }
+
+    // Find cursor position in formatted string
+    let cursorPos = 0;
+    let digitsSeen = 0;
+    while (digitsSeen < digitsBeforeCursor && cursorPos < formatted.length) {
+      if (/\d/.test(formatted[cursorPos])) digitsSeen++;
+      cursorPos++;
+    }
+
+    // Update internal value for display
     setInternalValue(formatted);
-    onChange?.(formatted);
+
+    // Send numeric value to RHF
+    onChange?.(isNaN(numValue) ? 0 : numValue);
 
     // Restore cursor position
     setTimeout(() => {
-      const formattedDigits = formatted.replace(/[^\d]/g, "");
-      let pos = 0, count = 0;
-      while (count < digitsBeforeCursor && pos < formatted.length) {
-        if (/\d/.test(formatted[pos])) count++;
-        pos++;
-      }
-      el.selectionStart = el.selectionEnd = pos;
+      el.selectionStart = el.selectionEnd = cursorPos;
     }, 0);
   };
+
 
   // --------------------------
   // Render logic
