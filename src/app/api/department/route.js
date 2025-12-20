@@ -1,6 +1,6 @@
-// src/app/api/department/route.js
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
+import { Decimal128, Int32 } from "mongodb";
 
 /**
  * POST: Create Department
@@ -49,6 +49,17 @@ export async function POST(req) {
       );
     }
 
+    // --- Convert types ---
+    const employeeCount = new Int32(Number(stats.employeeCount));
+    const budgetNumber = Number(stats.budget);
+
+    if (isNaN(budgetNumber)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid budget value" },
+        { status: 400 }
+      );
+    }
+
     // --- Prepare document ---
     const newDepartment = {
       departmentId,
@@ -63,8 +74,8 @@ export async function POST(req) {
         userId: manager.userId,
       },
       stats: {
-        employeeCount: Number(stats.employeeCount),
-        budget: Number(stats.budget),
+        employeeCount,
+        budget: Decimal128.fromString(budgetNumber.toString()),
       },
       metadata: {
         createdAt: new Date(),
