@@ -1,32 +1,30 @@
 // src/app/admin/departments/Add_New_Department_Modal/Add_New_Department_Modal.jsx
 
 // React Components
-import React, { use, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 
 // Hooks
 import { useToast } from '@/hooks/useToast';
 import useAxiosPublic from '@/hooks/useAxiosPublic';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 // Shared
 import Shared_Input from '@/Shared/Shared_Input/Shared_Input';
 import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
+import Shared_Input_Image from '@/Shared/Shared_Input_Image/Shared_Input_Image';
+import Shared_Multi_Field_Input from '@/Shared/Shared_Multi_Field_Input/Shared_Multi_Field_Input';
 
 // Icons
 import { ImCross } from 'react-icons/im';
-import Shared_Multi_Field_Input from '@/Shared/Shared_Multi_Field_Input/Shared_Multi_Field_Input';
-import Shared_Input_Image from '@/Shared/Shared_Input_Image/Shared_Input_Image';
-import { useImageUpload } from '@/hooks/useImageUpload';
-import { useQuery } from '@tanstack/react-query';
 
-
-const Add_New_Department_Modal = () => {
+const Add_New_Department_Modal = ({ RefetchAll }) => {
   const { success, error } = useToast();
   const axiosPublic = useAxiosPublic();
   const {
     uploadImage,
     error: imageError,
-    loading: uploadingImage,
   } = useImageUpload();
 
   // States -> Image Upload
@@ -67,14 +65,15 @@ const Add_New_Department_Modal = () => {
   });
 
   // Transform into { label, value } format for the select
-  const managerOptions =
-    [
-      { label: "Unassigned", value: "unassigned" },
-      ...(managerOptionsData?.map((user) => ({
+  const managerOptions = [
+    { label: "Unassigned", value: "unassigned" },
+    ...(managerOptionsData?.map((user) => (
+      {
         label: user.personal.name,
         value: user.personal.userId,
-      })) || []),
-    ];
+      }))
+      || []),
+  ];
 
   // Close modal
   const handleClose = () => {
@@ -94,11 +93,14 @@ const Add_New_Department_Modal = () => {
       const departmentId = data.departmentId?.trim() || `DEP-${Date.now()}-${randomSuffix}`;
 
       // --- Upload Icon Image if provided ---
-      let iconUrl = iconPreview || placeholderIcon; // use placeholder if no image uploaded
+      let iconUrl = placeholderIcon; // default to placeholder
       if (iconImage) {
         const uploadedUrl = await uploadImage(iconImage);
         if (uploadedUrl) iconUrl = uploadedUrl;
       }
+
+      // Ensure manager.userId is always string
+      const managerUserId = data.manager?.userId || "unassigned";
 
       // Prepare payload
       const payload = {
@@ -108,16 +110,17 @@ const Add_New_Department_Modal = () => {
           description: data.info?.description || "",
           status: data.info?.status || "active",
           icon: iconUrl,
-          iconBgColor: data.info?.iconBgColor || "#e5e7eb",
+          iconBgColor: selectedColor || "#e5e7eb",
         },
         manager: {
-          userId: data.manager?.userId || "",
+          userId: managerUserId,
         },
         stats: {
-          employeeCount: Number(data.stats?.employeeCount || 0),
+          employeeCount: parseInt(data.stats?.employeeCount || 0, 10),
           budget: Number(data.stats?.budget || 0),
         },
       };
+
       // Send request
       const response = await axiosPublic.post("/department", payload);
 
@@ -149,6 +152,7 @@ const Add_New_Department_Modal = () => {
     }
   };
 
+  // Image Upload
   if (imageError) error(imageError);
 
   return (
@@ -217,7 +221,7 @@ const Add_New_Department_Modal = () => {
 
         {/* Budget */}
         <Controller
-          name="budget"
+          name="stats.budget"
           control={control}
           rules={{ required: "Budget is required" }}
           render={({ field }) => (
@@ -225,10 +229,11 @@ const Add_New_Department_Modal = () => {
               label="Budget"
               type="currency"
               placeholder="Enter the budget"
-              {...field}  // passes value and onChange from RHF
+              {...field}  // passes value (number) and onChange
             />
           )}
         />
+
 
         {/* Positions */}
         <Shared_Multi_Field_Input
@@ -280,8 +285,7 @@ const Add_New_Department_Modal = () => {
               {/* Icon Upload */}
               <div
                 className="relative flex items-center justify-center w-20 h-20
-                   border border-gray-300 rounded-xl shadow-sm hover:shadow-md"
-                style={{ backgroundColor: selectedColor }}
+                   border border-gray-300 rounded-xl shadow-sm hover:shadow-md" style={{ backgroundColor: selectedColor }}
               >
                 <Shared_Input_Image
                   file={iconImage}
