@@ -77,7 +77,7 @@ const EmployeesPage = () => {
   const Users = data?.data || [];
 
   // Handle loading
-  if (isLoading || status === "loading")
+  if (status === "loading")
     return <Loading
       message="Loading Users..."
       subText="Please wait while we fetch users data."

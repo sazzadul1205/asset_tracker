@@ -119,8 +119,6 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
     }
   };
 
-
-
   return (
     <div
       id="Add_New_User_Modal"
