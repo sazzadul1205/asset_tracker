@@ -78,6 +78,17 @@ const Shared_Input = ({
       : "0.00"
   );
 
+  // Add this useEffect right after:
+  useEffect(() => {
+    if (type === "currency") {
+      setInternalValue(
+        value !== undefined && value !== null
+          ? Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : "0.00"
+      );
+    }
+  }, [value, type]);
+
   // --------------------------
   // Helper functions
   // --------------------------

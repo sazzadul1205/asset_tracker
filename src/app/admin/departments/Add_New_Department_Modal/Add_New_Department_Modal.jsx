@@ -20,12 +20,9 @@ import Shared_Multi_Field_Input from '@/Shared/Shared_Multi_Field_Input/Shared_M
 import { ImCross } from 'react-icons/im';
 
 const Add_New_Department_Modal = ({ RefetchAll }) => {
-  const { success, error } = useToast();
   const axiosPublic = useAxiosPublic();
-  const {
-    uploadImage,
-    error: imageError,
-  } = useImageUpload();
+  const { success, error } = useToast();
+  const { uploadImage, error: imageError } = useImageUpload();
 
   // States -> Image Upload
   const [isOpen, setIsOpen] = useState(false);
@@ -58,7 +55,7 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
       axiosPublic
         .get(`/users/UserOptions`, {
           params: {
-            excludePosition: "manager", // Exclude all managers
+            excludePosition: "manager",
           },
         })
         .then(res => res.data.data),
@@ -89,11 +86,11 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
 
     try {
       // Generate Department ID if not provided
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 4 random digits
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       const departmentId = data.departmentId?.trim() || `DEP-${Date.now()}-${randomSuffix}`;
 
-      // --- Upload Icon Image if provided ---
-      let iconUrl = placeholderIcon; // default to placeholder
+      // Upload Icon
+      let iconUrl = placeholderIcon;
       if (iconImage) {
         const uploadedUrl = await uploadImage(iconImage);
         if (uploadedUrl) iconUrl = uploadedUrl;
@@ -101,6 +98,19 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
 
       // Ensure manager.userId is always string
       const managerUserId = data.manager?.userId || "unassigned";
+
+      // Map positions to objects that backend expects
+      const positions = (data.items || [])
+        .map(item => item.position_name?.trim())
+        .filter(Boolean)
+        .map(position_name => ({ position_name }));
+
+      // Ensure at least one position
+      if (positions.length === 0) {
+        setError("items", { type: "manual", message: "At least one position is required" });
+        setLoading(false);
+        return;
+      }
 
       // Prepare payload
       const payload = {
@@ -119,19 +129,24 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
           employeeCount: parseInt(data.stats?.employeeCount || 0, 10),
           budget: Number(data.stats?.budget || 0),
         },
+        items: positions,
       };
 
       // Send request
       const response = await axiosPublic.post("/department", payload);
 
+      // Handle response
       if (response.status === 201) {
         success("Department created successfully!");
         handleClose?.();
         RefetchAll?.();
       }
     } catch (error) {
+
+      // Log error
       console.error("[Axios Public] Error creating department:", error);
 
+      // Handle error
       const serverError =
         error?.response?.data?.error ||
         error?.response?.data?.message ||
@@ -139,9 +154,10 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
         error?.error ||
         "Something went wrong. Please try again.";
 
+      // Set error
       setGlobalError(serverError);
 
-      // Field-level mapping
+      // Set errors
       if (serverError.toLowerCase().includes("department")) setError("departmentId", { type: "server", message: serverError });
       if (serverError.toLowerCase().includes("name")) setError("info.name", { type: "server", message: serverError });
       if (serverError.toLowerCase().includes("description")) setError("info.description", { type: "server", message: serverError });
@@ -344,11 +360,11 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
             loading={isSubmitting || loading}
             minWidth="100px"
           >
-            Create New User
+            Create New Department
           </Shared_Button>
         </div>
       </form >
-    </div >
+    </div>
   );
 };
 
