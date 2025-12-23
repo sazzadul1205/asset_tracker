@@ -1,7 +1,9 @@
-// lib/connectDB.js
 import { MongoClient, ServerApiVersion } from "mongodb";
 
+// MongoDB URI
 const uri = process.env.MONGODB_URI;
+
+// Check if MONGODB_URI is set
 if (!uri) {
   throw new Error("Missing MONGODB_URI in .env.local");
 }
@@ -19,6 +21,7 @@ if (!global._mongoClient) {
     socketTimeoutMS: 30000,
   });
 
+  // Connect to MongoDB
   global._mongoClientPromise = global._mongoClient
     .connect()
     .then((conn) => {
@@ -33,7 +36,7 @@ if (!global._mongoClient) {
     });
 }
 
-// Connect and return the DB
+// Connect and return the DB (default behavior)
 export async function connectDB() {
   const client = await global._mongoClientPromise;
   const dbName = process.env.MONGODB_DB || "assets_tracker";
@@ -46,16 +49,20 @@ export async function connectDB() {
   return db;
 }
 
+// Return the raw MongoClient for transactions
+export async function getMongoClient() {
+  return await global._mongoClientPromise;
+}
+
 // Helper function to manually test connection
 export async function testConnection() {
   try {
     const client = await global._mongoClientPromise;
-    // Ping the admin database
     await client.db("admin").command({ ping: 1 });
     console.log("MongoDB connection is alive!");
     return true;
   } catch (err) {
-    console.error(" MongoDB connection test failed:", err);
+    console.error("MongoDB connection test failed:", err);
     return false;
   }
 }
