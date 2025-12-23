@@ -20,6 +20,7 @@ import Table_Pagination from '@/Shared/Table_Pagination/Table_Pagination';
 import formatCurrency from "@/Utils/formatCurrency";
 import UserId_To_Name from './UserId_To_Name/UserId_To_Name';
 import Edit_Department_Modal from './Edit_Department_Modal/Edit_Department_Modal';
+import View_Department_Modal from './View_Department_Modal/View_Department_Modal';
 
 const DepartmentPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -337,7 +338,10 @@ const DepartmentPage = () => {
 
       {/* View Department Modal */}
       <dialog id="View_Department_Modal" className="modal">
-        {/* <View_Department_Modal /> */}
+        <View_Department_Modal
+          selectedDepartment={selectedDepartment}
+          setSelectedDepartment={setSelectedDepartment}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>

@@ -33,8 +33,6 @@ import { formatDistanceToNow } from 'date-fns';
 import Edit_User_Modal from './Edit_User_Modal/Edit_User_Modal';
 import View_User_Modal from './View_User_Modal/View_User_Modal';
 
-
-
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();
 
@@ -385,7 +383,10 @@ const EmployeesPage = () => {
 
       {/* View User */}
       <dialog id="View_User_Modal" className="modal">
-        <View_User_Modal selectedUser={selectedUser} setSelectedUser={setSelectedUser} />
+        <View_User_Modal
+          selectedUser={selectedUser}
+          setSelectedUser={setSelectedUser}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>

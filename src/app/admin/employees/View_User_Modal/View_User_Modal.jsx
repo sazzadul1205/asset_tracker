@@ -35,6 +35,7 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
       .replace("_", " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
+  // Close Modal
   const handleClose = () => {
     setSelectedUser(null);
     document.getElementById("View_User_Modal")?.close();
