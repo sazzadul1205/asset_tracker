@@ -1,23 +1,28 @@
 // src/app/api/department/route.js
 
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/connectDB";
+import { connectDB, getMongoClient } from "@/lib/connectDB";
 
 // Types
 import { Decimal128, Int32 } from "mongodb";
 
 /**
- * POST: Create Department
+ * POST: Create Department + Assign Manager (TRANSACTION SAFE)
  */
 export async function POST(req) {
+  const client = await getMongoClient();
+  const dbName = process.env.MONGODB_DB || "assets_tracker";
+  const db = client.db(dbName);
+  const session = client.startSession();
+
   try {
-    const db = await connectDB();
     const departmentCol = db.collection("department");
+    const usersCol = db.collection("users");
 
     const body = await req.json();
-    const { departmentId, info, manager, stats, items } = body;
+    const { departmentId, info, manager, stats, items, updatedBy } = body;
 
-    // --- Validation ---
+    // ---------------- VALIDATION ----------------
     const missingFields = [];
 
     if (!departmentId) missingFields.push("departmentId");
@@ -34,15 +39,13 @@ export async function POST(req) {
       missingFields.push("stats.employeeCount");
     if (stats?.budget === undefined) missingFields.push("stats.budget");
 
-    if (!items || !Array.isArray(items) || items.length === 0)
+    if (!Array.isArray(items) || items.length === 0)
       missingFields.push("positions");
 
-    // Check positions content
     const invalidPositions = items?.filter(
       (p) => !p.position_name || typeof p.position_name !== "string"
     );
-    if (invalidPositions && invalidPositions.length > 0)
-      missingFields.push("positions.invalid");
+    if (invalidPositions?.length) missingFields.push("positions.invalid");
 
     if (missingFields.length > 0) {
       return NextResponse.json(
@@ -56,68 +59,85 @@ export async function POST(req) {
       );
     }
 
-    // --- Uniqueness check ---
-    const exists = await departmentCol.findOne({ departmentId });
-    if (exists) {
-      return NextResponse.json(
-        { success: false, error: "Department already exists" },
-        { status: 409 }
+    // ---------------- TRANSACTION ----------------
+    let createdDepartmentId = null;
+
+    await session.withTransaction(async () => {
+      // --- Check if department exists ---
+      const exists = await departmentCol.findOne({ departmentId }, { session });
+      if (exists) throw new Error("Department already exists");
+
+      // --- Check if manager exists ---
+      const managerExists = await usersCol.findOne(
+        { "personal.userId": manager.userId },
+        { session }
       );
-    }
+      if (!managerExists) {
+        throw new Error(`Manager user not found: ${manager.userId}`);
+      }
 
-    // --- Convert types ---
-    const employeeCount = new Int32(Number(stats.employeeCount));
-    const budgetNumber = Number(stats.budget);
+      // --- Convert types ---
+      const employeeCount = new Int32(Number(stats.employeeCount));
+      const budgetNumber = Number(stats.budget);
+      if (isNaN(budgetNumber)) throw new Error("Invalid budget value");
 
-    if (isNaN(budgetNumber)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid budget value" },
-        { status: 400 }
+      // --- Create department ---
+      const newDepartment = {
+        departmentId,
+        info: { ...info },
+        manager: { userId: manager.userId },
+        stats: {
+          employeeCount,
+          budget: Decimal128.fromString(budgetNumber.toString()),
+        },
+        positions: items.map((p) => ({ position_name: p.position_name })),
+        metadata: { createdAt: new Date(), updatedAt: new Date() },
+      };
+
+      const insertResult = await departmentCol.insertOne(newDepartment, {
+        session,
+      });
+      createdDepartmentId = insertResult.insertedId;
+
+      // --- Update manager role ---
+      const userUpdate = await usersCol.updateOne(
+        { "personal.userId": manager.userId },
+        {
+          $set: {
+            "employment.departmentId": departmentId,
+            "employment.position": "manager",
+            "employment.role": "manager",
+            "employment.lastUpdatedBy": updatedBy || manager.userId,
+            "metadata.updatedAt": new Date(),
+          },
+        },
+        { session }
       );
-    }
 
-    // --- Prepare document ---
-    const newDepartment = {
-      departmentId,
-      info: {
-        name: info.name,
-        description: info.description,
-        status: info.status,
-        icon: info.icon,
-        iconBgColor: info.iconBgColor,
-      },
-      manager: {
-        userId: manager.userId,
-      },
-      stats: {
-        employeeCount,
-        budget: Decimal128.fromString(budgetNumber.toString()),
-      },
-      positions: items.map((p) => ({
-        position_name: p.position_name,
-      })),
-      metadata: {
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    };
+      if (userUpdate.matchedCount === 0) {
+        throw new Error(
+          `Manager user not found during update: ${manager.userId}`
+        );
+      }
+    });
 
-    await departmentCol.insertOne(newDepartment);
-
+    // ---------------- SUCCESS ----------------
     return NextResponse.json(
       {
         success: true,
-        message: "Department created successfully",
-        data: newDepartment,
+        message: "Department created and manager assigned successfully",
+        departmentId: createdDepartmentId || departmentId,
       },
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/department] Error:", err);
+    console.error("[POST /api/department TRANSACTION FAILED]", err);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: err.message || "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    await session.endSession();
   }
 }
 

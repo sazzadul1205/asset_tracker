@@ -68,9 +68,12 @@ export async function POST(req, context) {
       { $set: updateFields }
     );
 
-    // If user not found after update, return 404
+    // If no user found, return 404
     if (updateResult.matchedCount === 0) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
     }
 
     // Success response
