@@ -205,7 +205,7 @@ const DepartmentPage = () => {
                       >
                         <Image
                           src={department?.info?.icon || "https://i.ibb.co/9996NVtk/info-removebg-preview.png"}
-                          alt={department.name || "Department Icon"}
+                          alt={department?.info?.name || "Department Icon"}
                           width={32} // 8 * 4 = 32px (matches w-8)
                           height={32} // matches h-8
                           className="object-contain"
