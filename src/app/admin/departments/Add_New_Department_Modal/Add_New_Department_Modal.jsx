@@ -24,14 +24,14 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
   const { success, error } = useToast();
   const { uploadImage, error: imageError } = useImageUpload();
 
-  // States -> Image Upload
+  // Modal states
   const [isOpen, setIsOpen] = useState(false);
   const [iconImage, setIconImage] = useState(null);
   const [iconPreview, setIconPreview] = useState(null);
   const [selectedColor, setSelectedColor] = useState("#ffffff");
   const [placeholderIcon] = useState("https://i.ibb.co/9996NVtk/info-removebg-preview.png");
 
-  // States -> Global
+  // Global states
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState("");
 
@@ -72,14 +72,14 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
       || []),
   ];
 
-  // Close modal
+  // Close modal handler
   const handleClose = () => {
     reset();
     setGlobalError("");
     document.getElementById("Add_New_Department_Modal")?.close();
   }
 
-  // Submit Handler
+  // Submit Handler (react-hook-form)
   const onSubmit = async (data) => {
     setGlobalError("");
     setLoading(true);
@@ -168,7 +168,7 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
     }
   };
 
-  // Image Upload
+  // Image Upload Error
   if (imageError) error(imageError);
 
   return (

@@ -48,26 +48,32 @@ const Edit_Department_Modal = ({
     formState: { errors, isSubmitting },
   } = useForm();
 
-  // Fetch manager options
-  const { data: managerOptionsData, isLoading: managerLoading } = useQuery({
+  // Get User Options
+  const {
+    data: managerOptionsData,
+    isLoading: managerLoading,
+  } = useQuery({
     queryKey: ["userOptions"],
-    queryFn: async () => {
-      try {
-        const res = await axiosPublic.get(`/users/UserOptions`, { params: { excludePosition: "manager" } });
-        return res.data.data;
-      } catch (err) {
-        console.error("[Axios Public] Failed to fetch manager options:", err.response?.data || err.message);
-        return [];
-      }
-    }
+    queryFn: async () =>
+      axiosPublic
+        .get(`/users/UserOptions`, {
+          params: {
+            excludeRole: "manager,admin", // exclude both manager and admin
+          },
+        })
+        .then(res => res.data.data),
   });
 
+
+  // Transform into { label, value } format for the select
   const managerOptions = [
     { label: "Unassigned", value: "unassigned" },
-    ...(managerOptionsData?.map(user => ({
-      label: user.personal.name,
-      value: user.personal.userId
-    })) || [])
+    ...(managerOptionsData?.map((user) => (
+      {
+        label: user.personal.name,
+        value: user.personal.userId,
+      }))
+      || []),
   ];
 
   // Preload department data into form when modal opens
@@ -170,6 +176,7 @@ const Edit_Department_Modal = ({
     }
   };
 
+  // Image Upload Error
   if (imageError) error(imageError);
 
   return (
