@@ -3,16 +3,15 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import bcrypt from "bcrypt";
 
-/* ============================================================
+/*
    GET /api/users/[userId]
    Fetch a single user by personal.userId
-   ============================================================ */
+   */
 export async function GET(request, context) {
   try {
-    // Dynamic route params must be awaited in App Router
+    // Dynamic route params
     const { userId } = await context.params;
 
-    // Validate required parameter
     if (!userId) {
       return NextResponse.json(
         { success: false, message: "User ID is required" },
@@ -20,29 +19,63 @@ export async function GET(request, context) {
       );
     }
 
-    // Read query parameters
+    // Query params
     const { searchParams } = new URL(request.url);
-    const includeSecrets = searchParams.get("includeSecrets") === "true";
 
-    // Connect to MongoDB
+    const includeSecrets = searchParams.get("includeSecrets") === "true";
+    const includeFields = searchParams.get("include"); // comma separated
+    const excludeFields = searchParams.get("exclude"); // comma separated
+
+    // MongoDB does NOT allow mixing include + exclude (except _id)
+    if (includeFields && excludeFields) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Cannot use both include and exclude at the same time",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Connect DB
     const db = await connectDB();
     const collection = db.collection("users");
 
-    // Exclude sensitive fields unless explicitly requested
-    const projection = includeSecrets
-      ? {}
-      : {
-          "credentials.password": 0,
-          "credentials.oldPassword": 0,
-        };
+    // -------------------------
+    // Build projection safely
+    // -------------------------
+    let projection = {};
 
-    // Find user by schema-defined identifier
+    // Default: exclude secrets unless explicitly included
+    if (!includeSecrets) {
+      projection["credentials.password"] = 0;
+      projection["credentials.oldPassword"] = 0;
+    }
+
+    // INCLUDE mode
+    if (includeFields) {
+      projection = {}; // reset projection
+      includeFields.split(",").forEach((field) => {
+        projection[field.trim()] = 1;
+      });
+
+      // MongoDB best practice: explicitly allow _id
+      projection._id = 1;
+    }
+
+    // EXCLUDE mode
+    if (excludeFields) {
+      excludeFields.split(",").forEach((field) => {
+        projection[field.trim()] = 0;
+      });
+    }
+
+    // Query
     const user = await collection.findOne(
       { "personal.userId": userId },
       { projection }
     );
 
-    // Handle not found
     if (!user) {
       return NextResponse.json(
         { success: false, message: "User not found" },
@@ -50,7 +83,6 @@ export async function GET(request, context) {
       );
     }
 
-    // Success response
     return NextResponse.json({ success: true, data: user }, { status: 200 });
   } catch (error) {
     console.error("GET /api/users/[userId] error:", error);
@@ -62,10 +94,10 @@ export async function GET(request, context) {
   }
 }
 
-/* ============================================================
+/*
    PATCH /api/users/[userId]
    Update user while enforcing MongoDB schema rules
-   ============================================================ */
+   */
 export async function PATCH(request, { params }) {
   try {
     // Extract route parameter correctly
@@ -174,10 +206,10 @@ export async function PATCH(request, { params }) {
   }
 }
 
-/* ============================================================
+/*
    DELETE /api/users/[userId]
    Delete a user by personal.userId
-   ============================================================ */
+   */
 export async function DELETE(request, { params }) {
   try {
     // Dynamic route params must be awaited in App Router

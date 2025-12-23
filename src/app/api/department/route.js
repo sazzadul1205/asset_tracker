@@ -1,5 +1,9 @@
+// src/app/api/department/route.js
+
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
+
+// Types
 import { Decimal128, Int32 } from "mongodb";
 
 /**
@@ -11,7 +15,7 @@ export async function POST(req) {
     const departmentCol = db.collection("department");
 
     const body = await req.json();
-    const { departmentId, info, manager, stats } = body;
+    const { departmentId, info, manager, stats, items } = body;
 
     // --- Validation ---
     const missingFields = [];
@@ -30,11 +34,23 @@ export async function POST(req) {
       missingFields.push("stats.employeeCount");
     if (stats?.budget === undefined) missingFields.push("stats.budget");
 
+    if (!items || !Array.isArray(items) || items.length === 0)
+      missingFields.push("positions");
+
+    // Check positions content
+    const invalidPositions = items?.filter(
+      (p) => !p.position_name || typeof p.position_name !== "string"
+    );
+    if (invalidPositions && invalidPositions.length > 0)
+      missingFields.push("positions.invalid");
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: `Missing required fields: ${missingFields.join(", ")}`,
+          error: `Missing or invalid required fields: ${missingFields.join(
+            ", "
+          )}`,
         },
         { status: 400 }
       );
@@ -77,6 +93,9 @@ export async function POST(req) {
         employeeCount,
         budget: Decimal128.fromString(budgetNumber.toString()),
       },
+      positions: items.map((p) => ({
+        position_name: p.position_name,
+      })),
       metadata: {
         createdAt: new Date(),
         updatedAt: new Date(),
