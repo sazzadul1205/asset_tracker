@@ -1,10 +1,82 @@
 // src/app/api/department/[departmentId]/route.js
 
 import { NextResponse } from "next/server";
-import { getMongoClient } from "@/lib/connectDB";
+import { getMongoClient, connectDB } from "@/lib/connectDB";
 
 // Types
 import { Decimal128, Int32 } from "mongodb";
+
+// GET Department by ID
+export async function GET(request, context) {
+  try {
+    // Must await context.params
+    const params = await context.params;
+    const { departmentId } = params;
+
+    if (!departmentId) {
+      return NextResponse.json(
+        { success: false, message: "Department ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const includeFields = searchParams.get("include");
+    const excludeFields = searchParams.get("exclude");
+
+    if (includeFields && excludeFields) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Cannot use both include and exclude at the same time",
+        },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectDB();
+    const collection = db.collection("department");
+
+    let projection = {};
+
+    if (includeFields) {
+      includeFields.split(",").forEach((field) => {
+        projection[field.trim()] = 1;
+      });
+      projection._id = 1;
+    } else if (excludeFields) {
+      excludeFields.split(",").forEach((field) => {
+        projection[field.trim()] = 0;
+      });
+    } else {
+      // Default: only return name + departmentId
+      projection = { "info.name": 1, departmentId: 1, _id: 0 };
+    }
+
+    const department = await collection.findOne(
+      { departmentId },
+      { projection }
+    );
+
+    if (!department) {
+      return NextResponse.json(
+        { success: false, message: "Department not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, data: department },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("GET /api/department/[departmentId] error:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
 
 // PATCH Department (TRANSACTION SAFE + Reset current users)
 export const PATCH = async (request, context) => {
