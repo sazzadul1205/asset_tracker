@@ -1,26 +1,40 @@
 // src/app/admin/departments/page.jsx
 "use client";
 
-import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
-import Shared_Input from '@/Shared/Shared_Input/Shared_Input';
+// React Components
 import React, { useState } from 'react';
-import { IoMdAdd } from "react-icons/io";
-import Add_New_Department_Modal from './Add_New_Department_Modal/Add_New_Department_Modal';
-import Error from '@/Shared/Error/Error';
-import Loading from '@/Shared/Loading/Loading';
 import { useQuery } from '@tanstack/react-query';
+
+// Next Components
+import Image from 'next/image';
 import { useToast } from '@/hooks/useToast';
 import { useSession } from 'next-auth/react';
-import useAxiosPublic from '@/hooks/useAxiosPublic';
-import Image from 'next/image';
-import { FaBoxOpen, FaEye, FaRegTrashAlt } from 'react-icons/fa';
+
+// Icons
+import { IoMdAdd } from "react-icons/io";
 import { MdEdit } from 'react-icons/md';
+import { FaBoxOpen, FaEye, FaRegTrashAlt } from 'react-icons/fa';
+
+// Shared
+import Error from '@/Shared/Error/Error';
+import Loading from '@/Shared/Loading/Loading';
+import Shared_Input from '@/Shared/Shared_Input/Shared_Input';
+import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
 import Table_Pagination from '@/Shared/Table_Pagination/Table_Pagination';
 
+// Hooks
+import useAxiosPublic from '@/hooks/useAxiosPublic';
+
+// Utils
 import formatCurrency from "@/Utils/formatCurrency";
+
+// Components
 import UserId_To_Name from './UserId_To_Name/UserId_To_Name';
+
+// Modals
 import Edit_Department_Modal from './Edit_Department_Modal/Edit_Department_Modal';
 import View_Department_Modal from './View_Department_Modal/View_Department_Modal';
+import Add_New_Department_Modal from './Add_New_Department_Modal/Add_New_Department_Modal';
 
 const DepartmentPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -32,9 +46,9 @@ const DepartmentPage = () => {
   const { success, error, confirm } = useToast();
 
   // State variables -> Departments
+  const [itemsPerPage] = useState(8);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(8);
 
   // State Variable -> Selected Department
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -60,18 +74,35 @@ const DepartmentPage = () => {
     keepPreviousData: true,
   });
 
+  // Get User Options
+  const {
+    data: managerOptionsData,
+    isLoading: managerLoading,
+    isError: managerIsError,
+  } = useQuery({
+    queryKey: ["userOptions"],
+    queryFn: async () =>
+      axiosPublic
+        .get(`/users/UserOptions`, {
+          params: {
+            excludePosition: "manager",
+          },
+        })
+        .then(res => res.data.data),
+  });
+
   // Destructure AllDepartments data
   const Departments = data?.data || [];
 
   // Handle loading
-  if (status === "loading")
+  if (status === "loading" || managerLoading)
     return <Loading
       message="Loading Departments..."
       subText="Please wait while we fetch departments data."
     />;
 
   // Handle errors
-  if (isError) return <Error errors={data?.errors || []} />;
+  if (isError || managerIsError) return <Error errors={data?.errors || managerOptionsData?.errors || []} />;
 
   // Refetch all
   const RefetchAll = () => {
@@ -317,7 +348,11 @@ const DepartmentPage = () => {
 
       {/* Add New Department Modal */}
       <dialog id="Add_New_Department_Modal" className="modal">
-        <Add_New_Department_Modal RefetchAll={RefetchAll} session={session} />
+        <Add_New_Department_Modal
+          session={session}
+          RefetchAll={RefetchAll}
+          managerOptionsData={managerOptionsData}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
@@ -328,6 +363,7 @@ const DepartmentPage = () => {
         <Edit_Department_Modal
           session={session}
           RefetchAll={RefetchAll}
+          managerOptionsData={managerOptionsData}
           selectedDepartment={selectedDepartment}
           setSelectedDepartment={setSelectedDepartment}
         />

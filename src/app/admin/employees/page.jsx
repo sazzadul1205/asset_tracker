@@ -22,7 +22,10 @@ import Table_Pagination from '@/Shared/Table_Pagination/Table_Pagination';
 import { IoMdAdd } from 'react-icons/io';
 
 // Modal
+import Edit_User_Modal from './Edit_User_Modal/Edit_User_Modal';
+import View_User_Modal from './View_User_Modal/View_User_Modal';
 import Add_New_User_Modal from './Add_New_User_Modal/Add_New_User_Modal';
+
 
 // Icons
 import { MdEdit } from 'react-icons/md';
@@ -30,8 +33,9 @@ import { FaBoxOpen, FaEye, FaRegTrashAlt } from 'react-icons/fa';
 
 // Date Fns
 import { formatDistanceToNow } from 'date-fns';
-import Edit_User_Modal from './Edit_User_Modal/Edit_User_Modal';
-import View_User_Modal from './View_User_Modal/View_User_Modal';
+
+// Components
+import DeptId_To_Name from './DeptId_To_Name/DeptId_To_Name';
 
 const EmployeesPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -43,9 +47,9 @@ const EmployeesPage = () => {
   const { success, error, confirm } = useToast();
 
   // State variables -> Users
+  const [itemsPerPage] = useState(8);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(8);
 
   // State Variable -> Selected User
   const [selectedUser, setSelectedUser] = useState(null);
@@ -71,18 +75,31 @@ const EmployeesPage = () => {
     keepPreviousData: true,
   });
 
+  // Get Department Options
+  const {
+    data: departmentOptionsData,
+    isLoading: departmentLoading,
+    isError: departmentError,
+  } = useQuery({
+    queryKey: ["DepartmentOption"],
+    queryFn: async () =>
+      axiosPublic
+        .get(`/department/DepartmentOptions`)
+        .then(res => res.data.data),
+  });
+
   // Destructure AllUsers data
   const Users = data?.data || [];
 
   // Handle loading
-  if (status === "loading")
+  if (status === "loading" || departmentLoading)
     return <Loading
       message="Loading Users..."
       subText="Please wait while we fetch users data."
     />;
 
   // Handle errors
-  if (isError) return <Error errors={[MyUserError]} />;
+  if (isError || departmentError) return <Error errors={data?.errors || departmentOptionsData?.errors || []} />;
 
   // Refetch all
   const RefetchAll = () => {
@@ -242,7 +259,7 @@ const EmployeesPage = () => {
 
                   {/* Department */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm">
-                    {user?.employment?.departmentId || "N/A"}
+                    <DeptId_To_Name deptId={user?.employment?.departmentId} />
                   </td>
 
                   {/* Position */}
@@ -362,7 +379,11 @@ const EmployeesPage = () => {
 
       {/* Add New User */}
       <dialog id="Add_New_User_Modal" className="modal">
-        <Add_New_User_Modal RefetchAll={RefetchAll} session={session} />
+        <Add_New_User_Modal
+          session={session}
+          RefetchAll={RefetchAll}
+          departmentOptionsData={departmentOptionsData || []}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
@@ -375,6 +396,7 @@ const EmployeesPage = () => {
           RefetchAll={RefetchAll}
           selectedUser={selectedUser}
           setSelectedUser={setSelectedUser}
+          departmentOptionsData={departmentOptionsData || []}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

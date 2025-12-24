@@ -19,9 +19,11 @@ import Shared_Multi_Field_Input from '@/Shared/Shared_Multi_Field_Input/Shared_M
 import { ImCross } from 'react-icons/im';
 
 const Edit_Department_Modal = ({
+  session,
   RefetchAll,
+  managerOptionsData,
   selectedDepartment,
-  setSelectedDepartment
+  setSelectedDepartment,
 }) => {
   const axiosPublic = useAxiosPublic();
   const { success, error } = useToast();
@@ -47,23 +49,6 @@ const Edit_Department_Modal = ({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
-
-  // Get User Options
-  const {
-    data: managerOptionsData,
-    isLoading: managerLoading,
-  } = useQuery({
-    queryKey: ["userOptions"],
-    queryFn: async () =>
-      axiosPublic
-        .get(`/users/UserOptions`, {
-          params: {
-            excludeRole: "manager,admin", // exclude both manager and admin
-          },
-        })
-        .then(res => res.data.data),
-  });
-
 
   // Transform into { label, value } format for the select
   const managerOptions = [
@@ -232,7 +217,6 @@ const Edit_Department_Modal = ({
               type="searchable"
               placeholder="Select a manager"
               options={managerOptions}
-              disabled={managerLoading}
               errors={errors}
             />
           )}

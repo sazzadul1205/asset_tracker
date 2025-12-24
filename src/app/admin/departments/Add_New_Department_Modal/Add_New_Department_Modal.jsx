@@ -19,7 +19,11 @@ import Shared_Multi_Field_Input from '@/Shared/Shared_Multi_Field_Input/Shared_M
 // Icons
 import { ImCross } from 'react-icons/im';
 
-const Add_New_Department_Modal = ({ RefetchAll }) => {
+const Add_New_Department_Modal = ({
+  session,
+  RefetchAll,
+  managerOptionsData,
+}) => {
   const axiosPublic = useAxiosPublic();
   const { success, error } = useToast();
   const { uploadImage, error: imageError } = useImageUpload();
@@ -44,22 +48,6 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm();
-
-  // Get User Options
-  const {
-    data: managerOptionsData,
-    isLoading: managerLoading,
-  } = useQuery({
-    queryKey: ["userOptions"],
-    queryFn: async () =>
-      axiosPublic
-        .get(`/users/UserOptions`, {
-          params: {
-            excludePosition: "manager",
-          },
-        })
-        .then(res => res.data.data),
-  });
 
   // Transform into { label, value } format for the select
   const managerOptions = [
@@ -228,9 +216,8 @@ const Add_New_Department_Modal = ({ RefetchAll }) => {
               label="Manager (Select or search for the manager)"
               type="searchable"
               placeholder="Select or search for the manager"
-              options={managerOptions}
-              disabled={managerLoading}
               errors={errors}
+              options={managerOptions}
             />
           )}
         />
