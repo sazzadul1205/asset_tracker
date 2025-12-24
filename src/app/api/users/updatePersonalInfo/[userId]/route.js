@@ -40,6 +40,7 @@ export async function POST(req, context) {
       "personal.userId": { $ne: userId },
     });
 
+    // If email already exists, return 409
     if (existingEmail) {
       return NextResponse.json(
         { error: "Email already exists" },
