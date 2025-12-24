@@ -305,6 +305,7 @@ const Shared_Input = ({
             disabled={disabled}
             readOnly={readOnly}
             dateFormat="dd MMM yyyy"
+            autoComplete="bday"
           />
           {errors?.[name] && <p className="mt-1 text-sm text-red-500 font-medium">{errors[name].message}</p>}
         </div>

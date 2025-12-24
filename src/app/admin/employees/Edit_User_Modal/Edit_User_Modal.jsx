@@ -20,6 +20,7 @@ const Edit_User_Modal = ({
   RefetchAll,
   selectedUser,
   setSelectedUser,
+  departmentOptionsData,
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -31,6 +32,7 @@ const Edit_User_Modal = ({
   // React Hook Form
   const {
     reset,
+    watch,
     control,
     register,
     setError,
@@ -41,6 +43,28 @@ const Edit_User_Modal = ({
     }
   } = useForm();
 
+  // Department options
+  const deptOptions = [
+    { label: "Unassigned", value: "unassigned" },
+    ...(departmentOptionsData?.map((dept) => ({
+      label: dept?.info?.name,
+      value: dept?.departmentId,
+    })) || []),
+  ];
+
+  // Position options based on selected department
+  const selectedDept = departmentOptionsData?.find(
+    (dept) => dept?.departmentId === watch("personal.department")
+  );
+
+  // Position options
+  const positionOptions = [
+    { label: "Unassigned", value: "unassigned" },
+    ...(selectedDept?.positions?.map((pos) => ({
+      label: pos?.position_name,
+      value: pos?.position_name,
+    })) || []),
+  ];
 
   // Preload data
   useEffect(() => {
@@ -67,7 +91,6 @@ const Edit_User_Modal = ({
       },
     });
   }, [selectedUser, reset]);
-
 
   // Close modal
   const handleClose = () => {
@@ -238,31 +261,19 @@ const Edit_User_Modal = ({
           rules={{ required: "Department is required." }}
           autoComplete="department"
           type="select"
-          options={[
-            { label: "Engineering", value: "EN-01" },
-            { label: "Human Resources", value: "HR-02" },
-            { label: "Finance", value: "FI-03" },
-            { label: "Marketing", value: "MR-04" },
-          ]}
+          options={deptOptions}
           errors={errors}
         />
 
         {/* Position */}
         <Shared_Input
           label="Position"
-          idPrefix="edit"
           name="personal.position"
           register={register}
           placeholder="Select Position"
           rules={{ required: "Position is required." }}
-          autoComplete="position"
           type="select"
-          options={[
-            { label: "Manager", value: "manager" },
-            { label: "Senior Developer", value: "senior_dev" },
-            { label: "Junior Developer", value: "junior_dev" },
-            { label: "Intern", value: "intern" },
-          ]}
+          options={positionOptions}
           errors={errors}
         />
 

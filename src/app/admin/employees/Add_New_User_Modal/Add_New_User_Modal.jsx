@@ -15,7 +15,11 @@ import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
 // Icons
 import { ImCross } from 'react-icons/im';
 
-const Add_New_User_Modal = ({ RefetchAll }) => {
+const Add_New_User_Modal = ({
+  session,
+  RefetchAll,
+  departmentOptionsData,
+}) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
 
@@ -26,6 +30,7 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
   // React Hook Form
   const {
     reset,
+    watch,
     control,
     register,
     setError,
@@ -35,6 +40,31 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
       isSubmitting
     }
   } = useForm();
+
+  // Department options
+  const deptOptions = [
+    { label: "Unassigned", value: "unassigned" },
+    ...(departmentOptionsData?.map((dept) => ({
+      label: dept?.info?.name,
+      value: dept?.departmentId,
+    })) || []),
+  ];
+
+  // Position options based on selected department
+  const selectedDept = departmentOptionsData?.find(
+    (dept) => dept?.departmentId === watch("personal.department")
+  );
+
+  // Position options
+  const positionOptions = [
+    { label: "Unassigned", value: "unassigned" },
+    ...(selectedDept?.positions?.map((pos) => ({
+      label: pos?.position_name,
+      value: pos?.position_name,
+    })) || []),
+  ];
+
+
 
   // Close modal
   const handleClose = () => {
@@ -119,6 +149,9 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
     }
   };
 
+  console.log(departmentOptionsData);
+
+
   return (
     <div
       id="Add_New_User_Modal"
@@ -193,12 +226,7 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
           placeholder="Select Department"
           rules={{ required: "Department is required." }}
           type="select"
-          options={[
-            { label: "Engineering", value: "EN-01" },
-            { label: "Human Resources", value: "HR-02" },
-            { label: "Finance", value: "FI-03" },
-            { label: "Marketing", value: "MR-04" },
-          ]}
+          options={deptOptions}
           errors={errors}
         />
 
@@ -210,12 +238,7 @@ const Add_New_User_Modal = ({ RefetchAll }) => {
           placeholder="Select Position"
           rules={{ required: "Position is required." }}
           type="select"
-          options={[
-            { label: "Manager", value: "manager" },
-            { label: "Senior Developer", value: "senior_dev" },
-            { label: "Junior Developer", value: "junior_dev" },
-            { label: "Intern", value: "intern" },
-          ]}
+          options={positionOptions}
           errors={errors}
         />
 
