@@ -71,7 +71,7 @@ const DepartmentPage = () => {
     />;
 
   // Handle errors
-  if (isError) return <Error errors={[MyUserError]} />;
+  if (isError) return <Error errors={data?.errors || []} />;
 
   // Refetch all
   const RefetchAll = () => {

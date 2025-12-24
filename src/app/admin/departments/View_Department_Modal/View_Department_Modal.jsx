@@ -1,5 +1,6 @@
 // React Components
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 // Next Components
 import Image from 'next/image';
@@ -18,21 +19,71 @@ import {
   FaMoneyBillWave,
 } from "react-icons/fa";
 
+// Hooks
+import UserId_To_Name from '../UserId_To_Name/UserId_To_Name';
+
+// Utils
+import formatCurrency from '@/Utils/formatCurrency';
+
+// Hooks
+import useAxiosPublic from '@/hooks/useAxiosPublic';
+import Loading from '@/Shared/Loading/Loading';
+import Error from '@/Shared/Error/Error';
+
 const View_Department_Modal = ({
   selectedDepartment,
   setSelectedDepartment,
 }) => {
+  const axiosPublic = useAxiosPublic();
+
+  // Fetch User Count
+  const {
+    data,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["DepartmentEmployeeCount", selectedDepartment?.departmentId],
+    queryFn: async () => {
+      const res = await axiosPublic.get(
+        `/users/CountEmployee/${selectedDepartment.departmentId}`
+      );
+      return res.data;
+    },
+    enabled: !!selectedDepartment?.departmentId,
+  });
+
+  // Update selectedDepartment.stats.employeeCount when data arrives
+  useEffect(() => {
+    if (data?.employeeCount && selectedDepartment?.stats?.employeeCount !== data.employeeCount) {
+      setSelectedDepartment(prev => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          employeeCount: data.employeeCount,
+        },
+      }));
+    }
+  }, [data?.employeeCount, selectedDepartment?.stats?.employeeCount, setSelectedDepartment]);
+
 
   // Close Modal
   const handleClose = () => {
-    setSelectedUser(null);
-    document.getElementById("View_User_Modal")?.close();
+    setSelectedDepartment(null);
+    document.getElementById("View_Department_Modal")?.close();
   }
 
+  // Handle Loading
+  if (isLoading) return <Loading variant="modal" message="Loading..." subText="Please wait while we get your department data." />;
+
+  // Handle Error
+  if (isError) return <Error variant="modal" message={data?.message || "Failed to load department data."} />;
+
+  // Handle no selected department
+  if (!selectedDepartment) return null;
 
   return (
     <div
-      id="View_User_Modal"
+      id="View_Department_Modal"
       className="modal-box w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
     >
       {/* Header */}
@@ -67,7 +118,7 @@ const View_Department_Modal = ({
         <button
           type="button"
           onClick={handleClose}
-          className="hover:text-red-500 transition-colors duration-300"
+          className="hover:text-red-500 transition-colors duration-300 cursor-pointer"
         >
           <ImCross className="text-xl" />
         </button>
@@ -152,7 +203,7 @@ const View_Department_Modal = ({
               <div>
                 <p className="text-sm text-gray-500">Manager</p>
                 <p className="font-medium">
-                  {selectedDepartment?.manager?.userId || "Not Assigned"}
+                  <UserId_To_Name userId={selectedDepartment?.manager?.userId} />
                 </p>
               </div>
             </div>
@@ -184,7 +235,7 @@ const View_Department_Modal = ({
                     Manager
                   </span>
                   <span className='font-medium' >
-                    {selectedDepartment?.manager?.userId || "Not Assigned"}
+                    <UserId_To_Name userId={selectedDepartment?.manager?.userId} />
                   </span>
                 </div>
 
@@ -238,10 +289,10 @@ const View_Department_Modal = ({
             <div>
               <p className="text-sm text-gray-500">Budget</p>
               <p className="font-medium">
-                {selectedDepartment?.stats?.budget?.$numberDecimal
-                  ? `$${selectedDepartment?.stats?.budget?.$numberDecimal}`
-                  : "$0"}
-
+                {formatCurrency(
+                  selectedDepartment?.stats?.budget?.$numberDecimal,
+                  { currency: "USD" }
+                )}
               </p>
               <p className="text-xs text-gray-400">Annual department budget</p>
             </div>
@@ -448,9 +499,10 @@ const View_Department_Modal = ({
               <FaMoneyBillWave className="text-green-500 w-5 h-5" />
             </div>
             <p className='text-2xl font-bold text-green-800'>
-              {selectedDepartment?.stats?.budget
-                ? `$${selectedDepartment?.stats?.budget?.$numberDecimal}`
-                : "N/A"}
+              {formatCurrency(
+                selectedDepartment?.stats?.budget?.$numberDecimal,
+                { currency: "USD" }
+              )}
             </p>
             <p className='text-sm text-green-600'>Annual Budget</p>
           </div>
@@ -461,11 +513,14 @@ const View_Department_Modal = ({
               <FaUserTag className="text-purple-500 w-5 h-5" />
             </div>
             <p className='text-2xl font-bold text-purple-800'>
-              {selectedDepartment?.stats?.budget?.$numberDecimal && selectedDepartment?.stats?.employeeCount > 0
-                ? Number(
-                  selectedDepartment.stats?.budget?.$numberDecimal / selectedDepartment?.stats?.employeeCount
-                ).toLocaleString("en-US") + " ৳"
-                : "0 ৳"}
+              {formatCurrency(
+                selectedDepartment?.stats?.budget?.$numberDecimal &&
+                  selectedDepartment?.stats?.employeeCount > 0
+                  ? Number(selectedDepartment.stats.budget.$numberDecimal) /
+                  Number(selectedDepartment.stats.employeeCount)
+                  : 0,
+                { currency: "USD" }
+              )}
             </p>
             <p className='text-sm text-purple-600'>Budget per employee</p>
           </div>
