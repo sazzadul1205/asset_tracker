@@ -1,7 +1,6 @@
 // src/app/admin/departments/Add_New_Department_Modal/Add_New_Department_Modal.jsx
 
 // React Components
-import { useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import React, { useState } from 'react';
 
@@ -63,7 +62,12 @@ const Add_New_Department_Modal = ({
   // Close modal handler
   const handleClose = () => {
     reset();
+    setLoading(false);
+    setIsOpen(false);
+    setIconImage(null);
     setGlobalError("");
+    setIconPreview(null);
+    setSelectedColor("#ffffff");
     document.getElementById("Add_New_Department_Modal")?.close();
   }
 

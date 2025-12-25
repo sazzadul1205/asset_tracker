@@ -1,5 +1,6 @@
 // src/app/admin/departments/Edit_Department_Modal/Edit_Department_Modal.jsx
 
+// React Components
 import { Controller, useForm } from 'react-hook-form';
 import React, { useEffect, useState } from 'react';
 
@@ -90,7 +91,12 @@ const Edit_Department_Modal = ({
   // Close modal handler
   const handleClose = () => {
     reset();
-    setGlobalError('');
+    setLoading(false);
+    setIsOpen(false);
+    setIconImage(null);
+    setGlobalError("");
+    setIconPreview(null);
+    setSelectedColor("#ffffff");
     setSelectedDepartment(null);
     document.getElementById('Edit_Department_Modal')?.close();
   };
