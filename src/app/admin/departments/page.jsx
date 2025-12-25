@@ -166,7 +166,7 @@ const DepartmentPage = () => {
           <Shared_Input
             type="search"
             label="Search"
-            placeholder="Search users..."
+            placeholder="Search departments..."
             className="min-w-75"
             value={searchTerm}
             onChange={setSearchTerm}

@@ -60,9 +60,9 @@ const AdminLayout = ({ children }) => {
       href: "/admin/assets",
     },
     {
-      name: "Asset Category",
+      name: "Asset Categories",
       icon: <FaInbox className="text-xl" />,
-      href: "/admin/assetsCategory",
+      href: "/admin/assetsCategories",
     },
     {
       name: "Transactions",
