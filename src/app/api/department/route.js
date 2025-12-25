@@ -105,8 +105,8 @@ export async function POST(req) {
         {
           $set: {
             "employment.departmentId": departmentId,
-            "employment.position": "manager",
-            "employment.role": "manager",
+            "employment.position": "Manager",
+            "employment.role": "Manager",
             "employment.lastUpdatedBy": updatedBy || manager.userId,
             "metadata.updatedAt": new Date(),
           },

@@ -80,6 +80,7 @@ const EmployeesPage = () => {
     data: departmentOptionsData,
     isLoading: departmentLoading,
     isError: departmentError,
+    refetch: departmentRefetch
   } = useQuery({
     queryKey: ["DepartmentOption"],
     queryFn: async () =>
@@ -104,6 +105,7 @@ const EmployeesPage = () => {
   // Refetch all
   const RefetchAll = () => {
     refetch();
+    departmentRefetch();
   };
 
   // Delete user (improved & safe)
@@ -246,7 +248,7 @@ const EmployeesPage = () => {
                       <div className="flex flex-col">
                         {/* Name */}
                         <h3 className="font-semibold text-gray-800 text-sm md:text-base">
-                          {user?.personal?.name}
+                          {user?.personal?.name ?? "N/A"}
                         </h3>
 
                         {/* Email */}
