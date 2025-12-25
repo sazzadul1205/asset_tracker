@@ -24,15 +24,11 @@ import Table_Pagination from '@/Shared/Table_Pagination/Table_Pagination';
 
 // Hooks
 import useAxiosPublic from '@/hooks/useAxiosPublic';
-import Add_New_Category_Modal from './Add_New_Category_Modal/Add_New_Category_Modal';
-import Edit_Category_Modal from './Edit_Category_Modal/Edit_Category_Modal';
-
-// Utils
-
-// Components
 
 // Modals
-
+import Edit_Category_Modal from './Edit_Category_Modal/Edit_Category_Modal';
+import View_Category_Modal from './View_Category_Modal/View_Category_Modal';
+import Add_New_Category_Modal from './Add_New_Category_Modal/Add_New_Category_Modal';
 
 const AssetsCategoriesPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -358,7 +354,7 @@ const AssetsCategoriesPage = () => {
       </dialog>
 
       {/* View Category Modal */}
-      {/* <dialog id="View_Category_Modal" className="modal">
+      <dialog id="View_Category_Modal" className="modal">
         <View_Category_Modal
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
@@ -366,7 +362,7 @@ const AssetsCategoriesPage = () => {
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
-      </dialog> */}
+      </dialog>
     </div>
   );
 };

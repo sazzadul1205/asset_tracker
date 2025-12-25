@@ -1,7 +1,7 @@
 // src/app/admin/assetsCategories/Edit_Category_Modal/Edit_Category_Modal.jsx
 
 // React Components
-import { Controller, useForm } from 'react-hook-form';
+import {useForm } from 'react-hook-form';
 import React, { useEffect, useState } from 'react';
 
 // Hooks
@@ -191,6 +191,8 @@ const Edit_Category_Modal = ({
 
   // Image Upload Error
   if (imageError) error(imageError);
+
+  if (!selectedCategory) return null
 
   return (
     <div
