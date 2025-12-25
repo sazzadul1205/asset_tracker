@@ -79,17 +79,19 @@ const DepartmentPage = () => {
     data: managerOptionsData,
     isLoading: managerLoading,
     isError: managerIsError,
+    refetch: managerRefetch
   } = useQuery({
-    queryKey: ["userOptions"],
+    queryKey: ["userOptions", "exclude-manager-admin"],
     queryFn: async () =>
       axiosPublic
-        .get(`/users/UserOptions`, {
+        .get("/users/UserOptions", {
           params: {
-            excludePosition: "manager",
+            excludeRole: "manager,admin",
           },
         })
-        .then(res => res.data.data),
+        .then((res) => res.data.data),
   });
+
 
   // Destructure AllDepartments data
   const Departments = data?.data || [];
@@ -107,6 +109,7 @@ const DepartmentPage = () => {
   // Refetch all
   const RefetchAll = () => {
     refetch();
+    managerRefetch();
   };
 
   // Delete user (improved & safe)

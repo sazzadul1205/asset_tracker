@@ -1,3 +1,5 @@
+// src/app/admin/departments/View_Department_Modal/View_Department_Modal.jsx
+
 // React Components
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -419,10 +421,13 @@ const View_Department_Modal = ({
               </div>
 
               {/* Description */}
-              <div className='flex items-center gap-2' >
-                <FaInfoCircle className="text-gray-500 w-4 h-4" />
-                <p className='text-gray-600'>{selectedDepartment?.info?.description || "N/A"}</p>
+              <div className="flex items-center gap-2 max-w-full">
+                <FaInfoCircle className="text-gray-500 w-4 h-4 shrink-0" />
+                <p className="text-gray-600 truncate">
+                  {selectedDepartment?.info?.description || "N/A"}
+                </p>
               </div>
+
 
               {/* Department ID */}
               <div className='flex items-center gap-2' >
@@ -446,7 +451,7 @@ const View_Department_Modal = ({
               <div className='flex items-center gap-2' >
                 <FaUserTie className="text-gray-500 w-4 h-4" />
                 <p className='text-gray-600'>
-                  {selectedDepartment?.manager?.full_name || "Not Assigned"}
+                  <UserId_To_Name userId={selectedDepartment?.manager?.userId} />
                 </p>
               </div>
 
@@ -462,9 +467,10 @@ const View_Department_Modal = ({
               <div className='flex items-center gap-2' >
                 <FaMoneyBillWave className="text-gray-500 w-4 h-4" />
                 <p className='text-gray-600'>
-                  {selectedDepartment?.stats?.budget?.$numberDecimal
-                    ? `$${selectedDepartment?.stats?.budget?.$numberDecimal}`
-                    : "N/A"}
+                  {formatCurrency(
+                    selectedDepartment?.stats?.budget?.$numberDecimal,
+                    { currency: "USD" }
+                  )}
                 </p>
               </div>
             </div>

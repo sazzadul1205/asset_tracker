@@ -1,6 +1,5 @@
 // src/app/admin/departments/Edit_Department_Modal/Edit_Department_Modal.jsx
 
-import { useQuery } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import React, { useEffect, useState } from 'react';
 
