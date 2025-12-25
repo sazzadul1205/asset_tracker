@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
+// Types
+import { Decimal128 } from "mongodb";
+
 /*
   GET /api/assetsCategories/[categoryId]
   Fetch a single asset category by info.categoryId
@@ -81,9 +84,11 @@ export async function GET(request, context) {
   PATCH /api/assetsCategories/[categoryId]
   Update asset category while preserving schema integrity
 */
-export async function PATCH(request, { params }) {
+export async function PATCH(request, context) {
   try {
-    const { categoryId } = await params;
+    // --- Unwrap params properly ---
+    const params = await context.params;
+    const { categoryId } = params;
 
     if (!categoryId) {
       return NextResponse.json(
@@ -93,7 +98,6 @@ export async function PATCH(request, { params }) {
     }
 
     const payload = await request.json();
-
     const db = await connectDB();
     const collection = db.collection("categories");
 
@@ -108,27 +112,46 @@ export async function PATCH(request, { params }) {
       );
     }
 
-    // Merge update (categoryId is immutable)
-    const update = {
-      info: {
-        ...existingCategory.info,
-        ...(payload.info || {}),
-        categoryId: existingCategory.info.categoryId,
-      },
-      depreciation: {
-        ...existingCategory.depreciation,
-        ...(payload.depreciation || {}),
-      },
-      metadata: {
-        ...existingCategory.metadata,
-        createdAt: existingCategory.metadata?.createdAt || new Date(),
-        updatedAt: new Date(),
-      },
+    // --- Merge info ---
+    const updatedInfo = {
+      ...existingCategory.info,
+      ...(payload.info || {}),
+      categoryId: existingCategory.info.categoryId, // immutable
+      icon: payload.info?.icon || existingCategory.info.icon || "",
+      iconBgColor:
+        payload.info?.iconBgColor || existingCategory.info.iconBgColor || "",
     };
 
+    // --- Merge depreciation with Decimal128 conversion ---
+    const updatedDepreciation = {
+      averageRate:
+        payload.depreciation?.averageRate !== undefined
+          ? Decimal128.fromString(payload.depreciation.averageRate.toString())
+          : existingCategory.depreciation.averageRate,
+      defaultWarrantyMonths:
+        payload.depreciation?.defaultWarrantyMonths !== undefined
+          ? Decimal128.fromString(
+              payload.depreciation.defaultWarrantyMonths.toString()
+            )
+          : existingCategory.depreciation.defaultWarrantyMonths,
+    };
+
+    // --- Update metadata ---
+    const updatedMetadata = {
+      ...existingCategory.metadata,
+      updatedAt: new Date(),
+    };
+
+    // --- Perform update ---
     await collection.updateOne(
       { "info.categoryId": categoryId },
-      { $set: update }
+      {
+        $set: {
+          info: updatedInfo,
+          depreciation: updatedDepreciation,
+          metadata: updatedMetadata,
+        },
+      }
     );
 
     return NextResponse.json(

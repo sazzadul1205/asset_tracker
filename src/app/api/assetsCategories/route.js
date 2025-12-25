@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
+// Types
+import { Decimal128 } from "mongodb";
+
 // POST: Create Asset Category
 export async function POST(req) {
   try {
@@ -13,14 +16,12 @@ export async function POST(req) {
 
     // --- Validation ---
     const missingFields = [];
-
     if (!info?.categoryId) missingFields.push("info.categoryId");
     if (!info?.name) missingFields.push("info.name");
     if (!info?.description) missingFields.push("info.description");
     if (!info?.status) missingFields.push("info.status");
     if (!info?.icon) missingFields.push("info.icon");
     if (!info?.iconBgColor) missingFields.push("info.iconBgColor");
-
     if (depreciation?.averageRate === undefined)
       missingFields.push("depreciation.averageRate");
     if (depreciation?.defaultWarrantyMonths === undefined)
@@ -36,19 +37,22 @@ export async function POST(req) {
       );
     }
 
-    // --- Uniqueness check ---
-    if (
-      await categoriesCollection.findOne({
-        "info.categoryId": info.categoryId,
-      })
-    ) {
+    // --- Check for uniqueness of categoryId ---
+    const existingCategory = await categoriesCollection.findOne({
+      "info.categoryId": String(info.categoryId),
+    });
+
+    if (existingCategory) {
       return NextResponse.json(
-        { success: false, error: "CategoryId already exists" },
-        { status: 409 }
+        {
+          success: false,
+          error: `Category with ID "${info.categoryId}" already exists.`,
+        },
+        { status: 409 } // Conflict
       );
     }
 
-    // --- Prepare category document ---
+    // --- Prepare document with Decimal128 ---
     const newCategory = {
       info: {
         categoryId: String(info.categoryId),
@@ -59,8 +63,10 @@ export async function POST(req) {
         iconBgColor: String(info.iconBgColor),
       },
       depreciation: {
-        averageRate: Number(depreciation.averageRate),
-        defaultWarrantyMonths: Number(depreciation.defaultWarrantyMonths),
+        averageRate: Decimal128.fromString(depreciation.averageRate.toString()),
+        defaultWarrantyMonths: Decimal128.fromString(
+          depreciation.defaultWarrantyMonths.toString()
+        ),
       },
       metadata: {
         createdAt: new Date(),
