@@ -149,9 +149,6 @@ const Add_New_User_Modal = ({
     }
   };
 
-  console.log(departmentOptionsData);
-
-
   return (
     <div
       id="Add_New_User_Modal"
@@ -286,8 +283,8 @@ const Add_New_User_Modal = ({
           rules={{ required: "Role is required." }}
           type="select"
           options={[
-            { label: "Manager", value: "manager" },
-            { label: "Employee", value: "employee" },
+            { label: "Manager", value: "Manager" },
+            { label: "Employee", value: "Employee" },
           ]}
           errors={errors}
         />

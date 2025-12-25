@@ -176,6 +176,9 @@ const Edit_User_Modal = ({
     }
   };
 
+  // Check if user is admin
+  const isAdmin = selectedUser?.employment?.role === "admin";
+
   return (
     <div
       id="Edit_User_Modal"
@@ -195,6 +198,20 @@ const Edit_User_Modal = ({
           {globalError}
         </div>
       )}
+
+      {/* Role Warning */}
+      {selectedUser?.employment?.role === "manager" &&
+        <div className='bg-red-100 border border-red-500 rounded-lg p-2'>
+          <p className="text-sm text-red-600" >Please note: Try not to manually change the role of a manager.</p>
+        </div>
+      }
+
+      {/* Role Warning */}
+      {selectedUser?.employment?.role === "admin" &&
+        <div className='bg-red-100 border border-red-500 rounded-lg p-2'>
+          <p className="text-sm text-red-600" >Please note: Try not to manually change the role of an admin.</p>
+        </div>
+      }
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 pt-4">
@@ -263,6 +280,7 @@ const Edit_User_Modal = ({
           type="select"
           options={deptOptions}
           errors={errors}
+          disabled={isAdmin}
         />
 
         {/* Position */}
@@ -275,6 +293,7 @@ const Edit_User_Modal = ({
           type="select"
           options={positionOptions}
           errors={errors}
+          disabled={isAdmin}
         />
 
         {/* Hire Date */}
@@ -327,10 +346,11 @@ const Edit_User_Modal = ({
           autoComplete="role"
           type="select"
           options={[
-            { label: "Manager", value: "manager" },
-            { label: "Employee", value: "employee" },
+            { label: "Manager", value: "Manager" },
+            { label: "Employee", value: "Employee" },
           ]}
           errors={errors}
+          disabled={isAdmin}
         />
 
         {/* Password */}
