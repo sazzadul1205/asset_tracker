@@ -36,7 +36,6 @@ const Add_New_Category_Modal = ({
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState("");
 
-
   // react-hook-form
   const {
     reset,
@@ -138,6 +137,7 @@ const Add_New_Category_Modal = ({
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="pt-4 space-y-4">
+        {/* Category Name */}
         <Shared_Input
           label="Category Name"
           name="info.name"
@@ -146,9 +146,10 @@ const Add_New_Category_Modal = ({
           placeholder="e.g. Mobile, Hardware, etc..."
           rules={{ required: "Category name is required" }}
           control={control}
-          error={errors?.category_name}
+          error={errors?.info?.name}
         />
 
+        {/* Category Description */}
         <Shared_Input
           label="Category Description"
           name="info.description"
@@ -161,7 +162,9 @@ const Add_New_Category_Modal = ({
           error={errors?.category_description}
         />
 
+        {/* Depreciation & Warranty */}
         <div className="grid grid-cols-2 gap-3">
+          {/* Depreciation */}
           <Shared_Input
             label="Depreciation (%)"
             name="info.depreciation"
@@ -177,6 +180,8 @@ const Add_New_Category_Modal = ({
             control={control}
             error={errors?.depreciation}
           />
+
+          {/* Warranty */}
           <Shared_Input
             label="Warranty (Months)"
             name="info.warranty"
@@ -238,8 +243,21 @@ const Add_New_Category_Modal = ({
 
         {/* Buttons */}
         <div className="col-span-2 justify-end flex items-center gap-2 pt-2">
-          <Shared_Button type="button" onClick={handleClose} variant="ghost" minWidth="100px">Cancel</Shared_Button>
-          <Shared_Button type="submit" variant="primary" loading={isSubmitting || loading} minWidth="100px">
+          {/* Cancel Button */}
+          <Shared_Button
+            type="button"
+            onClick={handleClose}
+            variant="ghost"
+            minWidth="100px">
+            Cancel
+          </Shared_Button>
+
+          {/* Submit Button */}
+          <Shared_Button
+            type="submit"
+            variant="primary"
+            loading={isSubmitting || loading}
+            minWidth="100px">
             Create New Category
           </Shared_Button>
         </div>
