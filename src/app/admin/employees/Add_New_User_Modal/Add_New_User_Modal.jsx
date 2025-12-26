@@ -252,6 +252,7 @@ const Add_New_User_Modal = ({
               errors={errors}
               value={field.value}
               onChange={field.onChange}
+              errorMessage={errors.personal?.hireDate?.message}
             />
           )}
         />
