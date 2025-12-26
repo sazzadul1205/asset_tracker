@@ -11,7 +11,9 @@ import { Decimal128 } from "mongodb";
 */
 export async function GET(request, context) {
   try {
-    const { categoryId } = await context.params;
+    // --- Unwrap params properly ---
+    const params = await context.params;
+    const { categoryId } = params;
 
     if (!categoryId) {
       return NextResponse.json(
