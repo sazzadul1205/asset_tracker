@@ -1,18 +1,23 @@
 // src/app/admin/departments/CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock.jsx
 
+// Next Components
+import Image from "next/image";
+
+// React Components
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+
+// Hooks
 import useAxiosPublic from "@/hooks/useAxiosPublic";
-import Image from "next/image";
 
 const CategoryId_To_CategoryBlock = ({
   categoryId,
-  view = "icon", // "icon" | "name"
+  view = "icon",
 }) => {
   const axiosPublic = useAxiosPublic();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["AssetCategory", categoryId],
+    queryKey: ["AssetCategoryName", categoryId],
     queryFn: async () => {
       const res = await axiosPublic.get(
         `/assetsCategories/${categoryId}`
