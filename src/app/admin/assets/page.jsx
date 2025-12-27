@@ -6,13 +6,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 // Next Components
-import Image from 'next/image';
 import { useToast } from '@/hooks/useToast';
 import { useSession } from 'next-auth/react';
 
 // Icons
-import { IoMdAdd } from "react-icons/io";
 import { MdEdit } from 'react-icons/md';
+import { IoMdAdd } from "react-icons/io";
 import { FaBoxOpen, FaEye, FaRegTrashAlt } from 'react-icons/fa';
 
 // Shared
@@ -25,15 +24,19 @@ import Table_Pagination from '@/Shared/Table_Pagination/Table_Pagination';
 // Hooks
 import useAxiosPublic from '@/hooks/useAxiosPublic';
 
+// Utils
+import formatCurrency from '@/Utils/formatCurrency';
+import { formatStatusText, getStatusColor } from '@/Utils/formatStatus';
+
 // Components
+import AssignedTo_To_Name from './AssignedTo_To_Name/AssignedTo_To_Name';
+import SerialNumber_To_Barcode from './SerialNumber_To_Barcode/SerialNumber_To_Barcode';
+import CategoryId_To_CategoryBlock from './CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock';
 
 // Modals
 import Add_New_Asset_Modal from './Add_New_Asset_Modal/Add_New_Asset_Modal';
-import CategoryId_To_CategoryBlock from './CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock';
-import SerialNumber_To_Barcode from './SerialNumber_To_Barcode/SerialNumber_To_Barcode';
-import { Assistant } from 'next/font/google';
-import AssignedTo_To_Name from './AssignedTo_To_Name/AssignedTo_To_Name';
-
+import Edit_Asset_Modal from './Edit_Asset_Modal/Edit_Asset_Modal';
+import View_Asset_Modal from './View_Asset_Modal/View_Asset_Modal';
 
 const AssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -45,9 +48,12 @@ const AssetsPage = () => {
   const { success, error, confirm } = useToast();
 
   // State variables -> Assets
-  const [itemsPerPage] = useState(8);
+  const [itemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // State Variable -> Selected Asset
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
   // Fetch Assets
   const {
@@ -63,6 +69,7 @@ const AssetsPage = () => {
           page: currentPage,
           limit: itemsPerPage,
           search: searchTerm || undefined,
+          // includeDeleted is omitted since it's false by default
         },
       });
       return res.data;
@@ -95,13 +102,53 @@ const AssetsPage = () => {
     />;
 
   // Handle errors
-  if (AssetCategoryIsError) return <Error errors={AssetCategoryOptionsData?.errors || []} />;
-
+  if (isError || AssetCategoryIsError) return <Error
+    errors={data?.errors || AssetCategoryOptionsData?.errors || []} />;
 
   // Refetch all
   const RefetchAll = () => {
+    refetch();
     AssetCategoryRefetch();
   };
+
+  // Delete user (improved & safe)
+  const handleDeleteAsset = async (asset) => {
+    if (!asset?.identification?.tag) {
+      error("Invalid Asset", "Asset ID not found");
+      return;
+    }
+
+    // Confirm dialog
+    const isConfirmed = await confirm(
+      "Delete Asset?",
+      `This will permanently delete ${asset?.identification?.name}.`,
+      "Yes, Delete",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      await axiosPublic.delete(`/assets/${asset?.identification?.tag}`);
+
+      success(
+        "Asset Deleted",
+        `${asset?.identification?.name} has been removed successfully`
+      );
+
+      refetch();
+    } catch (err) {
+      console.error("Delete Asset error:", err);
+
+      error(
+        "Delete Failed",
+        err?.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
+
 
   return (
     <div>
@@ -204,7 +251,6 @@ const AssetsPage = () => {
                     </div>
                   </td>
 
-
                   {/* Serial Number (Barcode) */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm text-center">
                     <SerialNumber_To_Barcode
@@ -227,6 +273,56 @@ const AssetsPage = () => {
                     />
                   </td>
 
+                  {/* Status */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {asset?.details?.status && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(asset.details.status)}`}>
+                        {formatStatusText(asset?.details?.status)}
+                      </span>
+                    )}
+                  </td>
+
+                  {/* Purchase Price */}
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {formatCurrency(asset?.purchase?.cost?.$numberDecimal, {
+                      currency: "USD",
+                    })}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="py-3 px-4 whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      {/* View */}
+                      <button
+                        onClick={() => {
+                          setSelectedAsset(asset);
+                          document.getElementById("View_Asset_Modal").showModal();
+                        }}
+                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200"
+                      >
+                        <FaEye className="text-sm" />
+                      </button>
+
+                      {/* Edit */}
+                      <button
+                        onClick={() => {
+                          setSelectedAsset(asset);
+                          document.getElementById("Edit_Asset_Modal").showModal();
+                        }}
+                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+                      >
+                        <MdEdit className="text-sm" />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => handleDeleteAsset(asset)}
+                        className="flex items-center justify-center cursor-pointer gap-1 px-3 py-2 text-xs rounded-lg shadow-md bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+                      >
+                        <FaRegTrashAlt className="text-sm" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -275,29 +371,30 @@ const AssetsPage = () => {
         </form>
       </dialog>
 
-      {/* Edit Category Modal */}
-      {/* <dialog id="Edit_Category_Modal" className="modal">
-        <Edit_Category_Modal
+      {/* Edit Asset Modal */}
+      <dialog id="Edit_Asset_Modal" className="modal">
+        <Edit_Asset_Modal
           session={session}
           RefetchAll={RefetchAll}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+          selectedAsset={selectedAsset}
+          setSelectedAsset={setSelectedAsset}
+          AssetCategoryOptionsData={AssetCategoryOptionsData}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
-      </dialog> */}
+      </dialog>
 
-      {/* View Category Modal */}
-      {/* <dialog id="View_Category_Modal" className="modal">
-        <View_Category_Modal
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+      {/* View Asset Modal */}
+      <dialog id="View_Asset_Modal" className="modal">
+        <View_Asset_Modal
+          selectedAsset={selectedAsset}
+          setSelectedAsset={setSelectedAsset}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
-      </dialog> */}
+      </dialog>
     </div>
   );
 };

@@ -7,12 +7,10 @@ import { Controller, useForm } from "react-hook-form";
 // Hooks
 import { useToast } from "@/hooks/useToast";
 import useAxiosPublic from "@/hooks/useAxiosPublic";
-import { useImageUpload } from "@/hooks/useImageUpload";
 
 // Shared
 import Shared_Input from "@/Shared/Shared_Input/Shared_Input";
 import Shared_Button from "@/Shared/Shared_Button/Shared_Button";
-import Shared_Input_Image from "@/Shared/Shared_Input_Image/Shared_Input_Image";
 
 // Icons
 import { ImCross } from "react-icons/im";
