@@ -4,8 +4,6 @@ import "./globals.css";
 // Fonts
 import { Geist, Geist_Mono } from "next/font/google";
 
-
-
 // Providers
 import SessionWrapper from "./SessionWrapper";
 import QueryProvider from "@/Providers/QueryProvider";
