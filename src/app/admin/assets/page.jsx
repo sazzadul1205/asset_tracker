@@ -34,9 +34,9 @@ import SerialNumber_To_Barcode from './SerialNumber_To_Barcode/SerialNumber_To_B
 import CategoryId_To_CategoryBlock from './CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock';
 
 // Modals
-import Add_New_Asset_Modal from './Add_New_Asset_Modal/Add_New_Asset_Modal';
-import Edit_Asset_Modal from './Edit_Asset_Modal/Edit_Asset_Modal';
 import View_Asset_Modal from './View_Asset_Modal/View_Asset_Modal';
+import Edit_Asset_Modal from './Edit_Asset_Modal/Edit_Asset_Modal';
+import Add_New_Asset_Modal from './Add_New_Asset_Modal/Add_New_Asset_Modal';
 
 const AssetsPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -148,7 +148,6 @@ const AssetsPage = () => {
       );
     }
   };
-
 
   return (
     <div>

@@ -252,7 +252,7 @@ const Row = ({ icon: Icon, label, value, children }) => (
     <Icon className="text-gray-500 w-5 h-5" />
     <div>
       <p className="text-sm text-gray-500">{label}</p>
-      <p className="font-medium">{children || value || "N/A"}</p>
+      <div className="font-medium">{children || value || "N/A"}</div>
     </div>
   </div>
 );
