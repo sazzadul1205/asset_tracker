@@ -171,12 +171,19 @@ export async function GET(req) {
 
     // Filters
     const search = searchParams.get("search")?.trim();
-    const status = searchParams.get("status"); // asset status
-    const categoryId = searchParams.get("categoryId"); // filter by category
-    const assignedTo = searchParams.get("assignedTo"); // filter by assigned user
+    const status = searchParams.get("status");
+    const categoryId = searchParams.get("categoryId");
+    const assignedTo = searchParams.get("assignedTo");
+    const includeDeleted = searchParams.get("includeDeleted") === "true"; // new param
 
     const filters = {};
 
+    // Soft-delete filter
+    if (!includeDeleted) {
+      filters["metadata.deletedAt"] = { $in: [null, undefined, ""] };
+    }
+
+    // Search
     if (search) {
       filters.$or = [
         { "identification.tag": { $regex: search, $options: "i" } },

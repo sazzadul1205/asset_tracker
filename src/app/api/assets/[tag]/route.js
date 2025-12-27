@@ -77,8 +77,7 @@ export const PATCH = async (request, context) => {
   const session = client.startSession();
 
   try {
-    const params = await context.params;
-    const { tag } = params;
+    const { tag } = await context.params;
 
     if (!tag) {
       return NextResponse.json(
@@ -97,36 +96,51 @@ export const PATCH = async (request, context) => {
         { "identification.tag": tag },
         { session }
       );
+
       if (!existingAsset) throw new Error("Asset not found");
 
       const updateDoc = {};
-      if (identification) updateDoc.identification = { ...identification };
-      if (details) updateDoc.details = { ...details };
-      if (purchase) {
-        updateDoc.purchase = {
-          ...purchase,
-          cost: purchase.cost
-            ? Decimal128.fromString(String(purchase.cost))
-            : 0,
-          purchasedAt: purchase.purchasedAt
-            ? new Date(purchase.purchasedAt)
-            : null,
-          warrantyExpiry: purchase.warrantyExpiry
-            ? new Date(purchase.warrantyExpiry)
-            : null,
-        };
-      }
-      if (assigned) {
-        updateDoc.assigned = {
-          ...assigned,
-          assignedAt: assigned.assignedAt
-            ? new Date(assigned.assignedAt)
-            : null,
-        };
-      }
 
-      updateDoc["metadata.updatedAt"] = new Date();
-      if (updatedBy) updateDoc["metadata.updatedBy"] = updatedBy;
+      // Merge identification
+      updateDoc.identification = {
+        ...existingAsset.identification,
+        ...identification,
+      };
+
+      // Merge details
+      updateDoc.details = { ...existingAsset.details, ...details };
+
+      // Merge purchase
+      updateDoc.purchase = {
+        ...existingAsset.purchase,
+        ...purchase,
+        cost:
+          purchase?.cost != null
+            ? Decimal128.fromString(String(purchase.cost))
+            : existingAsset.purchase.cost || 0,
+        purchasedAt: purchase?.purchasedAt
+          ? new Date(purchase.purchasedAt)
+          : existingAsset.purchase.purchasedAt || null,
+        warrantyExpiry: purchase?.warrantyExpiry
+          ? new Date(purchase.warrantyExpiry)
+          : existingAsset.purchase.warrantyExpiry || null,
+      };
+
+      // Merge assigned
+      updateDoc.assigned = {
+        ...existingAsset.assigned,
+        ...assigned,
+        assignedAt: assigned?.assignedAt
+          ? new Date(assigned.assignedAt)
+          : existingAsset.assigned.assignedAt || null,
+      };
+
+      // Preserve metadata
+      updateDoc.metadata = {
+        ...existingAsset.metadata,
+        updatedAt: new Date(),
+        ...(updatedBy && { updatedBy }),
+      };
 
       await assetsCol.updateOne(
         { "identification.tag": tag },
@@ -151,14 +165,8 @@ export const PATCH = async (request, context) => {
 };
 
 //  DELETE Asset by identification.tag (soft delete)
-export const DELETE = async (request, context) => {
-  const client = await getMongoClient();
-  const dbName = process.env.MONGODB_DB || "assets_tracker";
-  const db = client.db(dbName);
-  const session = client.startSession();
-
+export async function DELETE(request, { params }) {
   try {
-    const params = await context.params;
     const { tag } = params;
 
     if (!tag) {
@@ -168,29 +176,36 @@ export const DELETE = async (request, context) => {
       );
     }
 
-    await session.withTransaction(async () => {
-      const assetsCol = db.collection("assets");
+    const db = await connectDB();
+    const collection = db.collection("assets");
 
-      const result = await assetsCol.updateOne(
-        { "identification.tag": tag },
-        { $set: { "metadata.deletedAt": new Date() } },
-        { session }
+    // Soft delete by setting metadata.deletedAt
+    const result = await collection.updateOne(
+      { "identification.tag": tag },
+      { $set: { "metadata.deletedAt": new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "Asset not found" },
+        { status: 404 }
       );
-
-      if (result.matchedCount === 0) throw new Error("Asset not found");
-    });
+    }
 
     return NextResponse.json(
       { success: true, message: "Asset deleted successfully" },
       { status: 200 }
     );
-  } catch (err) {
-    console.error("DELETE /api/assets/[tag] error:", err);
+  } catch (error) {
+    console.error("DELETE /api/assets/[tag] error:", error);
     return NextResponse.json(
-      { success: false, message: err.message || "Internal server error" },
+      {
+        success: false,
+        message: "Internal server error",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
       { status: 500 }
     );
-  } finally {
-    await session.endSession();
   }
-};
+}
