@@ -11,8 +11,8 @@ const DeptId_To_Name = ({ deptId }) => {
   const axiosPublic = useAxiosPublic();
 
   // If unassigned, show it immediately
-  if (deptId === "UnAssigned" || !deptId || deptId === "UnAssigned") {
-    return <span className="font-medium text-gray-900">Un Assigned</span>;
+  if (deptId === "UnAssigned" || !deptId || deptId === "UnAssigned" || deptId === "unassigned") {
+    return <span>Un Assigned</span>;
   }
 
   // Fetch
@@ -45,7 +45,7 @@ const DeptId_To_Name = ({ deptId }) => {
 
   // Success
   return (
-    <span className="font-medium text-gray-900">
+    <span className="font-semibold text-gray-900">
       {data?.info?.name}
     </span>
   );

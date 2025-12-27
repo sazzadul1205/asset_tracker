@@ -64,8 +64,6 @@ const Add_New_User_Modal = ({
     })) || []),
   ];
 
-
-
   // Close modal
   const handleClose = () => {
     reset();
@@ -113,7 +111,7 @@ const Add_New_User_Modal = ({
       const response = await axiosPublic.post("/users", payload);
 
       // Success
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         success("User added successfully!");
         handleClose();
         RefetchAll();

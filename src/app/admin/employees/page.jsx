@@ -266,7 +266,15 @@ const EmployeesPage = () => {
 
                   {/* Position */}
                   <td className="py-3 px-4 whitespace-nowrap text-sm">
-                    {user?.employment?.position || "N/A"}
+                    {
+                      (() => {
+                        const pos = user?.employment?.position || "N/A";
+                        if (pos.toLowerCase() === "unassigned") return <p>Un Assigned</p>;
+                        return <p className="font-semibold">{pos.charAt(0).toUpperCase() + pos.slice(1)}</p>;
+                      })()
+                    }
+
+
                   </td>
 
                   {/* Role */}
