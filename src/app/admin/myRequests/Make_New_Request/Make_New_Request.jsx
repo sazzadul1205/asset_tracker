@@ -18,6 +18,8 @@ import {
   IoTrashOutline
 } from "react-icons/io5";
 import AssignAssetForm from "./AssignAssetForm/AssignAssetForm";
+import RequestAssetForm from "./RequestAssetForm/RequestAssetForm";
+import ReturnAssetForm from "./ReturnAssetForm/ReturnAssetForm";
 
 // Action Items arranged in rows for better layout
 const actionItems = [
@@ -220,6 +222,7 @@ const Make_New_Request = ({
 
             {/* Action-specific placeholder messages */}
             <div>
+              {/* Assign Asset Form */}
               {selectedItem.key === "assign" && (
                 <AssignAssetForm
                   session={session}
@@ -229,18 +232,21 @@ const Make_New_Request = ({
                 />
               )}
 
+              {/* Request Asset Form */}
               {selectedItem.key === "request" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to request new assets for your department.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">RequestAssetForm.jsx</code></p>
-                </div>
+                <RequestAssetForm
+                  session={session}
+                  handleClose={handleClose}
+                  unassignedAssets={unassignedAssets}
+                />
               )}
 
               {selectedItem.key === "return" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to return previously assigned assets.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">ReturnAssetForm.jsx</code></p>
-                </div>
+                <ReturnAssetForm
+                  session={session}
+                  myAssets={myAssets}
+                  handleClose={handleClose}
+                />
               )}
 
               {selectedItem.key === "repair" && (
