@@ -1,0 +1,162 @@
+// src/app/admin/myRequests/page.jsx
+"use client";
+
+// React Components
+import React from 'react';
+
+// Next Components
+import { useSession } from 'next-auth/react';
+
+// Hooks
+import useAxiosPublic from '@/hooks/useAxiosPublic';
+
+// Icons
+import { IoMdAdd } from 'react-icons/io';
+
+// Shared
+import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
+
+// Component
+import Make_New_Request from './Make_New_Request/Make_New_Request';
+
+// Shared
+import Error from '@/Shared/Error/Error';
+import Loading from '@/Shared/Loading/Loading';
+import { useQuery } from '@tanstack/react-query';
+
+const MyRequestPage = () => {
+  const axiosPublic = useAxiosPublic();
+
+  // Session
+  const { data: session, status } = useSession();
+
+  // Assigned Assets 
+  const {
+    data: assignedAssets,
+    isLoading: isAssignedLoading,
+    isError: isAssignedError,
+  } = useQuery({
+    queryKey: ["assets", "assigned"],
+    queryFn: async () => {
+      const res = await axiosPublic.get("/assets/AssetOption", {
+        params: { mode: "assigned" },
+      });
+      return res.data;
+    },
+    keepPreviousData: true,
+  });
+
+  // My Assets
+  const {
+    data: myAssets,
+    isLoading: isMyAssetsLoading,
+    isError: isMyAssetsError,
+  } = useQuery({
+    queryKey: ["assets", "assigned-to-me", session?.user?.userId],
+    queryFn: async () => {
+      const res = await axiosPublic.get("/assets/AssetOption", {
+        params: {
+          mode: "assigned-to-me",
+          userId: session?.user?.userId,
+        },
+      });
+      return res.data;
+    },
+    enabled: !!session?.user?.userId,
+    keepPreviousData: true,
+  });
+
+  // Unassigned Assets
+  const {
+    data: unassignedAssets,
+    isLoading: isUnassignedLoading,
+    isError: isUnassignedError,
+  } = useQuery({
+    queryKey: ["assets", "unassigned"],
+    queryFn: async () => {
+      const res = await axiosPublic.get("/assets/AssetOption", {
+        params: { mode: "unassigned" },
+      });
+      return res.data;
+    },
+    keepPreviousData: true,
+  });
+
+  // User Options
+  const {
+    data: userOptions,
+    isLoading: isUserOptionsLoading,
+    isError: isUserOptionsError,
+  } = useQuery({
+    queryKey: ["userOptions"],
+    queryFn: async () => {
+      const res = await axiosPublic.get("/users/UserOptions");
+      return res.data;
+    },
+    keepPreviousData: true,
+  });
+
+  // Handle loading
+  if (
+    isAssignedLoading ||
+    isMyAssetsLoading ||
+    isUnassignedLoading ||
+    isUserOptionsLoading ||
+    status === "loading"
+  )
+    return <Loading
+      message="Loading Users..."
+      subText="Please wait while we fetch users data."
+    />;
+
+  // Handle errors
+  if (
+    isAssignedError ||
+    isMyAssetsError ||
+    isUnassignedError ||
+    isUserOptionsError
+  ) return <Error errors={
+    isAssignedError || isMyAssetsError || isUnassignedError || isUserOptionsError
+  } />;
+
+  return (
+    <div>
+
+      {/* Header */}
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 ' >
+        {/* Title */}
+        <div>
+          <h3 className='text-xl sm:text-2xl font-bold text-gray-900' >My Requests</h3>
+          <p className='text-sm sm:text-base text-gray-600 mt-1' >Manage and track your submitted requests</p>
+        </div>
+
+        {/* Edit Profile */}
+        <Shared_Button
+          variant="primary"
+          onClick={() => document.getElementById("Make_New_Request")?.showModal()}
+          className="bg-blue-500 hover:bg-blue-600 whitespace-nowrap"
+        >
+          <IoMdAdd className="inline-block mr-2" />
+          Make New Request
+        </Shared_Button>
+      </div>
+
+      {/* Add New Asset Modal */}
+      <dialog id="Make_New_Request" className="modal">
+        <Make_New_Request
+          session={session}
+          myAssets={myAssets}
+          userOptions={userOptions}
+          // RefetchAll={RefetchAll}
+          assignedAssets={assignedAssets}
+          unassignedAssets={unassignedAssets}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </div>
+  );
+};
+
+export default MyRequestPage;

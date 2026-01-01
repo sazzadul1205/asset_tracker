@@ -15,7 +15,6 @@ import Shared_Button from "@/Shared/Shared_Button/Shared_Button";
 // Icons
 import { ImCross } from "react-icons/im";
 
-
 const Add_New_Asset_Modal = ({
   session,
   RefetchAll,
