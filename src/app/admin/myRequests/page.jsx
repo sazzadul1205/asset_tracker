@@ -96,11 +96,27 @@ const MyRequestPage = () => {
     keepPreviousData: true,
   });
 
+  // User 
+  const {
+    data: myRequests,
+    isLoading: isMyRequestsLoading,
+    isError: isMyRequestsError,
+  } = useQuery({
+    queryKey: ["myRequests", session?.user?.userId],
+    queryFn: async () => {
+      const res = await axiosPublic.get(`/requests/${session?.user?.userId}`);
+      return res.data;
+    },
+    enabled: !!session?.user?.userId,
+    keepPreviousData: true,
+  });
+
   // Handle loading
   if (
     isAssignedLoading ||
     isMyAssetsLoading ||
     isUnassignedLoading ||
+    isMyRequestsLoading ||
     isUserOptionsLoading ||
     status === "loading"
   )
@@ -114,10 +130,14 @@ const MyRequestPage = () => {
     isAssignedError ||
     isMyAssetsError ||
     isUnassignedError ||
+    isMyRequestsError ||
     isUserOptionsError
   ) return <Error errors={
-    isAssignedError || isMyAssetsError || isUnassignedError || isUserOptionsError
+    isAssignedError || isMyAssetsError || isUnassignedError || isMyRequestsError || isUserOptionsError
   } />;
+
+  console.log("myRequests : ", myRequests);
+
 
   return (
     <div>

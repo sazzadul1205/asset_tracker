@@ -270,6 +270,7 @@ const Make_New_Request = ({
 
             )}
 
+            {/* Transfer Asset Form */}
             {selectedItem.key === "transfer" && (
               <TransferAssetForm
                 session={session}
@@ -279,6 +280,7 @@ const Make_New_Request = ({
               />
             )}
 
+            {/* Update Asset Form */}
             {selectedItem.key === "update" && (
               <UpdateAssetForm
                 session={session}
@@ -287,6 +289,7 @@ const Make_New_Request = ({
               />
             )}
 
+            {/* Dispose Asset Form */}
             {selectedItem.key === "dispose" && (
               <DisposeAssetForm
                 session={session}
@@ -294,16 +297,6 @@ const Make_New_Request = ({
                 handleClose={handleClose}
               />
             )}
-
-            {/* Common placeholder text */}
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-gray-400 text-sm">
-                Placeholder area for the form. Replace this with the actual form component.
-              </p>
-              <p className="text-gray-400 text-xs mt-1">
-                To implement: Create <code className="text-gray-600">{selectedItem.title.replace(' ', '')}Form.jsx</code> and import here
-              </p>
-            </div>
           </div>
 
         </div>
