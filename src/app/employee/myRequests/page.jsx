@@ -22,6 +22,8 @@ import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
 import { useQuery } from '@tanstack/react-query';
 import Make_New_Request from '@/app/admin/myRequests/Make_New_Request/Make_New_Request';
+import MyRequestsList from '@/app/admin/myRequests/MyRequestsList/MyRequestsList';
+import MyRequestCards from '@/app/admin/myRequests/MyRequestCards/MyRequestCards';
 
 const MyRequestPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -34,6 +36,7 @@ const MyRequestPage = () => {
     data: assignedAssets,
     isLoading: isAssignedLoading,
     isError: isAssignedError,
+    refetch: refetchAssignedAssets,
   } = useQuery({
     queryKey: ["assets", "assigned"],
     queryFn: async () => {
@@ -50,6 +53,7 @@ const MyRequestPage = () => {
     data: myAssets,
     isLoading: isMyAssetsLoading,
     isError: isMyAssetsError,
+    refetch: refetchMyAssets,
   } = useQuery({
     queryKey: ["assets", "assigned-to-me", session?.user?.userId],
     queryFn: async () => {
@@ -70,6 +74,7 @@ const MyRequestPage = () => {
     data: unassignedAssets,
     isLoading: isUnassignedLoading,
     isError: isUnassignedError,
+    refetch: refetchUnassignedAssets,
   } = useQuery({
     queryKey: ["assets", "unassigned"],
     queryFn: async () => {
@@ -86,6 +91,7 @@ const MyRequestPage = () => {
     data: userOptions,
     isLoading: isUserOptionsLoading,
     isError: isUserOptionsError,
+    refetch: refetchUserOptions,
   } = useQuery({
     queryKey: ["userOptions"],
     queryFn: async () => {
@@ -100,6 +106,7 @@ const MyRequestPage = () => {
     data: myRequests,
     isLoading: isMyRequestsLoading,
     isError: isMyRequestsError,
+    refetch: refetchMyRequests,
   } = useQuery({
     queryKey: ["myRequests", session?.user?.userId],
     queryFn: async () => {
@@ -135,12 +142,16 @@ const MyRequestPage = () => {
     isAssignedError || isMyAssetsError || isUnassignedError || isMyRequestsError || isUserOptionsError
   } />;
 
-  console.log("myRequests : ", myRequests);
-
+  const RefetchAll = () => {
+    refetchAssignedAssets();
+    refetchMyAssets();
+    refetchUnassignedAssets();
+    refetchUserOptions();
+    refetchMyRequests();
+  }
 
   return (
     <div>
-
       {/* Header */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 ' >
         {/* Title */}
@@ -160,13 +171,49 @@ const MyRequestPage = () => {
         </Shared_Button>
       </div>
 
+
+      {/* Request Cards */}
+      <MyRequestCards RequestCounts={myRequests?.counts} />
+
+      {/* My Requests */}
+      {myRequests?.data?.length > 0 ? (
+        <div className="p-5 space-y-3">
+          {myRequests.data.map((request) => (
+            <MyRequestsList
+              key={request._id}
+              myRequests={request}
+              UserId={session?.user?.userId}
+              UserRole={session?.user?.role}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center mt-16 text-center">
+          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            📭
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-800">
+            No requests found
+          </h3>
+
+          <p className="text-sm text-gray-500 max-w-sm mt-1">
+            {session?.user?.role === "admin"
+              ? "There are no requests in the system yet."
+              : session?.user?.role === "manager"
+                ? "No requests have been submitted in your department."
+                : "You haven’t created or received any requests yet."}
+          </p>
+        </div>
+      )}
+
       {/* Add New Asset Modal */}
       <dialog id="Make_New_Request" className="modal">
         <Make_New_Request
           session={session}
           myAssets={myAssets}
           userOptions={userOptions}
-          // RefetchAll={RefetchAll}
+          RefetchAll={RefetchAll}
           assignedAssets={assignedAssets}
           unassignedAssets={unassignedAssets}
         />

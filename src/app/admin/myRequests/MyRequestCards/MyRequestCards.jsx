@@ -17,7 +17,7 @@ import {
   IoTrashOutline,
 } from "react-icons/io5";
 
-const DashboardCards = ({ RequestCounts }) => {
+const MyRequestCards = ({ RequestCounts }) => {
 
   // Cards Data
   const cards = [
@@ -131,4 +131,4 @@ const DashboardCards = ({ RequestCounts }) => {
   );
 };
 
-export default DashboardCards;
+export default MyRequestCards;
