@@ -23,6 +23,7 @@ const priorities = [
 const ReturnAssetForm = ({
   session,
   myAssets,
+  RefetchAll,
   handleClose,
 }) => {
   const { success } = useToast();
@@ -77,6 +78,7 @@ const ReturnAssetForm = ({
       const result = await axiosPublic.post("/requests", payload);
 
       success(result.data.message || "Asset return request created successfully!");
+      RefetchAll();
       handleClose();
     } catch (error) {
       console.error("Error creating return request:", error);

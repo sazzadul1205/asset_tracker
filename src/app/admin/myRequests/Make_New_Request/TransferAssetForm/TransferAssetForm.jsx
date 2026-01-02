@@ -23,6 +23,7 @@ const priorities = [
 const TransferAssetForm = ({
   session,
   myAssets,
+  RefetchAll,
   handleClose,
   userOptions,
 }) => {
@@ -84,6 +85,7 @@ const TransferAssetForm = ({
       const result = await axiosPublic.post("/requests", payload);
 
       success(result.data.message || "Asset assigned successfully!");
+      RefetchAll();
       handleClose();
     } catch (error) {
       console.error("Error assigning asset:", error);

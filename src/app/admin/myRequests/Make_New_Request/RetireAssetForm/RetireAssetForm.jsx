@@ -22,6 +22,7 @@ const priorities = [
 
 const RetireAssetForm = ({
   session,
+  RefetchAll,
   handleClose,
   unassignedAssets,
 }) => {
@@ -77,6 +78,7 @@ const RetireAssetForm = ({
       const result = await axiosPublic.post("/requests", payload);
 
       success(result.data.message || "Asset return request created successfully!");
+      RefetchAll();
       handleClose();
     } catch (error) {
       console.error("Error creating return request:", error);

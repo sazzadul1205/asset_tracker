@@ -23,6 +23,7 @@ const priorities = [
 const RepairAssetForm = ({
   session,
   myAssets,
+  RefetchAll,
   handleClose,
 }) => {
   const { success } = useToast();
@@ -77,6 +78,7 @@ const RepairAssetForm = ({
       const result = await axiosPublic.post("/requests", payload);
 
       success(result.data.message || "Asset repair request created successfully!");
+      RefetchAll();
       handleClose();
     } catch (error) {
       console.error("Error creating repair request:", error);

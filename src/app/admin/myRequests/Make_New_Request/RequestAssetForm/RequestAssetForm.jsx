@@ -22,6 +22,7 @@ const priorities = [
 
 const RequestAssetForm = ({
   session,
+  RefetchAll,
   handleClose,
   unassignedAssets,
 }) => {
@@ -77,6 +78,7 @@ const RequestAssetForm = ({
       const result = await axiosPublic.post("/requests", payload);
 
       success(result.data.message || "Asset request created successfully!");
+      RefetchAll();
       handleClose();
     } catch (error) {
       console.error("Error creating request:", error);

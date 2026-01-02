@@ -22,8 +22,9 @@ const priorities = [
 
 const DisposeAssetForm = ({
   session,
+  RefetchAll,
   handleClose,
-  myAssets,
+  unassignedAssets
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -41,7 +42,7 @@ const DisposeAssetForm = ({
   } = useForm();
 
   // Prepare asset options for the select input
-  const assetOptions = myAssets?.data?.map(asset => ({
+  const assetOptions = unassignedAssets?.data?.map(asset => ({
     label: `${asset.tag} — ${asset.name}`,
     value: asset.tag,
   }));
@@ -77,6 +78,7 @@ const DisposeAssetForm = ({
       const result = await axiosPublic.post("/requests", payload);
 
       success(result.data.message || "Asset return request created successfully!");
+      RefetchAll();
       handleClose();
     } catch (error) {
       console.error("Error creating return request:", error);
