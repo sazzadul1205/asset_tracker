@@ -96,13 +96,77 @@ export async function GET(request, context) {
       .toArray();
 
     /* --------------------------------
-       4. Response
+       4. Calculate request counts by type
+    -------------------------------- */
+    // Get counts for all request types
+    const countPipeline = [
+      { $match: query },
+      {
+        $group: {
+          _id: "$type",
+          count: { $sum: 1 },
+        },
+      },
+    ];
+
+    const countResults = await requestsCollection
+      .aggregate(countPipeline)
+      .toArray();
+
+    // Initialize all possible request types with 0
+    const allTypes = [
+      "assign",
+      "request",
+      "return",
+      "repair",
+      "retire",
+      "transfer",
+      "update",
+      "dispose",
+    ];
+
+    // Convert array to object with default 0 values
+    const detailedCounts = {};
+    allTypes.forEach((type) => {
+      detailedCounts[type] = 0;
+    });
+
+    // Update with actual counts
+    countResults.forEach((result) => {
+      if (result._id) {
+        detailedCounts[result._id] = result.count;
+      }
+    });
+
+    // Calculate total
+    const total = Object.values(detailedCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
+    // Create counts object
+    const counts = {
+      total,
+      detailed: detailedCounts,
+    };
+
+    /* --------------------------------
+       5. Format requests data
+    -------------------------------- */
+    const formattedRequests = requests.map((request) => ({
+      ...request,
+      _id: request._id.toString(),
+    }));
+
+    /* --------------------------------
+       6. Response
     -------------------------------- */
     return NextResponse.json(
       {
         success: true,
         user: { userId: requestedBy, role, departmentId },
-        data: requests,
+        data: formattedRequests,
+        counts: counts,
       },
       { status: 200 }
     );

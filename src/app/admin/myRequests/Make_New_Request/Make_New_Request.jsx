@@ -36,6 +36,7 @@ const actionItems = [
       icon: IoPersonAddOutline,
       color: "bg-blue-50 text-blue-600",
       iconBg: "bg-blue-100",
+      allowedRoles: ["admin", "manager"],
     },
     {
       key: "request",
@@ -132,6 +133,11 @@ const Make_New_Request = ({
     document.getElementById("Make_New_Request")?.close();
   };
 
+  // Get current user role
+  const getCurrentUserRole = () => {
+    return session?.user?.role?.toLowerCase() || "employee";
+  };
+
   return (
     <div
       id="Make_New_Request"
@@ -156,7 +162,8 @@ const Make_New_Request = ({
         <div className="space-y-6">
           <div>
             <h3 className="font-semibold text-lg pb-2 text-gray-800">Select an Action</h3>
-            <p className="text-gray-600 text-sm pb-4">Choose what you want to do with an asset</p>
+            <p className="text-gray-600 text-sm">Choose what you want to do with an asset</p>
+            <p className="text-gray-600 text-sm">After Requesting the Admin/Manager Will Accept or Deny Any Request</p>
           </div>
 
           <div className="flex flex-col items-center gap-6">
@@ -168,23 +175,39 @@ const Make_New_Request = ({
                   gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))`,
                 }}
               >
-                {row.map((item) => (
-                  <div
-                    key={item.key}
-                    onClick={() => setSelectedAction(item.key)}
-                    className={`p-4 border border-gray-200 rounded-lg cursor-pointer shadow-sm bg-white transition-all duration-300 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] ${item.color}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-lg ${item.iconBg}`}>
-                        <item.icon className="text-2xl" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                        <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+
+                {row.map((item) => {
+                  const isDisabled = item.allowedRoles && !item.allowedRoles.includes(getCurrentUserRole());
+
+                  return (
+                    <div
+                      key={item.key}
+                      onClick={() => !isDisabled && setSelectedAction(item.key)}
+                      className={` p-4 border rounded-lg shadow-sm bg-white transition-all duration-300 ${item.color} ${isDisabled
+                        ? 'opacity-50 cursor-not-allowed border-gray-200'
+                        : 'cursor-pointer hover:border-gray-300 hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] border-gray-200'
+                        }`}
+                      title={isDisabled ? "Only admins and managers can assign assets" : ""}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-3 rounded-lg ${item.iconBg} ${isDisabled ? 'opacity-70' : ''}`}>
+                          <item.icon className="text-2xl" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                            {item.title}
+                            {isDisabled && (
+                              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">
+                                Restricted
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -227,6 +250,7 @@ const Make_New_Request = ({
             {selectedItem.key === "assign" && (
               <AssignAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 handleClose={handleClose}
                 userOptions={userOptions}
                 unassignedAssets={unassignedAssets}
@@ -237,6 +261,7 @@ const Make_New_Request = ({
             {selectedItem.key === "request" && (
               <RequestAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 handleClose={handleClose}
                 unassignedAssets={unassignedAssets}
               />
@@ -246,6 +271,7 @@ const Make_New_Request = ({
             {selectedItem.key === "return" && (
               <ReturnAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 myAssets={myAssets}
                 handleClose={handleClose}
               />
@@ -255,6 +281,7 @@ const Make_New_Request = ({
             {selectedItem.key === "repair" && (
               <RepairAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 myAssets={myAssets}
                 handleClose={handleClose}
               />
@@ -264,6 +291,7 @@ const Make_New_Request = ({
             {selectedItem.key === "retire" && (
               <RetireAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 handleClose={handleClose}
                 unassignedAssets={unassignedAssets}
               />
@@ -274,6 +302,7 @@ const Make_New_Request = ({
             {selectedItem.key === "transfer" && (
               <TransferAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 myAssets={myAssets}
                 handleClose={handleClose}
                 userOptions={userOptions}
@@ -284,6 +313,7 @@ const Make_New_Request = ({
             {selectedItem.key === "update" && (
               <UpdateAssetForm
                 session={session}
+                RefetchAll={RefetchAll}
                 myAssets={myAssets}
                 handleClose={handleClose}
               />
@@ -293,8 +323,9 @@ const Make_New_Request = ({
             {selectedItem.key === "dispose" && (
               <DisposeAssetForm
                 session={session}
-                myAssets={myAssets}
+                RefetchAll={RefetchAll}
                 handleClose={handleClose}
+                unassignedAssets={unassignedAssets}
               />
             )}
           </div>
