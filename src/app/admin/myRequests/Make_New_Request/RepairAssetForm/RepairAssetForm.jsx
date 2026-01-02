@@ -1,4 +1,4 @@
-// src/app/admin/myRequests/Make_New_Request/AssignAssetForm/AssignAssetForm.jsx
+// src/app/admin/myRequests/Make_New_Request/RepairAssetForm/RepairAssetForm.jsx
 
 // React
 import React, { useState } from 'react';
@@ -20,11 +20,10 @@ const priorities = [
   { value: 'urgent', label: 'Urgent' },
 ];
 
-const AssignAssetForm = ({
+const RepairAssetForm = ({
   session,
+  myAssets,
   handleClose,
-  userOptions,
-  unassignedAssets,
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -42,52 +41,46 @@ const AssignAssetForm = ({
   } = useForm();
 
   // Prepare asset options for the select input
-  const assetOptions = unassignedAssets?.data?.map(asset => ({
+  const assetOptions = myAssets?.data?.map(asset => ({
     label: `${asset.tag} — ${asset.name}`,
     value: asset.tag,
-  }));
-
-  // Prepare user options for the select input
-  const userSelectOptions = userOptions?.data?.map(user => ({
-    label: `${user.personal.name} — ${user.personal.userId}`,
-    value: user.personal.userId,
   }));
 
   // Form submission handler
   const onSubmit = async (data) => {
     setLoading(true);
+    setGlobalError("");
 
     try {
       const payload = {
         assetId: data.assetId,
-        type: "assign",
+        type: "repair",
         priority: data.priority || "medium",
         description: data.description || "",
         expectedCompletion: data.expectedCompletion
-          ? new Date(data.expectedCompletion)
-          : new Date(),
+          ? new Date(data.expectedCompletion).toISOString()
+          : new Date().toISOString(),
 
         participants: {
           requestedById: session?.user?.userId || "system",
-          requestedToId: data.requestedToId,
+          requestedToId: data?.requestedToId || "-",
           departmentId: session?.user?.departmentId || "unassigned",
         },
 
         metadata: {
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           status: "pending",
         },
       };
 
-      // Axios POST request
       const result = await axiosPublic.post("/requests", payload);
 
-      success(result.data.message || "Asset assigned successfully!");
+      success(result.data.message || "Asset repair request created successfully!");
       handleClose();
     } catch (error) {
-      console.error("Error assigning asset:", error);
-      setGlobalError(error.error || "Failed to assign asset. Please try again.");
+      console.error("Error creating repair request:", error);
+      setGlobalError(error.error || "Failed to create repair request. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -105,7 +98,6 @@ const AssignAssetForm = ({
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
-
         {/* Asset ID */}
         <Controller
           name="assetId"
@@ -129,25 +121,8 @@ const AssignAssetForm = ({
           name="type"
           type="select"
           register={register}
-          placeholder="Assign Asset"
+          placeholder="Repair Asset"
           readOnly
-        />
-
-        {/* Assign To */}
-        <Controller
-          name="requestedToId"
-          control={control}
-          rules={{ required: "Assign To is required" }}
-          render={({ field }) => (
-            <Shared_Input
-              {...field}
-              type="searchable"
-              label="Assign To"
-              options={userSelectOptions}
-              placeholder="Search & select user"
-              errors={errors}
-            />
-          )}
         />
 
         {/* Priority */}
@@ -158,34 +133,36 @@ const AssignAssetForm = ({
           register={register}
           placeholder="Select Priority"
           options={priorities}
+          rules={{ required: "Priority is required" }}
+          error={errors?.priority}
         />
 
-        {/* Notes & Expected Date */}
-        <div className="col-span-2 space-y-4">
+        {/* Expected Repair Date */}
+        <Controller
+          name="expectedCompletion"
+          control={control}
+          rules={{ required: "Expected Repair completion date is required" }}
+          render={({ field }) => (
+            <Shared_Input
+              {...field}
+              type="date"
+              label="Expected Repair Date"
+              placeholder="Select expected repair completion date"
+              error={errors?.expectedCompletion}
+            />
+          )}
+        />
 
-          {/* Expected Date */}
-          <Controller
-            name="expectedCompletion"
-            control={control}
-            rules={{ required: "Expected completion date is required" }}
-            render={({ field }) => (
-              <Shared_Input
-                {...field}
-                type="date"
-                label="Expected Date"
-                placeholder="Select expected completion date"
-                error={errors?.expectedCompletion}
-              />
-            )}
-          />
-
-          {/* Notes */}
+        {/* Notes */}
+        <div className="col-span-2">
           <Shared_Input
             label="Notes"
             name="description"
             type="textarea"
             register={register}
-            placeholder="Enter any additional notes"
+            placeholder="Enter notes (optional)"
+            error={errors?.description}
+            rows={4}
           />
         </div>
 
@@ -208,12 +185,13 @@ const AssignAssetForm = ({
             loading={loading}
             minWidth="100px"
           >
-            Make Assign Asset Request
+            Make Update Asset Request
           </Shared_Button>
         </div>
+
       </form>
     </div>
   );
 };
 
-export default AssignAssetForm;
+export default RepairAssetForm;

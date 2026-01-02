@@ -1,4 +1,4 @@
-// src/app/admin/myRequests/Make_New_Request/ReturnAssetForm/ReturnAssetForm.jsx/ReturnAssetForm/ReturnAssetForm.jsx.jsx
+// src/app/admin/myRequests/Make_New_Request/ReturnAssetForm/ReturnAssetForm.jsx
 
 // React
 import React, { useState } from 'react';
@@ -19,7 +19,6 @@ const priorities = [
   { value: 'high', label: 'High' },
   { value: 'urgent', label: 'Urgent' },
 ];
-
 
 const ReturnAssetForm = ({
   session,
@@ -74,8 +73,6 @@ const ReturnAssetForm = ({
           status: "pending",
         },
       };
-
-      console.log("Return Asset Payload:", payload);
 
       const result = await axiosPublic.post("/requests", payload);
 
@@ -142,14 +139,20 @@ const ReturnAssetForm = ({
           error={errors?.priority}
         />
 
-        {/* Return Date */}
-        <Shared_Input
-          label="Return Date"
+        {/* Expected Date */}
+        <Controller
           name="expectedCompletion"
-          type="date"
-          register={register}
-          rules={{ required: "Return Date is required" }}
-          error={errors?.expectedCompletion}
+          control={control}
+          rules={{ required: "Expected Return completion date is required" }}
+          render={({ field }) => (
+            <Shared_Input
+              {...field}
+              type="date"
+              label="Return Date"
+              placeholder="Select expected return completion date"
+              error={errors?.expectedCompletion}
+            />
+          )}
         />
 
         {/* Notes */}

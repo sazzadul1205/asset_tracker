@@ -1,4 +1,4 @@
-// src/app/admin/myRequests/Make_New_Request/AssignAssetForm/AssignAssetForm.jsx
+// src/app/admin/myRequests/Make_New_Request/TransferAssetForm/TransferAssetForm.jsx
 
 // React
 import React, { useState } from 'react';
@@ -20,11 +20,11 @@ const priorities = [
   { value: 'urgent', label: 'Urgent' },
 ];
 
-const AssignAssetForm = ({
+const TransferAssetForm = ({
   session,
+  myAssets,
   handleClose,
   userOptions,
-  unassignedAssets,
 }) => {
   const { success } = useToast();
   const axiosPublic = useAxiosPublic();
@@ -42,7 +42,7 @@ const AssignAssetForm = ({
   } = useForm();
 
   // Prepare asset options for the select input
-  const assetOptions = unassignedAssets?.data?.map(asset => ({
+  const assetOptions = myAssets?.data?.map(asset => ({
     label: `${asset.tag} — ${asset.name}`,
     value: asset.tag,
   }));
@@ -60,7 +60,7 @@ const AssignAssetForm = ({
     try {
       const payload = {
         assetId: data.assetId,
-        type: "assign",
+        type: "transfer",
         priority: data.priority || "medium",
         description: data.description || "",
         expectedCompletion: data.expectedCompletion
@@ -133,16 +133,16 @@ const AssignAssetForm = ({
           readOnly
         />
 
-        {/* Assign To */}
+        {/* Transfer To */}
         <Controller
           name="requestedToId"
           control={control}
-          rules={{ required: "Assign To is required" }}
+          rules={{ required: "Transfer To is required" }}
           render={({ field }) => (
             <Shared_Input
               {...field}
               type="searchable"
-              label="Assign To"
+              label="Transfer To"
               options={userSelectOptions}
               placeholder="Search & select user"
               errors={errors}
@@ -160,25 +160,23 @@ const AssignAssetForm = ({
           options={priorities}
         />
 
-        {/* Notes & Expected Date */}
-        <div className="col-span-2 space-y-4">
-
-          {/* Expected Date */}
+        {/* Expected Transfer Date & Notes */}
+        <div className="col-span-2 space-y-4" >
+          {/* Expected Transfer Date */}
           <Controller
             name="expectedCompletion"
             control={control}
-            rules={{ required: "Expected completion date is required" }}
+            rules={{ required: "Expected Transfer completion date is required" }}
             render={({ field }) => (
               <Shared_Input
                 {...field}
                 type="date"
-                label="Expected Date"
-                placeholder="Select expected completion date"
+                label="Expected Transfer Date"
+                placeholder="Select expected transfer completion date"
                 error={errors?.expectedCompletion}
               />
             )}
           />
-
           {/* Notes */}
           <Shared_Input
             label="Notes"
@@ -208,7 +206,7 @@ const AssignAssetForm = ({
             loading={loading}
             minWidth="100px"
           >
-            Make Assign Asset Request
+            Make Transfer Asset Request
           </Shared_Button>
         </div>
       </form>
@@ -216,4 +214,4 @@ const AssignAssetForm = ({
   );
 };
 
-export default AssignAssetForm;
+export default TransferAssetForm;

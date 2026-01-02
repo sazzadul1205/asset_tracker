@@ -20,6 +20,11 @@ import {
 import AssignAssetForm from "./AssignAssetForm/AssignAssetForm";
 import RequestAssetForm from "./RequestAssetForm/RequestAssetForm";
 import ReturnAssetForm from "./ReturnAssetForm/ReturnAssetForm";
+import RepairAssetForm from "./RepairAssetForm/RepairAssetForm";
+import RetireAssetForm from "./RetireAssetForm/RetireAssetForm";
+import TransferAssetForm from "./TransferAssetForm/TransferAssetForm";
+import UpdateAssetForm from "./UpdateAssetForm/UpdateAssetForm";
+import DisposeAssetForm from "./DisposeAssetForm/DisposeAssetForm";
 
 // Action Items arranged in rows for better layout
 const actionItems = [
@@ -216,94 +221,91 @@ const Make_New_Request = ({
             </div>
           </div>
 
-          {/* Empty Form Area - Dynamic based on action */}
+          {/* Action-specific placeholder messages */}
           <div>
+            {/* Assign Asset Form */}
+            {selectedItem.key === "assign" && (
+              <AssignAssetForm
+                session={session}
+                handleClose={handleClose}
+                userOptions={userOptions}
+                unassignedAssets={unassignedAssets}
+              />
+            )}
 
+            {/* Request Asset Form */}
+            {selectedItem.key === "request" && (
+              <RequestAssetForm
+                session={session}
+                handleClose={handleClose}
+                unassignedAssets={unassignedAssets}
+              />
+            )}
 
-            {/* Action-specific placeholder messages */}
-            <div>
-              {/* Assign Asset Form */}
-              {selectedItem.key === "assign" && (
-                <AssignAssetForm
-                  session={session}
-                  handleClose={handleClose}
-                  userOptions={userOptions}
-                  unassignedAssets={unassignedAssets}
-                />
-              )}
+            {/* Return Asset Form */}
+            {selectedItem.key === "return" && (
+              <ReturnAssetForm
+                session={session}
+                myAssets={myAssets}
+                handleClose={handleClose}
+              />
+            )}
 
-              {/* Request Asset Form */}
-              {selectedItem.key === "request" && (
-                <RequestAssetForm
-                  session={session}
-                  handleClose={handleClose}
-                  unassignedAssets={unassignedAssets}
-                />
-              )}
+            {/* Repair Asset Form */}
+            {selectedItem.key === "repair" && (
+              <RepairAssetForm
+                session={session}
+                myAssets={myAssets}
+                handleClose={handleClose}
+              />
+            )}
 
-              {selectedItem.key === "return" && (
-                <ReturnAssetForm
-                  session={session}
-                  myAssets={myAssets}
-                  handleClose={handleClose}
-                />
-              )}
+            {/* Retire Asset Form */}
+            {selectedItem.key === "retire" && (
+              <RetireAssetForm
+                session={session}
+                handleClose={handleClose}
+                unassignedAssets={unassignedAssets}
+              />
 
-              {selectedItem.key === "repair" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to submit assets for maintenance or repair.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">RepairAssetForm.jsx</code></p>
-                </div>
-              )}
+            )}
 
-              {selectedItem.key === "retire" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to retire assets from active use.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">RetireAssetForm.jsx</code></p>
-                </div>
-              )}
+            {selectedItem.key === "transfer" && (
+              <TransferAssetForm
+                session={session}
+                myAssets={myAssets}
+                handleClose={handleClose}
+                userOptions={userOptions}
+              />
+            )}
 
-              {selectedItem.key === "transfer" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to transfer assets between departments.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">TransferAssetForm.jsx</code></p>
-                </div>
-              )}
+            {selectedItem.key === "update" && (
+              <UpdateAssetForm
+                session={session}
+                myAssets={myAssets}
+                handleClose={handleClose}
+              />
+            )}
 
-              {selectedItem.key === "update" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to update asset details and information.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">UpdateAssetForm.jsx</code></p>
-                </div>
-              )}
+            {selectedItem.key === "dispose" && (
+              <DisposeAssetForm
+                session={session}
+                myAssets={myAssets}
+                handleClose={handleClose}
+              />
+            )}
 
-              {selectedItem.key === "dispose" && (
-                <div className="max-w-md">
-                  <p className="text-gray-400 mb-3">This form will allow you to permanently dispose of assets.</p>
-                  <p className="text-gray-400 text-sm">Component: <code className="text-gray-600">DisposeAssetForm.jsx</code></p>
-                </div>
-              )}
-
-              {/* Common placeholder text */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <p className="text-gray-400 text-sm">
-                  Placeholder area for the form. Replace this with the actual form component.
-                </p>
-                <p className="text-gray-400 text-xs mt-1">
-                  To implement: Create <code className="text-gray-600">{selectedItem.title.replace(' ', '')}Form.jsx</code> and import here
-                </p>
-              </div>
-            </div>
-
-            {/* Placeholder for form fields */}
-            <div className="mt-6 grid grid-cols-2 gap-4 w-full max-w-md opacity-50">
-              <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-10 bg-gray-200 rounded animate-pulse col-span-2"></div>
-              <div className="h-24 bg-gray-200 rounded animate-pulse col-span-2"></div>
-              <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            {/* Common placeholder text */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-gray-400 text-sm">
+                Placeholder area for the form. Replace this with the actual form component.
+              </p>
+              <p className="text-gray-400 text-xs mt-1">
+                To implement: Create <code className="text-gray-600">{selectedItem.title.replace(' ', '')}Form.jsx</code> and import here
+              </p>
             </div>
           </div>
+
         </div>
       )}
     </div>

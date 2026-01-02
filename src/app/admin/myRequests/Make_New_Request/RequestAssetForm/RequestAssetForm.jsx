@@ -139,15 +139,20 @@ const RequestAssetForm = ({
           error={errors?.priority}
         />
 
-        {/* Expected Return Date */}
-        <Shared_Input
-          label="Expected Return Date"
+        {/* Expected Date */}
+        <Controller
           name="expectedCompletion"
-          type="date"
           control={control}
-          placeholder="Select expected completion date"
           rules={{ required: "Expected completion date is required" }}
-          error={errors?.expectedCompletion}
+          render={({ field }) => (
+            <Shared_Input
+              {...field}
+              type="date"
+              label="Expected Date"
+              placeholder="Select expected completion date"
+              error={errors?.expectedCompletion}
+            />
+          )}
         />
 
         {/* Notes */}
