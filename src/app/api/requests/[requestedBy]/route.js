@@ -17,6 +17,7 @@ export async function GET(request, context) {
     const db = await connectDB();
     const usersCollection = db.collection("users");
     const requestsCollection = db.collection("requests");
+    const assetsCollection = db.collection("assets");
 
     /* --------------------------------
        1. Fetch current user
@@ -96,9 +97,44 @@ export async function GET(request, context) {
       .toArray();
 
     /* --------------------------------
-       4. Calculate request counts by type
+       4. Fetch only asset name and serial number
     -------------------------------- */
-    // Get counts for all request types
+    const requestsWithAssetInfo = await Promise.all(
+      requests.map(async (request) => {
+        let assetInfo = null;
+
+        if (request.assetId) {
+          // Find asset by identification.tag (assetId)
+          const asset = await assetsCollection.findOne(
+            { "identification.tag": request.assetId },
+            {
+              projection: {
+                _id: 0,
+                "identification.name": 1,
+                "details.serialNumber": 1,
+              },
+            }
+          );
+
+          if (asset) {
+            assetInfo = {
+              name: asset.identification.name,
+              serialNumber: asset.details.serialNumber,
+            };
+          }
+        }
+
+        return {
+          ...request,
+          _id: request._id.toString(),
+          assetInfo,
+        };
+      })
+    );
+
+    /* --------------------------------
+       5. Calculate request counts by type
+    -------------------------------- */
     const countPipeline = [
       { $match: query },
       {
@@ -113,7 +149,6 @@ export async function GET(request, context) {
       .aggregate(countPipeline)
       .toArray();
 
-    // Initialize all possible request types with 0
     const allTypes = [
       "assign",
       "request",
@@ -125,38 +160,26 @@ export async function GET(request, context) {
       "dispose",
     ];
 
-    // Convert array to object with default 0 values
     const detailedCounts = {};
     allTypes.forEach((type) => {
       detailedCounts[type] = 0;
     });
 
-    // Update with actual counts
     countResults.forEach((result) => {
       if (result._id) {
         detailedCounts[result._id] = result.count;
       }
     });
 
-    // Calculate total
     const total = Object.values(detailedCounts).reduce(
       (sum, count) => sum + count,
       0
     );
 
-    // Create counts object
     const counts = {
       total,
       detailed: detailedCounts,
     };
-
-    /* --------------------------------
-       5. Format requests data
-    -------------------------------- */
-    const formattedRequests = requests.map((request) => ({
-      ...request,
-      _id: request._id.toString(),
-    }));
 
     /* --------------------------------
        6. Response
@@ -165,7 +188,7 @@ export async function GET(request, context) {
       {
         success: true,
         user: { userId: requestedBy, role, departmentId },
-        data: formattedRequests,
+        data: requestsWithAssetInfo,
         counts: counts,
       },
       { status: 200 }

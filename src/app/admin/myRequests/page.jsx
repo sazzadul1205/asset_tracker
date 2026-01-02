@@ -138,7 +138,7 @@ const MyRequestPage = () => {
     isAssignedError || isMyAssetsError || isUnassignedError || isMyRequestsError || isUserOptionsError
   } />;
 
-  console.log("myRequests : ", myRequests);
+  // console.log("myRequests : ", myRequests);
 
 
   return (
@@ -167,7 +167,21 @@ const MyRequestPage = () => {
       <MyRequestCards RequestCounts={myRequests?.counts} />
 
       {/* My Requests */}
-      <MyRequestsList myRequests={myRequests?.data} />
+      {myRequests?.data && myRequests?.data.length > 0 ? (
+        <div className="p-5">
+          {myRequests?.data.map((request, index) => (
+            <MyRequestsList
+              key={index}
+              myRequests={request}
+              UserId={session?.user?.userId}
+              UserRole={session?.user?.role}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-gray-600 mt-10">No requests found.</p>
+      )}
+
 
       {/* Add New Asset Modal */}
       <dialog id="Make_New_Request" className="modal">
