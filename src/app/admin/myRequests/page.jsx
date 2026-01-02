@@ -23,6 +23,8 @@ import Make_New_Request from './Make_New_Request/Make_New_Request';
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
 import { useQuery } from '@tanstack/react-query';
+import MyRequestCards from './MyRequestCards/MyRequestCards';
+import MyRequestsList from './MyRequestsList/MyRequestsList';
 
 const MyRequestPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -160,6 +162,12 @@ const MyRequestPage = () => {
           Make New Request
         </Shared_Button>
       </div>
+
+      {/* Request Cards */}
+      <MyRequestCards RequestCounts={myRequests?.counts} />
+
+      {/* My Requests */}
+      <MyRequestsList myRequests={myRequests?.data} />
 
       {/* Add New Asset Modal */}
       <dialog id="Make_New_Request" className="modal">
