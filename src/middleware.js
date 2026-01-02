@@ -2,61 +2,153 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
-const AUTH_SECRET = process.env.AUTH_SECRET; // same as in your nextauth route
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
 
-// Define route-role mappings
+// Define route-role mappings - use lowercase for comparison
 const roleProtectedRoutes = [
-  { path: "/admin", roles: ["Admin"] },
-  { path: "/manager", roles: ["Manager"] },
-  { path: "/employee", roles: ["Employee"] },
+  {
+    path: "/admin",
+    roles: ["admin"], // Compare with lowercase
+  },
+  {
+    path: "/manager",
+    roles: ["manager", "admin"], // Admins can access manager routes
+  },
+  {
+    path: "/employee",
+    roles: ["employee", "manager", "admin"], // Admins & managers can access employee routes
+  },
+];
+
+// Public paths
+const publicPaths = [
+  "/",
+  "/auth/login",
+  "/auth/register",
+  "/auth/error",
+  "/api",
+  "/_next",
+  "/favicon.ico",
+  "/public",
+  "/images",
 ];
 
 // Middleware function
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // Allow public routes (like login, api, _next)
-  if (
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
-  ) {
+  console.log(`🛡️  Middleware checking: ${pathname}`);
+
+  // 1. Skip public paths (including API routes for now)
+  const isPublicPath = publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+
+  if (isPublicPath) {
     return NextResponse.next();
   }
 
-  // Get JWT token from NextAuth
-  const token = await getToken({ req, secret: AUTH_SECRET });
+  // 2. Get token - IMPORTANT: Add debug logging
+  const token = await getToken({
+    req,
+    secret: NEXTAUTH_SECRET,
+    secureCookie: process.env.NODE_ENV === "production",
+  });
 
-  // If no token → redirect to login
+  console.log("🔑 Token exists:", !!token);
+  console.log("🔑 Token role:", token?.role);
+  console.log("🔑 Full token keys:", token ? Object.keys(token) : "No token");
+
+  // 3. No token → redirect to login
   if (!token) {
+    console.log("❌ No token found, redirecting to login");
     const loginUrl = new URL("/auth/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", encodeURIComponent(req.url));
+    loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check role-based access
+  // 4. Normalize the role from token
+  // Your NextAuth returns "Admin", "Manager", "Employee" (uppercase first letter)
+  // Convert to lowercase for consistent comparison
+  const tokenRole = token.role || "";
+  const userRole = tokenRole.toLowerCase();
+
+  console.log(`👤 User role (from token): ${tokenRole}`);
+  console.log(`👤 User role (normalized): ${userRole}`);
+
+  // 5. First, handle the root path "/"
+  if (pathname === "/") {
+    console.log(
+      `🏠 Root path detected, redirecting based on role: ${userRole}`
+    );
+    const dashboardUrl = getDashboardUrlByRole(userRole);
+    return NextResponse.redirect(new URL(dashboardUrl, req.url));
+  }
+
+  // 6. Check if current path requires specific role
+  let routeAccess = null;
+
   for (const route of roleProtectedRoutes) {
     if (pathname.startsWith(route.path)) {
-      if (!route.roles.includes(token.role)) {
-        // Unauthorized access → redirect to dashboard based on role
-        const redirectUrl = new URL(
-          token.role === "Admin"
-            ? "/admin/dashboard"
-            : token.role === "Manager"
-            ? "/manager/dashboard"
-            : "/employee/dashboard",
-          req.url
-        );
-        return NextResponse.redirect(redirectUrl);
-      }
+      routeAccess = route;
+      break;
     }
   }
 
-  // All good → allow access
+  // 7. If on a protected route, check access
+  if (routeAccess) {
+    const allowedRoles = routeAccess.roles; // Already lowercase
+
+    console.log(`🛡️  Protected route: ${routeAccess.path}`);
+    console.log(`🛡️  Allowed roles:`, allowedRoles);
+    console.log(`🛡️  User role: ${userRole}`);
+
+    if (!allowedRoles.includes(userRole)) {
+      console.log(`⛔ Access denied! ${userRole} cannot access ${pathname}`);
+
+      // Redirect to appropriate dashboard
+      const redirectUrl = getDashboardUrlByRole(userRole);
+      console.log(`↪️ Redirecting to: ${redirectUrl}`);
+
+      return NextResponse.redirect(new URL(redirectUrl, req.url));
+    }
+
+    console.log(`✅ Access granted to ${pathname}`);
+  }
+
+  // 8. Allow access to /dashboard for all authenticated users
+  if (pathname.startsWith("/dashboard")) {
+    return NextResponse.next();
+  }
+
   return NextResponse.next();
+}
+
+// Helper function - expects lowercase role
+function getDashboardUrlByRole(role) {
+  switch (role) {
+    case "admin":
+      return "/admin/dashboard";
+    case "manager":
+      return "/manager/dashboard";
+    case "employee":
+      return "/employee/dashboard";
+    default:
+      // If role is not recognized, go to a safe page
+      console.warn(`⚠️ Unknown role: "${role}", redirecting to /dashboard`);
+      return "/dashboard";
+  }
 }
 
 // Apply middleware to these paths
 export const config = {
-  matcher: ["/admin/:path*", "/manager/:path*", "/employee/:path*"],
+  matcher: [
+    // Match all paths except:
+    "/",
+    "/admin/:path*",
+    "/manager/:path*",
+    "/employee/:path*",
+    "/dashboard/:path*",
+  ],
 };

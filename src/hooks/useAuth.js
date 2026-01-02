@@ -17,7 +17,7 @@ import { signIn, signOut, useSession, getSession } from "next-auth/react";
 const useAuth = (redirectIfAuthenticated = false) => {
   const router = useRouter();
 
-  // States 
+  // States
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { data: session, status } = useSession();
@@ -55,16 +55,23 @@ const useAuth = (redirectIfAuthenticated = false) => {
 
       // Get the latest session safely
       const session = await getSession();
-      const role = session?.user?.role || "Employee";
+      const role = session?.user?.role || "employee";
 
-      // Role-based redirect
-      if (role === "Admin") router.push("/admin/dashboard");
-      else if (role === "Manager") router.push("/manager/dashboard");
-      else router.push("/employee/dashboard");
+      console.log("Login - Session role:", role); // Debug log
+
+      // Role-based redirect - USE LOWERCASE COMPARISON
+      const normalizedRole = role.toLowerCase();
+
+      if (normalizedRole === "admin") {
+        router.push("/admin/dashboard");
+      } else if (normalizedRole === "manager") {
+        router.push("/manager/dashboard");
+      } else {
+        router.push("/employee/dashboard");
+      }
 
       return { success: true, data: session };
     } catch (err) {
-      // Catch unexpected errors
       console.error("Login error:", err);
       setError("An unexpected error occurred. Please try again.");
       return { success: false, message: "Unexpected error" };
@@ -72,7 +79,6 @@ const useAuth = (redirectIfAuthenticated = false) => {
       setLoading(false);
     }
   };
-
   // SignUp function
   const signUp = async (data) => {
     setLoading(true);
