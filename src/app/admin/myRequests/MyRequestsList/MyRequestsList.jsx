@@ -3,21 +3,30 @@ import React from 'react';
 // Icons
 import {
   BsBoxSeam,
-  BsHourglass,
   BsPersonBadge,
   BsPersonCircle,
   BsCalendarEvent,
-  BsExclamationTriangle,
-  BsExclamationCircle,
 } from "react-icons/bs";
-import { FaTools } from 'react-icons/fa';
-import { IoTrashOutline, IoBuildOutline, IoRepeatOutline, IoCreateOutline, IoCloseCircleOutline, IoPersonAddOutline, IoDocumentTextOutline, IoReturnDownBackOutline, IoCheckmark, IoClose } from 'react-icons/io5';
+import {
+  IoClose,
+  IoCheckmark,
+  IoTrashOutline,
+  IoBuildOutline,
+  IoRepeatOutline,
+  IoCreateOutline,
+  IoPersonAddOutline,
+  IoCloseCircleOutline,
+  IoDocumentTextOutline,
+  IoReturnDownBackOutline
+} from 'react-icons/io5';
 
 // Components
-import SerialNumber_To_Barcode from '../../assets/SerialNumber_To_Barcode/SerialNumber_To_Barcode';
 import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
 import UserId_To_Name from '../../departments/UserId_To_Name/UserId_To_Name';
-// import RequestMessage from './RequestMessage/RequestMessage';
+import SerialNumber_To_Barcode from '../../assets/SerialNumber_To_Barcode/SerialNumber_To_Barcode';
+import useAxiosPublic from '@/hooks/useAxiosPublic';
+import { useSession } from 'next-auth/react';
+import { useToast } from '@/hooks/useToast';
 
 
 // Date formatter function
@@ -45,6 +54,11 @@ const formatDate = (dateString) => {
 };
 
 const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
+  const axiosPublic = useAxiosPublic();
+
+  // Toast
+  const { success, error, confirm } = useToast();
+
   // Helper function to get request type icon
   const getRequestTypeIcon = (type) => {
     const iconMap = {
@@ -98,6 +112,41 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
     return labelMap[type] || type;
   };
 
+  const handleDeleteRequest = async (request) => {
+    if (!request || !request?._id) {
+      console.error("Invalid request data for deletion.");
+      return;
+    }
+
+    // Confirm deletion
+    const isConfirmed = await confirm(
+      "Delete Request",
+      "This Will Permanently Delete The Request. Are You Sure?",
+      "Yes, Delete It",
+      "Cancel",
+      "#dc2626",
+      "#6b7280"
+    )
+
+    // If confirmed, delete the request
+    if (!isConfirmed) return;
+
+    // Delete request API call
+    try {
+      await axiosPublic.delete(`/requests/${request?._id}`);
+      success("Request deleted successfully.");
+      RefetchAll();
+    } catch (err) {
+      console.error("Error deleting request:", err);
+      error("Failed to delete request.", err.response?.data?.message || err.message);
+    }
+  }
+
+  const handleRequestAction = (request, action) => {
+    // Implement accept/reject request logic here
+    console.log(`${action} request:`, request);
+  }
+
   return (
     <div className='space-y-4 mb-2'>
       <div
@@ -145,17 +194,16 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
                 <div className="flex items-center gap-2">
                   {/* Accept Button */}
                   <Shared_Button
-                    onClick={() => handleRequestAction(request._id, 'approved')}
-                    className="!px-4 !h-10 bg-green-600 hover:bg-green-700 border-0"
+                    onClick={() => handleRequestAction(myRequests, 'approved')}
+                    className="bg-green-600 hover:bg-green-700 border-0"
                     title="Accept Request"
                   >
                     <IoCheckmark className="text-lg mr-2" /> Accept
                   </Shared_Button>
                   {/* Reject Button */}
                   <Shared_Button
-                    onClick={() => handleRequestAction(myRequests._id, 'rejected')}
+                    onClick={() => handleRequestAction(myRequests, 'rejected')}
                     variant="danger"
-                    className="!px-4 !h-10"
                     title="Reject Request"
                   >
                     <IoClose className="text-lg mr-2" /> Reject
@@ -167,8 +215,8 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
             {myRequests?.participants?.requestedById === UserId &&
               myRequests?.metadata?.status === 'pending' && (
                 <Shared_Button
-                  onClick={() => handleDeleteRequest(request)}
-                  className="!px-4 !h-10 bg-gray-600 hover:bg-gray-700 border-0"
+                  onClick={() => handleDeleteRequest(myRequests)}
+                  className="bg-gray-600 hover:bg-gray-700 border-0"
                   title="Delete Request"
                 >
                   <IoTrashOutline className="text-lg mr-2" /> Delete
@@ -190,7 +238,15 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
               {UserId === myRequests?.participants?.requestedById ? (
                 // Message for the person who created the request (requestedById)
                 <span className='text-sm text-gray-600'>
-                  Waiting for <UserId_To_Name userId={myRequests?.participants?.requestedToId} /> to respond to your request
+                  Waiting for   {(() => {
+                    const requestedToId = myRequests?.participants?.requestedToId;
+
+                    if (requestedToId === '-' || !requestedToId) {
+                      return <span className='font-semibold' >Manager</span>;
+                    }
+
+                    return <UserId_To_Name userId={requestedToId} />;
+                  })()} to respond to your request
                 </span>
               ) : UserId === myRequests?.participants?.requestedToId ? (
                 // Message for the person the request is addressed to (requestedToId)
@@ -200,13 +256,22 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
               ) : (
                 // Message for other users (managers/admins viewing)
                 <span className='text-sm text-gray-600'>
-                  Request is pending action from <UserId_To_Name userId={myRequests?.participants?.requestedToId} />
+                  Request is pending action from   {(() => {
+                    const requestedToId = myRequests?.participants?.requestedToId;
+
+                    if (requestedToId === '-' || !requestedToId) {
+                      return <span className='font-bold' >Manager</span>;
+                    }
+
+                    return <UserId_To_Name userId={requestedToId} />;
+                  })()}
                 </span>
               )}
             </div>
           </div>
         </div>
 
+        {/* Additional Information */}
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100'>
           {/* Asset Name */}
           <div className='flex items-center gap-2' >
@@ -252,8 +317,8 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
             </h4>
           </div>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 };
 

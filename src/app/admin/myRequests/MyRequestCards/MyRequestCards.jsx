@@ -6,30 +6,93 @@ import { useEffect, useState } from "react";
 
 // Icons 
 import {
-  IoFolderOpenOutline,
-  IoPersonAddOutline,
-  IoDocumentTextOutline,
-  IoReturnDownBackOutline,
+  IoTrashOutline,
   IoBuildOutline,
-  IoCloseCircleOutline,
   IoRepeatOutline,
   IoCreateOutline,
-  IoTrashOutline,
+  IoPersonAddOutline,
+  IoFolderOpenOutline,
+  IoCloseCircleOutline,
+  IoDocumentTextOutline,
+  IoReturnDownBackOutline,
 } from "react-icons/io5";
 
 const MyRequestCards = ({ RequestCounts }) => {
 
   // Cards Data
   const cards = [
-    { label: "All Requests", key: "all", value: RequestCounts?.total || 0, icon: IoFolderOpenOutline, iconBg: "bg-gradient-to-tr from-slate-200 to-slate-400", iconColor: "text-slate-800" },
-    { label: "Assign Assets Request", key: "assign", value: RequestCounts?.detailed.assign || 0, icon: IoPersonAddOutline, iconBg: "bg-gradient-to-tr from-blue-200 to-blue-400", iconColor: "text-blue-800" },
-    { label: "Request Assets Request", key: "request", value: RequestCounts?.detailed.request || 0, icon: IoDocumentTextOutline, iconBg: "bg-gradient-to-tr from-green-200 to-green-400", iconColor: "text-green-800" },
-    { label: "Return Assets Request", key: "return", value: RequestCounts?.detailed.return || 0, icon: IoReturnDownBackOutline, iconBg: "bg-gradient-to-tr from-yellow-200 to-yellow-400", iconColor: "text-yellow-800" },
-    { label: "Repair Assets Request", key: "repair", value: RequestCounts?.detailed.repair || 0, icon: IoBuildOutline, iconBg: "bg-gradient-to-tr from-orange-200 to-orange-400", iconColor: "text-orange-800" },
-    { label: "Retire Assets Request", key: "retire", value: RequestCounts?.detailed.retire || 0, icon: IoCloseCircleOutline, iconBg: "bg-gradient-to-tr from-red-200 to-red-400", iconColor: "text-red-800" },
-    { label: "Transfer Assets Request", key: "transfer", value: RequestCounts?.detailed.transfer || 0, icon: IoRepeatOutline, iconBg: "bg-gradient-to-tr from-purple-200 to-purple-400", iconColor: "text-purple-800" },
-    { label: "Update Assets Request", key: "update", value: RequestCounts?.detailed.update || 0, icon: IoCreateOutline, iconBg: "bg-gradient-to-tr from-teal-200 to-teal-400", iconColor: "text-teal-800" },
-    { label: "Dispose Assets Request", key: "dispose", value: RequestCounts?.detailed.dispose || 0, icon: IoTrashOutline, iconBg: "bg-gradient-to-tr from-gray-200 to-gray-400", iconColor: "text-gray-800" },
+    {
+      label: "All Requests",
+      key: "all",
+      value: RequestCounts?.total || 0,
+      icon: IoFolderOpenOutline,
+      iconBg: "bg-gradient-to-tr from-slate-200 to-slate-400",
+      iconColor: "text-slate-800"
+    },
+    {
+      label: "Assign Assets Request",
+      key: "assign",
+      value: RequestCounts?.detailed.assign || 0,
+      icon: IoPersonAddOutline,
+      iconBg: "bg-gradient-to-tr from-blue-200 to-blue-400",
+      iconColor: "text-blue-800"
+    },
+    {
+      label: "Request Assets Request",
+      key: "request",
+      value: RequestCounts?.detailed.request || 0,
+      icon: IoDocumentTextOutline,
+      iconBg: "bg-gradient-to-tr from-green-200 to-green-400",
+      iconColor: "text-green-800"
+    },
+    {
+      label: "Return Assets Request",
+      key: "return",
+      value: RequestCounts?.detailed.return || 0,
+      icon: IoReturnDownBackOutline,
+      iconBg: "bg-gradient-to-tr from-yellow-200 to-yellow-400",
+      iconColor: "text-yellow-800"
+    },
+    {
+      label: "Repair Assets Request",
+      key: "repair",
+      value: RequestCounts?.detailed.repair || 0,
+      icon: IoBuildOutline,
+      iconBg: "bg-gradient-to-tr from-orange-200 to-orange-400",
+      iconColor: "text-orange-800"
+    },
+    {
+      label: "Retire Assets Request",
+      key: "retire",
+      value: RequestCounts?.detailed.retire || 0,
+      icon: IoCloseCircleOutline,
+      iconBg: "bg-gradient-to-tr from-red-200 to-red-400",
+      iconColor: "text-red-800"
+    },
+    {
+      label: "Transfer Assets Request",
+      key: "transfer",
+      value: RequestCounts?.detailed.transfer || 0,
+      icon: IoRepeatOutline,
+      iconBg: "bg-gradient-to-tr from-purple-200 to-purple-400",
+      iconColor: "text-purple-800"
+    },
+    {
+      label: "Update Assets Request",
+      key: "update",
+      value: RequestCounts?.detailed.update || 0,
+      icon: IoCreateOutline,
+      iconBg: "bg-gradient-to-tr from-teal-200 to-teal-400",
+      iconColor: "text-teal-800"
+    },
+    {
+      label: "Dispose Assets Request",
+      key: "dispose",
+      value: RequestCounts?.detailed.dispose || 0,
+      icon: IoTrashOutline,
+      iconBg: "bg-gradient-to-tr from-gray-200 to-gray-400",
+      iconColor: "text-gray-800"
+    },
   ];
 
   // Animated Counts

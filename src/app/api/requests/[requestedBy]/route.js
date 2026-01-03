@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
+import { ObjectId } from "mongodb";
 
 export async function GET(request, context) {
   try {
@@ -195,6 +196,50 @@ export async function GET(request, context) {
     );
   } catch (error) {
     console.error("GET /api/requests/[requestedBy] error:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE : deleted a request by its ID
+export async function DELETE(request, context) {
+  try {
+    const { requestedBy } = await context.params;
+
+    // Validate requestedBy as a valid ObjectId
+    if (!requestedBy || !ObjectId.isValid(requestedBy)) {
+      return NextResponse.json(
+        { success: false, message: "Valid request ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Connect to MongoDB
+    const db = await connectDB();
+    const requestsCollection = db.collection("requests");
+
+    // Delete the request
+    const result = await requestsCollection.deleteOne({
+      _id: new ObjectId(requestedBy),
+    });
+
+    // Check if a request was deleted
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "Request not found" },
+        { status: 404 }
+      );
+    }
+
+    // Return success response
+    return NextResponse.json(
+      { success: true, message: "Request deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("DELETE /api/requests/[id] error:", error);
     return NextResponse.json(
       { success: false, message: "Internal server error" },
       { status: 500 }
