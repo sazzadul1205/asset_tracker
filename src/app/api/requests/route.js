@@ -24,15 +24,11 @@ export async function POST(req) {
       "description",
       "expectedCompletion",
       "participants",
-      "metadata",
     ];
 
     for (const field of requiredTop) {
       if (!(field in body)) {
-        return NextResponse.json(
-          { success: false, error: `Missing field: ${field}` },
-          { status: 400 }
-        );
+        return bad(`Missing field: ${field}`);
       }
     }
 
@@ -40,10 +36,7 @@ export async function POST(req) {
     const allowedTopKeys = new Set(requiredTop);
     for (const key of Object.keys(body)) {
       if (!allowedTopKeys.has(key)) {
-        return NextResponse.json(
-          { success: false, error: `Unexpected field: ${key}` },
-          { status: 400 }
-        );
+        return bad(`Unexpected field: ${key}`);
       }
     }
 
@@ -51,11 +44,8 @@ export async function POST(req) {
     // FIELD TYPE VALIDATION
     // -------------------------------
     if (!isString(body.assetId)) return bad("assetId must be a string");
-
     if (!isString(body.type)) return bad("type must be a string");
-
     if (!isString(body.priority)) return bad("priority must be a string");
-
     if (!isString(body.description)) return bad("description must be a string");
 
     const expectedCompletion = new Date(body.expectedCompletion);
@@ -89,36 +79,10 @@ export async function POST(req) {
     }
 
     // -------------------------------
-    // METADATA VALIDATION
+    // FINAL DOCUMENT (SERVER AUTHORITY)
     // -------------------------------
-    const metadata = body.metadata;
-    const requiredMetadata = ["createdAt", "updatedAt", "status"];
+    const now = new Date();
 
-    if (typeof metadata !== "object" || metadata === null)
-      return bad("metadata must be an object");
-
-    const createdAt = new Date(metadata.createdAt);
-    const updatedAt = new Date(metadata.updatedAt);
-
-    if (!isDate(createdAt))
-      return bad("metadata.createdAt must be a valid date");
-
-    if (!isDate(updatedAt))
-      return bad("metadata.updatedAt must be a valid date");
-
-    if (!isString(metadata.status))
-      return bad("metadata.status must be a string");
-
-    // Reject extra metadata fields
-    for (const key of Object.keys(metadata)) {
-      if (!requiredMetadata.includes(key)) {
-        return bad(`Unexpected metadata field: ${key}`);
-      }
-    }
-
-    // -------------------------------
-    // FINAL DOCUMENT (SAFE)
-    // -------------------------------
     const requestDoc = {
       assetId: body.assetId,
       type: body.type,
@@ -131,9 +95,9 @@ export async function POST(req) {
         departmentId: participants.departmentId,
       },
       metadata: {
-        createdAt,
-        updatedAt,
-        status: metadata.status,
+        createdAt: now,
+        updatedAt: now,
+        status: "pending",
       },
     };
 
@@ -152,7 +116,9 @@ export async function POST(req) {
   }
 }
 
-// Small helper for clean errors
+// -------------------------------
+// Helper
+// -------------------------------
 function bad(message) {
   return NextResponse.json({ success: false, error: message }, { status: 400 });
 }
