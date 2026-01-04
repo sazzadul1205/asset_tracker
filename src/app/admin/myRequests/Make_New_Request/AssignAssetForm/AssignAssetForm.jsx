@@ -59,25 +59,19 @@ const AssignAssetForm = ({
     setLoading(true);
 
     try {
+      // Prepare payload
       const payload = {
         assetId: data.assetId,
         type: "assign",
         priority: data.priority || "medium",
         description: data.description || "",
         expectedCompletion: data.expectedCompletion
-          ? new Date(data.expectedCompletion)
-          : new Date(),
-
+          ? new Date(data.expectedCompletion).toISOString()
+          : new Date().toISOString(),
         participants: {
           requestedById: session?.user?.userId || "system",
-          requestedToId: data.requestedToId,
+          requestedToId: data?.requestedToId || "-",
           departmentId: session?.user?.departmentId || "unassigned",
-        },
-
-        metadata: {
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          status: "pending",
         },
       };
 

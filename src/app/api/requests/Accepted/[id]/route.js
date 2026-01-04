@@ -76,6 +76,20 @@ export async function PUT(req, context) {
 
       switch (request.type) {
         // Request Type "Assign"
+        case "assign":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "assigned.assignedTo": assignedBy,
+                "assigned.assignedBy": requestedBy,
+                "assigned.assignedAt": assignedAt,
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
+        // Request Type "Request"
         case "request":
           updatedAsset = await assetsCollection.findOneAndUpdate(
             { "identification.tag": assetId },
@@ -89,11 +103,44 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
+        // Request Type "Request"
+        case "return":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "assigned.assignedTo": null,
+                "assigned.assignedBy": null,
+                "assigned.assignedAt": assignedAt,
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
+        // Request Type "Repair"
+        case "repair":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "assigned.assignedTo": null,
+                "assigned.assignedBy": null,
+                "assigned.assignedAt": assignedAt,
+                "details.status": "under_maintenance",
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
 
         // If No Matching Case
         default:
-          console.log(
-            `[INFO] Request type "${request.type}" does not update asset assignment.`
+          NextResponse.json(
+            {
+              success: false,
+              message: `Invalid request type: ${request.type}`,
+            },
+            { status: 400 }
           );
           updatedAsset = null;
       }
