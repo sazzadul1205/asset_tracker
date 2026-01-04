@@ -182,6 +182,7 @@ const MyRequestPage = () => {
             <MyRequestsList
               key={request._id}
               myRequests={request}
+              RefetchAll={RefetchAll}
               UserId={session?.user?.userId}
               UserRole={session?.user?.role}
             />

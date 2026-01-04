@@ -24,8 +24,9 @@ import {
 import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
 import UserId_To_Name from '../../departments/UserId_To_Name/UserId_To_Name';
 import SerialNumber_To_Barcode from '../../assets/SerialNumber_To_Barcode/SerialNumber_To_Barcode';
+
+// Hooks
 import useAxiosPublic from '@/hooks/useAxiosPublic';
-import { useSession } from 'next-auth/react';
 import { useToast } from '@/hooks/useToast';
 
 
@@ -53,7 +54,12 @@ const formatDate = (dateString) => {
   }
 };
 
-const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
+const MyRequestsList = ({
+  UserId,
+  UserRole,
+  RefetchAll,
+  myRequests,
+}) => {
   const axiosPublic = useAxiosPublic();
 
   // Toast
@@ -142,9 +148,34 @@ const MyRequestsList = ({ myRequests, UserId, UserRole }) => {
     }
   }
 
-  const handleRequestAction = (request, action) => {
-    // Implement accept/reject request logic here
-    console.log(`${action} request:`, request);
+  const handleRequestAction = async (request, action) => {
+    if (!request || !request?._id) {
+      console.error("Invalid request data for action.");
+      return;
+    }
+
+    if (action === 'rejected') {
+      try {
+        await axiosPublic.put(`/requests/Rejected/${request?._id}`);
+
+        success("Request rejected successfully.");
+        RefetchAll();
+      } catch (err) {
+        console.error("Error rejecting request:", err);
+        error("Failed to reject request.", err.response?.data?.message || err.message);
+      }
+    } else if (action === 'approved') {
+      try {
+        await axiosPublic.put(`/requests/Accepted/${request?._id}`);
+
+        success("Request accepted successfully.");
+        RefetchAll();
+
+      } catch (err) {
+        console.error("Error accepting request:", err);
+        error("Failed to accept request.", err.response?.data?.message || err.message);
+      }
+    }
   }
 
   return (

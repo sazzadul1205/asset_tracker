@@ -143,6 +143,7 @@ const MyRequestPage = () => {
     isAssignedError || isMyAssetsError || isUnassignedError || isMyRequestsError || isUserOptionsError
   } />;
 
+  // Refetch All
   const RefetchAll = () => {
     refetchAssignedAssets();
     refetchMyAssets();
@@ -183,6 +184,7 @@ const MyRequestPage = () => {
             <MyRequestsList
               key={request._id}
               myRequests={request}
+              RefetchAll={RefetchAll}
               UserId={session?.user?.userId}
               UserRole={session?.user?.role}
             />
@@ -213,8 +215,8 @@ const MyRequestPage = () => {
         <Make_New_Request
           session={session}
           myAssets={myAssets}
-          userOptions={userOptions}
           RefetchAll={RefetchAll}
+          userOptions={userOptions}
           assignedAssets={assignedAssets}
           unassignedAssets={unassignedAssets}
         />
