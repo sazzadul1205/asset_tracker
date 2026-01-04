@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 // Icons
 import {
@@ -64,6 +64,9 @@ const MyRequestsList = ({
 
   // Toast
   const { success, error, confirm } = useToast();
+
+  // Loading state
+  const [loading, setLoading] = useState(false);
 
   // Helper function to get request type icon
   const getRequestTypeIcon = (type) => {
@@ -148,35 +151,38 @@ const MyRequestsList = ({
     }
   }
 
-  const handleRequestAction = async (request, action) => {
-    if (!request || !request?._id) {
+  // Handle Accept/Reject Actions
+  const handleRequestAction = async (request, action, UserId) => {
+    if (!request?._id) {
       console.error("Invalid request data for action.");
       return;
     }
 
-    if (action === 'rejected') {
-      try {
-        await axiosPublic.put(`/requests/Rejected/${request?._id}`);
-
-        success("Request rejected successfully.");
-        RefetchAll();
-      } catch (err) {
-        console.error("Error rejecting request:", err);
-        error("Failed to reject request.", err.response?.data?.message || err.message);
-      }
-    } else if (action === 'approved') {
-      try {
-        await axiosPublic.put(`/requests/Accepted/${request?._id}`);
-
-        success("Request accepted successfully.");
-        RefetchAll();
-
-      } catch (err) {
-        console.error("Error accepting request:", err);
-        error("Failed to accept request.", err.response?.data?.message || err.message);
-      }
+    if (!UserId) {
+      console.error("No UserId found. User must be logged in.");
+      return;
     }
-  }
+
+    setLoading(true); // start loading
+    const payload = { UserId };
+
+    try {
+      if (action === "rejected") {
+        await axiosPublic.put(`/requests/Rejected/${request._id}`, payload);
+        success("Request rejected successfully.");
+      } else if (action === "approved") {
+        await axiosPublic.put(`/requests/Accepted/${request._id}`, payload);
+        success("Request accepted successfully.");
+      }
+
+      RefetchAll();
+    } catch (err) {
+      console.error(`Error ${action} request:`, err);
+      error(`Failed to ${action} request.`, err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false); // stop loading
+    }
+  };
 
   return (
     <div className='space-y-4 mb-2'>
@@ -220,24 +226,40 @@ const MyRequestsList = ({
             1. I'm the requestedToId AND status is pending
             2. I'm a manager OR admin
             */}
-            {(myRequests?.participants?.requestedToId === UserId || UserRole === 'manager' || UserRole === 'admin') &&
-              myRequests?.metadata?.status === 'pending' && (
+            {(myRequests?.participants?.requestedToId === UserId ||
+              UserRole === "manager" || UserRole === "admin") &&
+              myRequests?.metadata?.status === "pending" && (
                 <div className="flex items-center gap-2">
                   {/* Accept Button */}
                   <Shared_Button
-                    onClick={() => handleRequestAction(myRequests, 'approved')}
-                    className="bg-green-600 hover:bg-green-700 border-0"
+                    onClick={() => handleRequestAction(myRequests, "approved", UserId)}
+                    className="bg-green-600 hover:bg-green-700 border-0 flex items-center justify-center"
                     title="Accept Request"
+                    disabled={loading}
                   >
-                    <IoCheckmark className="text-lg mr-2" /> Accept
+                    {loading ? (
+                      <span className="text-sm">Processing…</span>
+                    ) : (
+                      <>
+                        <IoCheckmark className="text-lg mr-2" /> Accept
+                      </>
+                    )}
                   </Shared_Button>
+
                   {/* Reject Button */}
                   <Shared_Button
-                    onClick={() => handleRequestAction(myRequests, 'rejected')}
+                    onClick={() => handleRequestAction(myRequests, "rejected", UserId)}
                     variant="danger"
                     title="Reject Request"
+                    disabled={loading}
                   >
-                    <IoClose className="text-lg mr-2" /> Reject
+                    {loading ? (
+                      <span className="text-sm">Processing…</span>
+                    ) : (
+                      <>
+                        <IoClose className="text-lg mr-2" /> Reject
+                      </>
+                    )}
                   </Shared_Button>
                 </div>
               )}

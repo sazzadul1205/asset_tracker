@@ -37,8 +37,6 @@ const publicPaths = [
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  console.log(`🛡️  Middleware checking: ${pathname}`);
-
   // 1. Skip public paths (including API routes for now)
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
@@ -55,13 +53,8 @@ export async function middleware(req) {
     secureCookie: process.env.NODE_ENV === "production",
   });
 
-  console.log("🔑 Token exists:", !!token);
-  console.log("🔑 Token role:", token?.role);
-  console.log("🔑 Full token keys:", token ? Object.keys(token) : "No token");
-
   // 3. No token → redirect to login
   if (!token) {
-    console.log("❌ No token found, redirecting to login");
     const loginUrl = new URL("/auth/login", req.url);
     loginUrl.searchParams.set("callbackUrl", encodeURIComponent(req.url));
     loginUrl.searchParams.set("from", pathname);
@@ -74,14 +67,8 @@ export async function middleware(req) {
   const tokenRole = token.role || "";
   const userRole = tokenRole.toLowerCase();
 
-  console.log(`👤 User role (from token): ${tokenRole}`);
-  console.log(`👤 User role (normalized): ${userRole}`);
-
   // 5. First, handle the root path "/"
   if (pathname === "/") {
-    console.log(
-      `🏠 Root path detected, redirecting based on role: ${userRole}`
-    );
     const dashboardUrl = getDashboardUrlByRole(userRole);
     return NextResponse.redirect(new URL(dashboardUrl, req.url));
   }
@@ -100,21 +87,12 @@ export async function middleware(req) {
   if (routeAccess) {
     const allowedRoles = routeAccess.roles; // Already lowercase
 
-    console.log(`🛡️  Protected route: ${routeAccess.path}`);
-    console.log(`🛡️  Allowed roles:`, allowedRoles);
-    console.log(`🛡️  User role: ${userRole}`);
-
     if (!allowedRoles.includes(userRole)) {
-      console.log(`⛔ Access denied! ${userRole} cannot access ${pathname}`);
-
       // Redirect to appropriate dashboard
       const redirectUrl = getDashboardUrlByRole(userRole);
-      console.log(`↪️ Redirecting to: ${redirectUrl}`);
 
       return NextResponse.redirect(new URL(redirectUrl, req.url));
     }
-
-    console.log(`✅ Access granted to ${pathname}`);
   }
 
   // 8. Allow access to /dashboard for all authenticated users

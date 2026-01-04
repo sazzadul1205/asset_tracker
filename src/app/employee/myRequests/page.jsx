@@ -178,15 +178,21 @@ const MyRequestPage = () => {
       {/* My Requests */}
       {myRequests?.data?.length > 0 ? (
         <div className="p-5 space-y-3">
-          {myRequests.data.map((request) => (
-            <MyRequestsList
-              key={request._id}
-              myRequests={request}
-              RefetchAll={RefetchAll}
-              UserId={session?.user?.userId}
-              UserRole={session?.user?.role}
-            />
-          ))}
+          {[...myRequests.data]
+            .sort(
+              (a, b) =>
+                new Date(b.metadata.createdAt) -
+                new Date(a.metadata.createdAt)
+            )
+            .map((request) => (
+              <MyRequestsList
+                key={request._id}
+                myRequests={request}
+                RefetchAll={RefetchAll}
+                UserId={session?.user?.userId}
+                UserRole={session?.user?.role}
+              />
+            ))}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center mt-16 text-center">

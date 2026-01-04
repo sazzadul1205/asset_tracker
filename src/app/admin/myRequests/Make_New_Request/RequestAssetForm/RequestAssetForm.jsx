@@ -53,31 +53,30 @@ const RequestAssetForm = ({
     setGlobalError("");
 
     try {
+
+      // Prepare payload
       const payload = {
         assetId: data.assetId,
-        type: "request", // key change
+        type: "request",
         priority: data.priority || "medium",
         description: data.description || "",
         expectedCompletion: data.expectedCompletion
           ? new Date(data.expectedCompletion).toISOString()
           : new Date().toISOString(),
-
         participants: {
           requestedById: session?.user?.userId || "system",
           requestedToId: data?.requestedToId || "-",
           departmentId: session?.user?.departmentId || "unassigned",
         },
-
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          status: "pending",
-        },
       };
 
+      // API call to create the request
       const result = await axiosPublic.post("/requests", payload);
 
+      // Success handling
       success(result.data.message || "Asset request created successfully!");
+      console.log(result?.data);
+
       RefetchAll();
       handleClose();
     } catch (error) {
