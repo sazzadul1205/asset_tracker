@@ -226,9 +226,18 @@ const MyRequestsList = ({
             1. I'm the requestedToId AND status is pending
             2. I'm a manager OR admin
             */}
-            {(myRequests?.participants?.requestedToId === UserId ||
-              UserRole === "manager" || UserRole === "admin") &&
-              myRequests?.metadata?.status === "pending" && (
+            {myRequests?.metadata?.status === "pending" && (() => {
+              const isTransfer = myRequests?.type === "transfer";
+              const isRequestedTo = myRequests?.participants?.requestedToId === UserId;
+              const isManagerOrAdmin = UserRole === "manager" || UserRole === "admin";
+
+              // 🚫 Transfer: only requestedToId can act
+              if (isTransfer && !isRequestedTo) return null;
+
+              // 🚫 Non-transfer: block if no permission
+              if (!isTransfer && !(isRequestedTo || isManagerOrAdmin)) return null;
+
+              return (
                 <div className="flex items-center gap-2">
                   {/* Accept Button */}
                   <Shared_Button
@@ -262,7 +271,9 @@ const MyRequestsList = ({
                     )}
                   </Shared_Button>
                 </div>
-              )}
+              );
+            })()}
+
 
             {/* Delete Button: Show if I'm the requestedById AND status is pending */}
             {myRequests?.participants?.requestedById === UserId &&

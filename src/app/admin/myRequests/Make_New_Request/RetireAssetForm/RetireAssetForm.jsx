@@ -67,12 +67,6 @@ const RetireAssetForm = ({
           requestedToId: data?.requestedToId || "-",
           departmentId: session?.user?.departmentId || "unassigned",
         },
-
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          status: "pending",
-        },
       };
 
       const result = await axiosPublic.post("/requests", payload);

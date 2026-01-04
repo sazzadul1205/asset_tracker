@@ -73,12 +73,6 @@ const TransferAssetForm = ({
           requestedToId: data.requestedToId,
           departmentId: session?.user?.departmentId || "unassigned",
         },
-
-        metadata: {
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          status: "pending",
-        },
       };
 
       // Axios POST request

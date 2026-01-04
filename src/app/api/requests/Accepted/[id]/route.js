@@ -132,6 +132,63 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
+        // Request Type "Retire"
+        case "retire":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "assigned.assignedTo": null,
+                "assigned.assignedBy": null,
+                "assigned.assignedAt": assignedAt,
+                "details.status": "retired",
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
+        // Request Type "Transfer"
+        case "transfer":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "assigned.assignedTo": assignedBy,
+                "assigned.assignedBy": requestedBy,
+                "assigned.assignedAt": assignedAt,
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
+        // Request Type "Update"
+        case "update":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "details.status": "update_pending",
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
+
+        // Request Type "Update"
+        case "update":
+          updatedAsset = await assetsCollection.findOneAndUpdate(
+            { "identification.tag": assetId },
+            {
+              $set: {
+                "assigned.assignedTo": null,
+                "assigned.assignedBy": null,
+                "assigned.assignedAt": null,
+                "details.status": "pending_disposal",
+              },
+            },
+            { session, returnDocument: "after" }
+          );
+          break;
 
         // If No Matching Case
         default:
