@@ -103,8 +103,8 @@ const AdminLayout = ({ children }) => {
   return (
     <SessionProvider>
       <div className="flex min-h-screen bg-linear-to-tr from-gray-100 via-white to-gray-200">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-2xl border-r border-gray-100 flex flex-col justify-between">
+        {/* Sidebar - Fixed Position */}
+        <aside className="w-64 bg-white shadow-2xl border-r border-gray-100 flex flex-col justify-between fixed h-screen overflow-y-auto">
           {/* Top Section */}
           <div>
             {/* Logo */}
@@ -123,10 +123,10 @@ const AdminLayout = ({ children }) => {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-4 px-4 py-2  font-medium text-md rounded-xl cursor-pointer transition-colors
-                      ${pathname === item.href
+                    className={`flex items-center gap-4 px-4 py-2 font-medium text-md rounded-xl cursor-pointer transition-colors
+                ${pathname === item.href
                         ? "bg-blue-100 text-blue-600"
-                        : "hover:bg-blue-50 hover:text-blue-600 "
+                        : "hover:bg-blue-50 hover:text-blue-600"
                       }`}
                   >
                     {item.icon}
@@ -159,7 +159,7 @@ const AdminLayout = ({ children }) => {
                     <Link
                       href={item.href}
                       className={`flex items-center gap-3 rounded-xl py-2.5 px-3 transition-colors 
-                      ${isActive
+                ${isActive
                           ? "bg-blue-100 text-blue-700 font-semibold"
                           : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
                         }`}
@@ -174,8 +174,8 @@ const AdminLayout = ({ children }) => {
           </ul>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Main Content - Offset by sidebar width */}
+        <main className="flex-1 flex flex-col overflow-hidden ml-64">
           {/* Navbar */}
           <Navbar />
 
