@@ -7,6 +7,12 @@ import { ObjectId } from "mongodb";
 export async function GET(request, context) {
   try {
     const { requestedBy } = await context.params;
+    const { searchParams } = new URL(request.url);
+
+    // Pagination params
+    const page = Math.max(parseInt(searchParams.get("page")) || 1, 1);
+    const limit = Math.min(parseInt(searchParams.get("limit")) || 10, 50);
+    const skip = (page - 1) * limit;
 
     if (!requestedBy) {
       return NextResponse.json(
@@ -81,24 +87,41 @@ export async function GET(request, context) {
     }
 
     /* --------------------------------
-       3. Fetch requests without duplicates
+       3. Create deduplication pipeline for counts
     -------------------------------- */
-    const requests = await requestsCollection
-      .aggregate([
-        { $match: query },
-        { $sort: { "metadata.createdAt": -1 } },
-        {
-          $group: {
-            _id: "$_id", // unique by request ID
-            doc: { $first: "$$ROOT" },
-          },
+    const dedupePipeline = [
+      { $match: query },
+      { $sort: { "metadata.createdAt": -1 } },
+      {
+        $group: {
+          _id: "$_id",
+          doc: { $first: "$$ROOT" },
         },
-        { $replaceRoot: { newRoot: "$doc" } },
-      ])
-      .toArray();
+      },
+      { $replaceRoot: { newRoot: "$doc" } },
+    ];
 
     /* --------------------------------
-       4. Fetch only asset name and serial number
+       4. Get paginated data AND total count in parallel
+    -------------------------------- */
+    const [paginatedPipeline, totalCountPipeline] = await Promise.all([
+      // Paginated data pipeline
+      requestsCollection
+        .aggregate([...dedupePipeline, { $skip: skip }, { $limit: limit }])
+        .toArray(),
+
+      // Total count pipeline
+      requestsCollection
+        .aggregate([...dedupePipeline, { $count: "total" }])
+        .toArray(),
+    ]);
+
+    const requests = paginatedPipeline;
+    const totalItems = totalCountPipeline[0]?.total || 0;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    /* --------------------------------
+       5. Fetch only asset name and serial number
     -------------------------------- */
     const requestsWithAssetInfo = await Promise.all(
       requests.map(async (request) => {
@@ -113,6 +136,8 @@ export async function GET(request, context) {
                 _id: 0,
                 "identification.name": 1,
                 "details.serialNumber": 1,
+                "details.status": 1,
+                "details.condition": 1,
               },
             }
           );
@@ -121,6 +146,8 @@ export async function GET(request, context) {
             assetInfo = {
               name: asset.identification.name,
               serialNumber: asset.details.serialNumber,
+              status: asset.details.status,
+              condition: asset.details.condition,
             };
           }
         }
@@ -134,10 +161,10 @@ export async function GET(request, context) {
     );
 
     /* --------------------------------
-       5. Calculate request counts by type
+       6. Calculate request counts by type (WITH deduplication)
     -------------------------------- */
     const countPipeline = [
-      { $match: query },
+      ...dedupePipeline,
       {
         $group: {
           _id: "$type",
@@ -183,7 +210,7 @@ export async function GET(request, context) {
     };
 
     /* --------------------------------
-       6. Response
+       7. Response
     -------------------------------- */
     return NextResponse.json(
       {
@@ -191,6 +218,13 @@ export async function GET(request, context) {
         user: { userId: requestedBy, role, departmentId },
         data: requestsWithAssetInfo,
         counts: counts,
+        pagination: {
+          page,
+          limit,
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+        },
       },
       { status: 200 }
     );
