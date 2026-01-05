@@ -2,7 +2,9 @@
 "use client";
 
 // React Components
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 // Next Components
 import { useSession } from 'next-auth/react';
@@ -17,14 +19,14 @@ import { IoMdAdd } from 'react-icons/io';
 import Shared_Button from '@/Shared/Shared_Button/Shared_Button';
 
 // Component
+import MyRequestCards from './MyRequestCards/MyRequestCards';
+import MyRequestsList from './MyRequestsList/MyRequestsList';
 import Make_New_Request from './Make_New_Request/Make_New_Request';
+
 
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
-import { useQuery } from '@tanstack/react-query';
-import MyRequestCards from './MyRequestCards/MyRequestCards';
-import MyRequestsList from './MyRequestsList/MyRequestsList';
 
 const MyRequestPage = () => {
   const axiosPublic = useAxiosPublic();
@@ -102,21 +104,41 @@ const MyRequestPage = () => {
     keepPreviousData: true,
   });
 
-  // My Requests 
+  // My Requests with Infinite Loading
   const {
     data: myRequests,
     isLoading: isMyRequestsLoading,
     isError: isMyRequestsError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
     refetch: refetchMyRequests,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ["myRequests", session?.user?.userId],
-    queryFn: async () => {
-      const res = await axiosPublic.get(`/requests/${session?.user?.userId}`);
+    queryFn: async ({ pageParam = 1 }) => {
+      const res = await axiosPublic.get(`/requests/${session?.user?.userId}`, {
+        params: { page: pageParam, limit: 10 }
+      });
       return res.data;
+    },
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination || {};
+      return page < totalPages ? page + 1 : undefined;
     },
     enabled: !!session?.user?.userId,
     keepPreviousData: true,
   });
+
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, fetchNextPage, isFetchingNextPage]);
+
+  // Flatten all pages
+  const allRequests = myRequests?.pages?.flatMap(page => page.data) || [];
 
   // Handle loading
   if (
@@ -175,18 +197,13 @@ const MyRequestPage = () => {
       </div>
 
       {/* Request Cards */}
-      <MyRequestCards RequestCounts={myRequests?.counts} />
+      <MyRequestCards RequestCounts={myRequests?.pages[0]?.counts} />
 
-      {/* My Requests */}
-      {myRequests?.data?.length > 0 ? (
-        <div className="p-5 space-y-3">
-          {[...myRequests.data]
-            .sort(
-              (a, b) =>
-                new Date(b.metadata.createdAt) -
-                new Date(a.metadata.createdAt)
-            )
-            .map((request) => (
+      {/* My Requests with Infinite Scroll */}
+      <div className="space-y-3 px-5">
+        {allRequests.length > 0 ? (
+          <>
+            {allRequests.map((request) => (
               <MyRequestsList
                 key={request._id}
                 myRequests={request}
@@ -195,27 +212,38 @@ const MyRequestPage = () => {
                 UserRole={session?.user?.role}
               />
             ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center mt-16 text-center">
-          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
 
-            📭
+            {/* Load more trigger */}
+            <div ref={ref} className="py-4">
+              {isFetchingNextPage ? (
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              ) : hasNextPage ? (
+                <p className="text-center text-sm text-gray-500">Scroll down to load more</p>
+              ) : allRequests.length > 0 ? (
+                <p className="text-center text-sm text-gray-500">No more requests to load</p>
+              ) : null}
+            </div>
+          </>
+        ) : !isMyRequestsLoading ? (
+          <div className="flex flex-col items-center justify-center mt-16 text-center">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              📭
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">
+              No requests found
+            </h3>
+            <p className="text-sm text-gray-500 max-w-sm mt-1">
+              {session?.user?.role === "admin"
+                ? "There are no requests in the system yet."
+                : session?.user?.role === "manager"
+                  ? "No requests have been submitted in your department."
+                  : "You haven’t created or received any requests yet."}
+            </p>
           </div>
-
-          <h3 className="text-lg font-semibold text-gray-800">
-            No requests found
-          </h3>
-
-          <p className="text-sm text-gray-500 max-w-sm mt-1">
-            {session?.user?.role === "admin"
-              ? "There are no requests in the system yet."
-              : session?.user?.role === "manager"
-                ? "No requests have been submitted in your department."
-                : "You haven’t created or received any requests yet."}
-          </p>
-        </div>
-      )}
+        ) : null}
+      </div>
 
       {/* Add New Asset Modal */}
       <dialog id="Make_New_Request" className="modal">
