@@ -116,6 +116,140 @@ export async function POST(req) {
   }
 }
 
+// GET: Fetch requests with pagination, filtering, and asset details
+export async function GET(request) {
+  try {
+    const db = await connectDB();
+    const requestsCol = db.collection("requests");
+    const assetsCol = db.collection("assets");
+
+    const { searchParams } = new URL(request.url);
+
+    // Pagination (safe defaults)
+    const page = Math.max(parseInt(searchParams.get("page")) || 1, 1);
+    const limit = Math.min(parseInt(searchParams.get("limit")) || 10, 100);
+    const skip = (page - 1) * limit;
+
+    // Filters
+    const search = searchParams.get("search")?.trim();
+    const status = searchParams.get("status");
+    const type = searchParams.get("type");
+    const priority = searchParams.get("priority");
+    const assetId = searchParams.get("assetId");
+    const requestedById = searchParams.get("requestedById");
+    const requestedToId = searchParams.get("requestedToId");
+    const departmentId = searchParams.get("departmentId");
+
+    // Date range filters
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    // Build Mongo filter
+    const filters = {};
+
+    if (search) {
+      filters.$or = [
+        { description: { $regex: search, $options: "i" } },
+        { assetId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (status) filters["metadata.status"] = status;
+    if (type) filters.type = type;
+    if (priority) filters.priority = priority;
+    if (assetId) filters.assetId = assetId;
+    if (requestedById) filters["participants.requestedById"] = requestedById;
+    if (requestedToId) filters["participants.requestedToId"] = requestedToId;
+    if (departmentId) filters["participants.departmentId"] = departmentId;
+
+    if (startDate || endDate) {
+      filters["metadata.createdAt"] = {};
+      if (startDate) filters["metadata.createdAt"].$gte = new Date(startDate);
+      if (endDate) filters["metadata.createdAt"].$lte = new Date(endDate);
+    }
+
+    // Total count
+    const totalItems = await requestsCol.countDocuments(filters);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Fetch paginated requests
+    const requests = await requestsCol
+      .find(filters)
+      .sort({ "metadata.createdAt": -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    // Fetch asset details for each request
+    const requestsWithAssetDetails = await Promise.all(
+      requests.map(async (request) => {
+        try {
+          const asset = await assetsCol.findOne(
+            { "identification.tag": request.assetId },
+            {
+              projection: {
+                "identification.tag": 1,
+                "identification.name": 1,
+                "identification.categoryId": 1,
+                "details.serialNumber": 1,
+                "details.status": 1,
+                "details.condition": 1,
+                "purchase.location": 1,
+              },
+            }
+          );
+
+          return {
+            ...request,
+            assetDetails: asset
+              ? {
+                  tag: asset.identification.tag,
+                  name: asset.identification.name,
+                  categoryId: asset.identification.categoryId || null,
+                  serialNumber: asset.details?.serialNumber || null,
+                  status: asset.details?.status || null,
+                  condition: asset.details?.condition || null,
+                  location: asset.purchase?.location || null,
+                }
+              : null,
+          };
+        } catch (error) {
+          console.error(
+            `Error fetching asset for request ${request._id}:`,
+            error
+          );
+          return {
+            ...request,
+            assetDetails: null,
+          };
+        }
+      })
+    );
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: requestsWithAssetDetails,
+        pagination: {
+          page,
+          limit,
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("GET /api/requests error:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
 // -------------------------------
 // Helper
 // -------------------------------
