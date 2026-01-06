@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 import { ObjectId } from "mongodb";
 
+// GET : Fetch all requests
 export async function GET(request, context) {
   try {
     const { requestedBy } = await context.params;
@@ -56,7 +57,7 @@ export async function GET(request, context) {
     /* --------------------------------
        2. Build query based on role
     -------------------------------- */
-    if (role === "manager" && departmentId) {
+    if (role?.toLowerCase() === "manager" && departmentId) {
       // Manager → requests from department users
       const departmentUsers = await usersCollection
         .find(
