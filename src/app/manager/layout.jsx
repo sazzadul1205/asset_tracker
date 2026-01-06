@@ -9,9 +9,9 @@ import { SessionProvider } from 'next-auth/react';
 
 
 // Icons
-import {
-  MdOutlineDashboard, MdLogout, MdPersonOutline,
-} from "react-icons/md";
+import { MdOutlineDashboard, MdLogout, MdPersonOutline } from "react-icons/md";
+import { GrTransaction } from 'react-icons/gr';
+import { BiGroup } from "react-icons/bi";
 
 // Assets - Logo
 import Logo from "../../../public/Logo/Website_Logo.png";
@@ -25,7 +25,6 @@ import useAuth from '@/hooks/useAuth';
 
 // Components
 import Navbar from '@/Shared/Navbar/Navbar';
-import { GrTransaction } from 'react-icons/gr';
 
 
 const ManagerLayout = ({ children }) => {
@@ -54,6 +53,11 @@ const ManagerLayout = ({ children }) => {
       name: "Transactions",
       icon: <GrTransaction className="text-xl" />,
       href: "/manager/transactions",
+    },
+    {
+      name: "My Employees",
+      icon: <BiGroup className="text-xl" />,
+      href: "/manager/myEmployees",
     },
   ];
 
