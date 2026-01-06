@@ -113,6 +113,8 @@ const AssetsPage = () => {
 
   // Delete user (improved & safe)
   const handleDeleteAsset = async (asset) => {
+    console.log(asset?.identification?.tag);
+    
     if (!asset?.identification?.tag) {
       error("Invalid Asset", "Asset ID not found");
       return;

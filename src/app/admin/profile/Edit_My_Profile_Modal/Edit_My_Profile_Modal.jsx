@@ -228,7 +228,7 @@ const Edit_My_Profile_Modal = ({
               loading={isSubmitting || loading}
               minWidth="100px"
             >
-              Update Password
+              Update Profile
             </Shared_Button>
           </div>
         </form>

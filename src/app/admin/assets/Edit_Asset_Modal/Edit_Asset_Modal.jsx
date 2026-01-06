@@ -202,6 +202,7 @@ const Edit_Asset_Modal = ({
           rules={{ required: "Asset Tag is required" }}
           control={control}
           error={errors.identification?.tag}
+          disabled
         />
 
         {/* Serial Number */}

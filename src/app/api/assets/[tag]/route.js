@@ -70,14 +70,14 @@ export const GET = async (request, context) => {
 };
 
 //  PATCH Asset by identification.tag
-export const PATCH = async (request, context) => {
+export const PATCH = async (request, { params }) => {
   const client = await getMongoClient();
   const dbName = process.env.MONGODB_DB || "assets_tracker";
   const db = client.db(dbName);
   const session = client.startSession();
 
   try {
-    const { tag } = await context.params;
+    const { tag } = await params;
 
     if (!tag) {
       return NextResponse.json(
@@ -167,7 +167,7 @@ export const PATCH = async (request, context) => {
 //  DELETE Asset by identification.tag (soft delete)
 export async function DELETE(request, { params }) {
   try {
-    const { tag } = params;
+    const { tag } = await params;
 
     if (!tag) {
       return NextResponse.json(
