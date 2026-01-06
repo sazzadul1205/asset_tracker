@@ -25,9 +25,10 @@ import useAuth from '@/hooks/useAuth';
 
 // Components
 import Navbar from '@/Shared/Navbar/Navbar';
+import { GrTransaction } from 'react-icons/gr';
 
 
-const EmployeeLayout = ({ children }) => {
+const ManagerLayout = ({ children }) => {
   // Hooks
   const { logout } = useAuth();
   const pathname = usePathname();
@@ -37,18 +38,23 @@ const EmployeeLayout = ({ children }) => {
     {
       name: "Dashboard",
       icon: <MdOutlineDashboard className="text-xl" />,
-      href: "/employee/dashboard",
+      href: "/manager/dashboard",
     },
     {
       name: "My Assets",
       icon: <MyAssetsIcon className="w-5 h-5" />,
-      href: "/employee/myAssets",
+      href: "/manager/myAssets",
     },
     {
       name: "My Requests",
       icon: <MyRequestsIcon className="w-5 h-5" />,
-      href: "/employee/myRequests",
-    }
+      href: "/manager/myRequests",
+    },
+    {
+      name: "Transactions",
+      icon: <GrTransaction className="text-xl" />,
+      href: "/manager/transactions",
+    },
   ];
 
   // Menu Items -- Bottom Menu
@@ -56,7 +62,7 @@ const EmployeeLayout = ({ children }) => {
     {
       name: "Profile",
       icon: <MdPersonOutline className="text-xl" />,
-      href: "/employee/profile",
+      href: "/manager/profile",
     },
     {
       name: "Logout",
@@ -154,4 +160,4 @@ const EmployeeLayout = ({ children }) => {
   );
 };
 
-export default EmployeeLayout;
+export default ManagerLayout;

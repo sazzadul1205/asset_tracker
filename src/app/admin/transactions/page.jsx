@@ -27,6 +27,7 @@ import View_Request_Modal from './View_Request_Modal/View_Request_Modal';
 import RequestedById_To_Name from './RequestedById_To_Name/RequestedById_To_Name';
 import SerialNumber_To_Barcode from '../assets/SerialNumber_To_Barcode/SerialNumber_To_Barcode';
 import CategoryId_To_CategoryBlock from '../assets/CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock';
+import { useSession } from 'next-auth/react';
 
 
 // Request Type Badge Map
@@ -54,6 +55,9 @@ const formatStatus = (status) =>
 
 
 const TransactionPage = () => {
+  // Session
+  const { data: session, status } = useSession();
+
   const axiosPublic = useAxiosPublic();
 
   // State variables -> Requests
@@ -77,6 +81,7 @@ const TransactionPage = () => {
           page: currentPage,
           limit: itemsPerPage,
           search: searchTerm || undefined,
+          requestedBy: session?.user?.userId || undefined,
         },
       });
       return res.data;
@@ -87,6 +92,12 @@ const TransactionPage = () => {
   // Destructure AllRequest data
   const Request = data?.data || [];
 
+  // Handle loading
+  if (status === "loading")
+    return <Loading
+      message="Loading Users..."
+      subText="Please wait while we fetch users data."
+    />;
 
   // Handle errors
   if (isError) return <Error errors={data?.errors || []} />;

@@ -18,9 +18,6 @@ import {
 } from "react-icons/io5";
 
 const MyRequestCards = ({ RequestCounts }) => {
-  console.log(RequestCounts);
-  
-
   // Cards Data
   const cards = [
     {
