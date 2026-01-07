@@ -77,6 +77,7 @@ export async function PUT(req, context) {
           state: "rejected",
           timestamp: new Date(),
           details: {
+            type: request.type,
             priority: request.priority,
             expectedCompletion: request.expectedCompletion,
             departmentId: request.participants.departmentId,

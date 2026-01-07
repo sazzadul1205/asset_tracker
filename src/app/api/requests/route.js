@@ -110,9 +110,9 @@ export async function POST(req) {
     const requestId = insertResult.insertedId;
 
     /* -----------------------------
-       CREATE REQUEST LOG
-       (STRICT SCHEMA MATCH)
-    ----------------------------- */
+   CREATE REQUEST LOG
+   (STRICT SCHEMA MATCH)
+----------------------------- */
     const logDoc = {
       requestId: new ObjectId(requestId),
       action: "created",
@@ -121,6 +121,7 @@ export async function POST(req) {
       state: "pending",
       timestamp: now,
       details: {
+        type: body.type, 
         priority: body.priority,
         expectedCompletion,
         departmentId: body.participants.departmentId,

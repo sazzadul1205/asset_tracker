@@ -179,6 +179,7 @@ export async function PUT(req, context) {
           state: "accepted",
           timestamp: new Date(),
           details: {
+            type: request.type,
             priority: request.priority,
             expectedCompletion: request.expectedCompletion,
             departmentId: request.participants.departmentId,

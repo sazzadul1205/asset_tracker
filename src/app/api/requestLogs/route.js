@@ -16,10 +16,13 @@ const bad = (msg) =>
 
 /* =================================================
    GET /api/requestLogs
-   - Optional filters:
-     ?requestId=<ObjectId>
-     ?state=pending
-     ?action=created
+   Query params:
+   ?page=1
+   ?limit=10
+   ?requestId=<ObjectId>
+   ?types=assign,return,repair
+   ?states=pending,accepted
+   ?action=created
 ================================================= */
 export async function GET(req) {
   try {
@@ -28,30 +31,64 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
 
-    // Pagination params
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    /* ===============================
+       PAGINATION
+    =============================== */
+    const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
+    const limit = Math.max(parseInt(searchParams.get("limit") || "10", 10), 1);
     const skip = (page - 1) * limit;
 
-    // Build filter
+    /* ===============================
+       BUILD FILTER
+    =============================== */
     const filter = {};
+
+    // requestId filter
     if (searchParams.get("requestId")) {
       const id = searchParams.get("requestId");
-      if (!ObjectId.isValid(id))
+      if (!ObjectId.isValid(id)) {
         return NextResponse.json(
           { success: false, error: "Invalid requestId" },
           { status: 400 }
         );
+      }
       filter._id = new ObjectId(id);
     }
-    if (searchParams.get("state")) {
-      filter.state = searchParams.get("state");
+
+    // multiple states
+    if (searchParams.get("states")) {
+      const states = searchParams
+        .get("states")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (states.length) {
+        filter.state = { $in: states };
+      }
     }
+
+    // multiple request types (stored in details.type)
+    if (searchParams.get("types")) {
+      const types = searchParams
+        .get("types")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      if (types.length) {
+        filter["details.type"] = { $in: types };
+      }
+    }
+
+    // optional action
     if (searchParams.get("action")) {
       filter.action = searchParams.get("action");
     }
 
-    // Fetch paginated logs
+    /* ===============================
+       QUERY
+    =============================== */
     const logs = await logsCol
       .find(filter)
       .sort({ timestamp: -1 }) // newest first
@@ -59,18 +96,19 @@ export async function GET(req) {
       .limit(limit)
       .toArray();
 
-    // Total count for this filter
     const total = await logsCol.countDocuments(filter);
 
-    // Return JSON
+    /* ===============================
+       RESPONSE
+    =============================== */
     return NextResponse.json({
       success: true,
       data: logs,
       pagination: {
         page,
         limit,
-        hasMore: skip + logs.length < total, // for infinite scroll
         total,
+        hasMore: skip + logs.length < total,
       },
     });
   } catch (err) {

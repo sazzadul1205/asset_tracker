@@ -305,6 +305,7 @@ export async function DELETE(req, context) {
           state: "deleted",
           timestamp: new Date(),
           details: {
+            type: request.type,
             priority: request.priority,
             expectedCompletion: request.expectedCompletion,
             departmentId: request.participants.departmentId,
