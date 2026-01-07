@@ -111,7 +111,6 @@ const Make_New_Request = ({
 }) => {
   const [selectedAction, setSelectedAction] = useState(null);
 
-
   // Find the selected item details
   const getSelectedItem = () => {
     for (const row of actionItems) {
