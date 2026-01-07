@@ -27,28 +27,51 @@ export async function GET(req) {
     const logsCol = db.collection("requestLogs");
 
     const { searchParams } = new URL(req.url);
-    const filter = {};
 
+    // Pagination params
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const skip = (page - 1) * limit;
+
+    // Build filter
+    const filter = {};
     if (searchParams.get("requestId")) {
       const id = searchParams.get("requestId");
-      if (!ObjectId.isValid(id)) return bad("Invalid requestId");
-      filter.requestId = new ObjectId(id);
+      if (!ObjectId.isValid(id))
+        return NextResponse.json(
+          { success: false, error: "Invalid requestId" },
+          { status: 400 }
+        );
+      filter._id = new ObjectId(id);
     }
-
     if (searchParams.get("state")) {
       filter.state = searchParams.get("state");
     }
-
     if (searchParams.get("action")) {
       filter.action = searchParams.get("action");
     }
 
-    const logs = await logsCol.find(filter).sort({ timestamp: -1 }).toArray();
+    // Fetch paginated logs
+    const logs = await logsCol
+      .find(filter)
+      .sort({ timestamp: -1 }) // newest first
+      .skip(skip)
+      .limit(limit)
+      .toArray();
 
+    // Total count for this filter
+    const total = await logsCol.countDocuments(filter);
+
+    // Return JSON
     return NextResponse.json({
       success: true,
-      count: logs.length,
       data: logs,
+      pagination: {
+        page,
+        limit,
+        hasMore: skip + logs.length < total, // for infinite scroll
+        total,
+      },
     });
   } catch (err) {
     console.error("[GET /api/requestLogs]", err);
