@@ -1,19 +1,18 @@
-// src/app/api/requests/Rejected/[id]/route.js
-
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/connectDB";
+import { getMongoClient } from "@/lib/connectDB";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { ObjectId } from "mongodb";
 
 export async function PUT(req, context) {
+  let session;
+
   try {
-    const db = await connectDB();
-    const requestsCollection = db.collection("requests");
+    /* -----------------------------
+       PARAM + SESSION
+    ----------------------------- */
+    const { id } = await context.params;
 
-    // Must await context.params
-    const params = await context.params;
-    const { id } = params;
-
-    // Validate ObjectId
     if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Valid request ID is required" },
@@ -21,29 +20,88 @@ export async function PUT(req, context) {
       );
     }
 
-    const result = await requestsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $set: {
-          "metadata.status": "rejected",
-          "metadata.updatedAt": new Date(),
-        },
-      }
-    );
-
-    if (result.matchedCount === 0) {
+    const authSession = await getServerSession(authOptions);
+    if (!authSession?.user?.userId) {
       return NextResponse.json(
-        { success: false, message: "Request not found" },
-        { status: 404 }
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
-    console.error("Error rejecting request:", error);
+    const performedBy = authSession.user.userId;
+
+    const client = await getMongoClient();
+    const db = client.db("assets_tracker");
+
+    const requestsCollection = db.collection("requests");
+    const logsCollection = db.collection("requestLogs");
+
+    const requestId = new ObjectId(id);
+
+    /* -----------------------------
+       TRANSACTION
+    ----------------------------- */
+    session = client.startSession();
+
+    await session.withTransaction(async () => {
+      const request = await requestsCollection.findOne(
+        { _id: requestId },
+        { session }
+      );
+
+      if (!request) throw new Error("Request not found");
+
+      /* -----------------------------
+         UPDATE REQUEST STATUS
+      ----------------------------- */
+      await requestsCollection.updateOne(
+        { _id: requestId },
+        {
+          $set: {
+            "metadata.status": "rejected",
+            "metadata.updatedAt": new Date(),
+          },
+        },
+        { session }
+      );
+
+      /* -----------------------------
+         REQUEST LOG (STRICT)
+      ----------------------------- */
+      await logsCollection.insertOne(
+        {
+          requestId: request._id,
+          action: "rejected",
+          performedBy,
+          ipAddress: req.headers.get("x-forwarded-for") || "unknown",
+          state: "rejected",
+          timestamp: new Date(),
+          details: {
+            priority: request.priority,
+            expectedCompletion: request.expectedCompletion,
+            departmentId: request.participants.departmentId,
+            notes: "Request rejected",
+            additionalData: {
+              assetId: request.assetId,
+              requestType: request.type,
+            },
+          },
+        },
+        { session }
+      );
+    });
+
     return NextResponse.json(
-      { success: false, message: "Failed to reject request" },
+      { success: true, message: "Request rejected successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("[PUT /api/requests/Rejected/[id]]", error);
+    return NextResponse.json(
+      { success: false, message: error.message || "Failed to reject request" },
       { status: 500 }
     );
+  } finally {
+    if (session) await session.endSession();
   }
 }

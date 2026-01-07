@@ -1,23 +1,47 @@
-// src/app/api/requests/route.js
+// api/requests/route.js
 
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { ObjectId } from "mongodb";
 
-// Helper: strict type checks
+/* ===============================
+   HELPERS
+================================ */
+const bad = (msg) =>
+  NextResponse.json({ success: false, error: msg }, { status: 400 });
+
 const isString = (v) => typeof v === "string" && v.trim() !== "";
-const isDate = (v) => v instanceof Date && !isNaN(v.valueOf());
+const isPlainObject = (v) =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
 
-// POST /api/requests
+/* ===============================
+   POST /api/requests
+================================ */
 export async function POST(req) {
   try {
+    /* -----------------------------
+       SESSION (SERVER AUTHORITY)
+    ----------------------------- */
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.userId)
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+
+    const userId = session.user.userId;
+
     const db = await connectDB();
-    const requestsCollection = db.collection("requests");
+    const requestsCol = db.collection("requests");
+    const logsCol = db.collection("requestLogs");
 
     const body = await req.json();
 
-    // -------------------------------
-    // STRICT TOP-LEVEL VALIDATION
-    // -------------------------------
+    /* -----------------------------
+       STRICT REQUEST VALIDATION
+    ----------------------------- */
     const requiredTop = [
       "assetId",
       "type",
@@ -27,61 +51,45 @@ export async function POST(req) {
       "participants",
     ];
 
-    for (const field of requiredTop) {
-      if (!(field in body)) {
-        return bad(`Missing field: ${field}`);
-      }
+    for (const f of requiredTop) {
+      if (!(f in body)) return bad(`Missing field: ${f}`);
     }
 
-    // Reject additional properties
-    const allowedTopKeys = new Set(requiredTop);
     for (const key of Object.keys(body)) {
-      if (!allowedTopKeys.has(key)) {
-        return bad(`Unexpected field: ${key}`);
-      }
+      if (!requiredTop.includes(key)) return bad(`Unexpected field: ${key}`);
     }
 
-    // -------------------------------
-    // FIELD TYPE VALIDATION
-    // -------------------------------
-    if (!isString(body.assetId)) return bad("assetId must be a string");
-    if (!isString(body.type)) return bad("type must be a string");
-    if (!isString(body.priority)) return bad("priority must be a string");
-    if (!isString(body.description)) return bad("description must be a string");
+    if (!isString(body.assetId)) return bad("assetId must be string");
+    if (!isString(body.type)) return bad("type must be string");
+    if (!isString(body.priority)) return bad("priority must be string");
+    if (!isString(body.description)) return bad("description must be string");
 
     const expectedCompletion = new Date(body.expectedCompletion);
-    if (!isDate(expectedCompletion))
-      return bad("expectedCompletion must be a valid date");
+    if (isNaN(expectedCompletion))
+      return bad("expectedCompletion must be valid date");
 
-    // -------------------------------
-    // PARTICIPANTS VALIDATION
-    // -------------------------------
-    const participants = body.participants;
+    if (!isPlainObject(body.participants))
+      return bad("participants must be object");
+
     const requiredParticipants = [
       "requestedById",
       "requestedToId",
       "departmentId",
     ];
 
-    if (typeof participants !== "object" || participants === null)
-      return bad("participants must be an object");
-
-    for (const field of requiredParticipants) {
-      if (!isString(participants[field])) {
-        return bad(`participants.${field} must be a string`);
-      }
+    for (const p of requiredParticipants) {
+      if (!isString(body.participants[p]))
+        return bad(`participants.${p} must be string`);
     }
 
-    // Reject extra participant fields
-    for (const key of Object.keys(participants)) {
-      if (!requiredParticipants.includes(key)) {
+    for (const key of Object.keys(body.participants)) {
+      if (!requiredParticipants.includes(key))
         return bad(`Unexpected participants field: ${key}`);
-      }
     }
 
-    // -------------------------------
-    // FINAL DOCUMENT (SERVER AUTHORITY)
-    // -------------------------------
+    /* -----------------------------
+       CREATE REQUEST
+    ----------------------------- */
     const now = new Date();
 
     const requestDoc = {
@@ -90,22 +98,47 @@ export async function POST(req) {
       priority: body.priority,
       description: body.description,
       expectedCompletion,
-      participants: {
-        requestedById: participants.requestedById,
-        requestedToId: participants.requestedToId,
-        departmentId: participants.departmentId,
-      },
+      participants: body.participants,
       metadata: {
+        status: "pending",
         createdAt: now,
         updatedAt: now,
-        status: "pending",
       },
     };
 
-    await requestsCollection.insertOne(requestDoc);
+    const insertResult = await requestsCol.insertOne(requestDoc);
+    const requestId = insertResult.insertedId;
 
+    /* -----------------------------
+       CREATE REQUEST LOG
+       (STRICT SCHEMA MATCH)
+    ----------------------------- */
+    const logDoc = {
+      requestId: new ObjectId(requestId),
+      action: "created",
+      performedBy: userId,
+      ipAddress: req.headers.get("x-forwarded-for") || "unknown",
+      state: "pending",
+      timestamp: now,
+      details: {
+        priority: body.priority,
+        expectedCompletion,
+        departmentId: body.participants.departmentId,
+        notes: "Request created",
+        additionalData: {},
+      },
+    };
+
+    await logsCol.insertOne(logDoc);
+
+    /* -----------------------------
+       SUCCESS
+    ----------------------------- */
     return NextResponse.json(
-      { success: true, message: "Request created successfully" },
+      {
+        success: true,
+        requestId,
+      },
       { status: 201 }
     );
   } catch (err) {
@@ -249,11 +282,4 @@ export async function GET(request) {
       { status: 500 }
     );
   }
-}
-
-// -------------------------------
-// Helper
-// -------------------------------
-function bad(message) {
-  return NextResponse.json({ success: false, error: message }, { status: 400 });
 }

@@ -239,45 +239,98 @@ export async function GET(request, context) {
 }
 
 // DELETE : deleted a request by its ID
-export async function DELETE(request, context) {
-  try {
-    const { requestedBy } = await context.params;
+export async function DELETE(req, context) {
+  let session;
 
-    // Validate requestedBy as a valid ObjectId
-    if (!requestedBy || !ObjectId.isValid(requestedBy)) {
+  try {
+    /* -----------------------------
+       PARAM + SESSION
+    ----------------------------- */
+    const { id } = context.params;
+
+    if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Valid request ID is required" },
         { status: 400 }
       );
     }
 
-    // Connect to MongoDB
-    const db = await connectDB();
-    const requestsCollection = db.collection("requests");
-
-    // Delete the request
-    const result = await requestsCollection.deleteOne({
-      _id: new ObjectId(requestedBy),
-    });
-
-    // Check if a request was deleted
-    if (result.deletedCount === 0) {
+    const authSession = await getServerSession(authOptions);
+    if (!authSession?.user?.userId) {
       return NextResponse.json(
-        { success: false, message: "Request not found" },
-        { status: 404 }
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    // Return success response
+    const performedBy = authSession.user.userId;
+    const requestId = new ObjectId(id);
+
+    /* -----------------------------
+       DB
+    ----------------------------- */
+    const client = await getMongoClient();
+    const db = client.db("assets_tracker");
+
+    const requestsCollection = db.collection("requests");
+    const logsCollection = db.collection("requestLogs");
+
+    /* -----------------------------
+       TRANSACTION
+    ----------------------------- */
+    session = client.startSession();
+
+    await session.withTransaction(async () => {
+      const request = await requestsCollection.findOne(
+        { _id: requestId },
+        { session }
+      );
+
+      if (!request) throw new Error("Request not found");
+
+      /* -----------------------------
+         DELETE REQUEST
+      ----------------------------- */
+      await requestsCollection.deleteOne({ _id: requestId }, { session });
+
+      /* -----------------------------
+         REQUEST LOG (STRICT SCHEMA)
+      ----------------------------- */
+      await logsCollection.insertOne(
+        {
+          requestId: request._id,
+          action: "deleted",
+          performedBy,
+          ipAddress: req.headers.get("x-forwarded-for") || "unknown",
+          state: "deleted",
+          timestamp: new Date(),
+          details: {
+            priority: request.priority,
+            expectedCompletion: request.expectedCompletion,
+            departmentId: request.participants.departmentId,
+            notes: "Request deleted",
+            additionalData: {
+              assetId: request.assetId,
+              requestType: request.type,
+              previousStatus: request.metadata.status,
+            },
+          },
+        },
+        { session }
+      );
+    });
+
     return NextResponse.json(
       { success: true, message: "Request deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("DELETE /api/requests/[id] error:", error);
+    console.error("[DELETE /api/requests/[id]]", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error" },
+      { success: false, message: error.message || "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    if (session) await session.endSession();
   }
 }

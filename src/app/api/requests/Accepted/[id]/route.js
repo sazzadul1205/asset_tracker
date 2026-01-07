@@ -1,14 +1,17 @@
-// src/app/api/requests/Accepted/[id]/route.js
 import { NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/connectDB";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { ObjectId } from "mongodb";
 
 export async function PUT(req, context) {
   let session;
 
   try {
+    /* -----------------------------
+       PARAM + SESSION
+    ----------------------------- */
     const { id } = await context.params;
-
     if (!id) {
       return NextResponse.json(
         { success: false, message: "Request ID required" },
@@ -16,38 +19,48 @@ export async function PUT(req, context) {
       );
     }
 
-    const client = await getMongoClient();
-    const db = client.db("assets_tracker"); // Use the correct DB
-    const requestsCollection = db.collection("requests");
-    const assetsCollection = db.collection("assets");
-
-    // Parse body
-    const payload = await req.json();
-    const currentUserId = payload?.UserId;
-    if (!currentUserId) {
+    // Server Authority
+    const authSession = await getServerSession(authOptions);
+    if (!authSession?.user?.userId) {
       return NextResponse.json(
-        { success: false, message: "UserId required in payload" },
-        { status: 400 }
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
+    // Performer
+    const performedBy = authSession.user.userId;
+
+    // Connect to MongoDB
+    const client = await getMongoClient();
+    const db = client.db("assets_tracker");
+
+    // Collections
+    const assetsCollection = db.collection("assets");
+    const logsCollection = db.collection("requestLogs");
+    const requestsCollection = db.collection("requests");
+
     const requestId = ObjectId.isValid(id) ? new ObjectId(id) : id;
 
-    // Start transaction
+    /* -----------------------------
+       TRANSACTION
+    ----------------------------- */
     session = client.startSession();
-
     let result;
+
     await session.withTransaction(async () => {
-      // Fetch request
+      // Must await context.params
       const request = await requestsCollection.findOne(
         { _id: requestId },
         { session }
       );
+
+      // Validate request
       if (!request) throw new Error(`Request not found: ${id}`);
 
-      console.log("[DEBUG] Request fetched:", request);
-
-      // Update request status
+      /* -----------------------------
+         UPDATE REQUEST STATUS
+      ----------------------------- */
       await requestsCollection.updateOne(
         { _id: requestId },
         {
@@ -59,24 +72,26 @@ export async function PUT(req, context) {
         { session }
       );
 
-      // Determine assignment IDs
+      /* -----------------------------
+         ASSIGNMENT LOGIC (UNCHANGED)
+      ----------------------------- */
       const assignedBy =
         request.participants.requestedToId === "-"
-          ? currentUserId
+          ? performedBy
           : request.participants.requestedToId;
+
       const requestedBy =
         request.participants.requestedById === "-"
-          ? currentUserId
+          ? performedBy
           : request.participants.requestedById;
-      const assignedAt = new Date();
 
-      // Update asset based on request type
+      const assignedAt = new Date();
       const assetId = request.assetId;
       let updatedAsset;
 
       switch (request.type) {
-        // Request Type "Assign"
         case "assign":
+        case "transfer":
           updatedAsset = await assetsCollection.findOneAndUpdate(
             { "identification.tag": assetId },
             {
@@ -89,7 +104,7 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
-        // Request Type "Request"
+
         case "request":
           updatedAsset = await assetsCollection.findOneAndUpdate(
             { "identification.tag": assetId },
@@ -103,7 +118,7 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
-        // Request Type "Request"
+
         case "return":
           updatedAsset = await assetsCollection.findOneAndUpdate(
             { "identification.tag": assetId },
@@ -117,7 +132,7 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
-        // Request Type "Repair"
+
         case "repair":
           updatedAsset = await assetsCollection.findOneAndUpdate(
             { "identification.tag": assetId },
@@ -132,7 +147,7 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
-        // Request Type "Retire"
+
         case "retire":
           updatedAsset = await assetsCollection.findOneAndUpdate(
             { "identification.tag": assetId },
@@ -147,60 +162,35 @@ export async function PUT(req, context) {
             { session, returnDocument: "after" }
           );
           break;
-        // Request Type "Transfer"
-        case "transfer":
-          updatedAsset = await assetsCollection.findOneAndUpdate(
-            { "identification.tag": assetId },
-            {
-              $set: {
-                "assigned.assignedTo": assignedBy,
-                "assigned.assignedBy": requestedBy,
-                "assigned.assignedAt": assignedAt,
-              },
-            },
-            { session, returnDocument: "after" }
-          );
-          break;
-        // Request Type "Update"
-        case "update":
-          updatedAsset = await assetsCollection.findOneAndUpdate(
-            { "identification.tag": assetId },
-            {
-              $set: {
-                "details.status": "update_pending",
-              },
-            },
-            { session, returnDocument: "after" }
-          );
-          break;
 
-        // Request Type "Update"
-        case "update":
-          updatedAsset = await assetsCollection.findOneAndUpdate(
-            { "identification.tag": assetId },
-            {
-              $set: {
-                "assigned.assignedTo": null,
-                "assigned.assignedBy": null,
-                "assigned.assignedAt": null,
-                "details.status": "pending_disposal",
-              },
-            },
-            { session, returnDocument: "after" }
-          );
-          break;
-
-        // If No Matching Case
         default:
-          NextResponse.json(
-            {
-              success: false,
-              message: `Invalid request type: ${request.type}`,
-            },
-            { status: 400 }
-          );
-          updatedAsset = null;
+          throw new Error(`Invalid request type: ${request.type}`);
       }
+
+      /* -----------------------------
+         REQUEST LOG (STRICT SCHEMA)
+      ----------------------------- */
+      await logsCollection.insertOne(
+        {
+          requestId: request?._id,
+          action: "accepted",
+          performedBy,
+          ipAddress: req.headers.get("x-forwarded-for") || "unknown",
+          state: "accepted",
+          timestamp: new Date(),
+          details: {
+            priority: request.priority,
+            expectedCompletion: request.expectedCompletion,
+            departmentId: request.participants.departmentId,
+            notes: "Request accepted",
+            additionalData: {
+              assetId: request.assetId,
+              requestType: request.type,
+            },
+          },
+        },
+        { session }
+      );
 
       result = { request, updatedAsset };
     });
@@ -211,7 +201,7 @@ export async function PUT(req, context) {
       data: result,
     });
   } catch (err) {
-    console.error("[ERROR] PUT /api/requests/Accepted/[id]:", err);
+    console.error("[PUT /api/requests/Accepted/[id]]", err);
     return NextResponse.json(
       { success: false, message: err.message || "Internal server error" },
       { status: 500 }
