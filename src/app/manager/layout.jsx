@@ -25,6 +25,7 @@ import useAuth from '@/hooks/useAuth';
 
 // Components
 import Navbar from '@/Shared/Navbar/Navbar';
+import Footer from '@/Shared/Footer/Footer';
 
 
 const ManagerLayout = ({ children }) => {
@@ -158,6 +159,9 @@ const ManagerLayout = ({ children }) => {
           <div className="flex-1 overflow-y-auto relative">
             {children}
           </div>
+
+          {/* Footer */}
+          <Footer />
         </main>
       </div>
     </SessionProvider>
