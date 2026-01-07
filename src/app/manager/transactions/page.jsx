@@ -5,6 +5,8 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+// Next Components
+import { useSession } from 'next-auth/react';
 
 // Hooks
 import useAxiosPublic from '@/hooks/useAxiosPublic';
@@ -24,11 +26,9 @@ import View_Request_Modal from '@/app/admin/transactions/View_Request_Modal/View
 
 
 // Components
-import CategoryId_To_CategoryBlock from '@/app/admin/assets/CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock';
-import RequestedById_To_Name from '@/app/admin/transactions/RequestedById_To_Name/RequestedById_To_Name';
 import SerialNumber_To_Barcode from '@/app/admin/assets/SerialNumber_To_Barcode/SerialNumber_To_Barcode';
-import { useSession } from 'next-auth/react';
-
+import RequestedById_To_Name from '@/app/admin/transactions/RequestedById_To_Name/RequestedById_To_Name';
+import CategoryId_To_CategoryBlock from '@/app/admin/assets/CategoryId_To_CategoryBlock/CategoryId_To_CategoryBlock';
 
 
 // Request Type Badge Map
@@ -55,6 +55,7 @@ const formatStatus = (status) =>
   status?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
 
+// Main Component
 const TransactionPage = () => {
   // Session
   const { data: session, status } = useSession();
@@ -62,7 +63,7 @@ const TransactionPage = () => {
   const axiosPublic = useAxiosPublic();
 
   // State variables -> Requests
-  const [itemsPerPage] = useState(8);
+  const [itemsPerPage] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
