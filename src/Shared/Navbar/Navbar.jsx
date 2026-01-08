@@ -112,8 +112,12 @@ const Navbar = () => {
                 <p className="text-sm text-gray-600 font-medium truncate">
                   {MyUserData?.credentials?.email || "Unknown Email"}
                   <span className="text-gray-400"> · </span>
-                  {MyUserData?.employment?.position ||
-                    MyUserData?.employment?.role || "-"}
+                  {
+                    MyUserData?.employment?.position &&
+                      MyUserData.employment.position.toLowerCase() !== "unassigned"
+                      ? MyUserData.employment.position
+                      : MyUserData?.employment?.role || "-"
+                  }
                 </p>
               </>
             )}

@@ -9,15 +9,15 @@ import Link from "next/link";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 
 // Icons
-import { AiFillThunderbolt } from "react-icons/ai";
 import { FaBox } from "react-icons/fa";
 import { FiUsers } from "react-icons/fi";
-import { MdAccessTime, MdOutlineSettings } from "react-icons/md";
+import { AiFillThunderbolt } from "react-icons/ai";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
+import { MdAccessTime, MdOutlineSettings } from "react-icons/md";
 
 // Components
-import Loading from "@/Shared/Loading/Loading";
 import Error from "@/Shared/Error/Error";
+import Loading from "@/Shared/Loading/Loading";
 import SystemLogs from "./SystemLogs/SystemLogs";
 
 // Hooks
@@ -28,29 +28,34 @@ import useAxiosPublic from "@/hooks/useAxiosPublic";
 // ==============================================================
 const COLOR_MAP = {
   blue: {
-    border: 'border-blue-500',
-    bgLight: 'bg-blue-100',
-    text: 'text-blue-500',
+    border: "border-l-4 border-l-blue-500",
+    bgLight: "bg-blue-100",
+    text: "text-blue-600",
   },
   green: {
-    border: 'border-green-500',
-    bgLight: 'bg-green-100',
-    text: 'text-green-500',
+    border: "border-l-4 border-l-green-500",
+    bgLight: "bg-green-100",
+    text: "text-green-600",
   },
   orange: {
-    border: 'border-orange-500',
-    bgLight: 'bg-orange-100',
-    text: 'text-orange-500',
+    border: "border-l-4 border-l-orange-500",
+    bgLight: "bg-orange-100",
+    text: "text-orange-600",
+  },
+  red: {
+    border: "border-l-4 border-l-red-500",
+    bgLight: "bg-red-100",
+    text: "text-red-600",
   },
   purple: {
-    border: 'border-purple-500',
-    bgLight: 'bg-purple-100',
-    text: 'text-purple-500',
+    border: "border-l-4 border-l-purple-500",
+    bgLight: "bg-purple-100",
+    text: "text-purple-600",
   },
   indigo: {
-    border: 'border-indigo-500',
-    bgLight: 'bg-indigo-100',
-    text: 'text-indigo-700',
+    border: "border-l-4 border-l-indigo-500",
+    bgLight: "bg-indigo-100",
+    text: "text-indigo-700",
   },
 };
 
@@ -60,7 +65,7 @@ const COLOR_MAP = {
  * @param {string} variant - Variant (border, bgLight, text)
  * @returns {string} Tailwind CSS class
  */
-const getColorClass = (colorName, variant = 'border') => {
+export const getColorClass = (colorName, variant = 'border') => {
   return COLOR_MAP[colorName]?.[variant] || COLOR_MAP.blue[variant];
 };
 
@@ -233,6 +238,12 @@ const DashboardPage = () => {
     );
   }
 
+  // Function to get color class
+  const getColorClass = (color, type) => {
+    return COLOR_MAP[color]?.[type] || "";
+  };
+
+
   // ==============================================================
   // RENDER
   // ==============================================================
@@ -275,7 +286,7 @@ const DashboardPage = () => {
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div
             key={label}
-            className={`rounded-lg border bg-white shadow-lg hover:shadow-xl transition-shadow border-l-4 ${getColorClass(color, 'border')} border-gray-200`}
+            className={`rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow ${getColorClass(color, 'border')}`}
           >
             <div className="p-4 sm:p-6">
               <div className="flex items-center space-x-3">
