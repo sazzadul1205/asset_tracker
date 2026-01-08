@@ -1,6 +1,9 @@
 // app/employee/layout.jsx
 "use client";
 
+// React Components
+import { useState } from 'react';
+
 // next components
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,6 +35,10 @@ const ManagerLayout = ({ children }) => {
   // Hooks
   const { logout } = useAuth();
   const pathname = usePathname();
+
+
+  // Sidebar state
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Menu Items -- Top Menu
   const menuItems = [
@@ -79,69 +86,76 @@ const ManagerLayout = ({ children }) => {
   return (
     <SessionProvider>
       <div className="flex min-h-screen bg-linear-to-tr from-gray-100 via-white to-gray-200">
-        {/* Sidebar - Fixed Position */}
-        <aside className="w-64 bg-white shadow-2xl border-r border-gray-100 flex flex-col justify-between fixed h-screen overflow-y-auto">
-          {/* Top Section */}
+        {/* ================= SIDEBAR ================= */}
+        <aside
+          className={`fixed h-screen bg-white shadow-2xl flex flex-col justify-between
+          transition-all duration-300
+          ${isMenuOpen ? "w-20" : "w-64"}`}
+        >
+          {/* Top */}
           <div>
             {/* Logo */}
-            <div className="mx-auto p-6 pb-4 border-b border-gray-100">
+            <div className="p-6 border-b border-gray-100 flex justify-center">
               <Image
                 src={Logo}
                 alt="SAT Logo"
-                className="w-full h-auto"
+                className={`transition-all duration-300 ${isMenuOpen ? "w-10" : "w-full"
+                  }`}
                 priority
               />
             </div>
 
-            {/* Navigation */}
-            <ul className="px-3 mt-4 space-y-1">
+            {/* Menu */}
+            <ul className="px-2 mt-4 space-y-1">
               {menuItems.map((item) => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-4 px-4 py-2 font-medium text-md rounded-xl cursor-pointer transition-colors
-                ${pathname === item.href
+                    className={`flex items-center gap-4 px-4 py-2 rounded-xl transition-colors font-semibold
+                    ${pathname === item.href
                         ? "bg-blue-100 text-blue-600"
                         : "hover:bg-blue-50 hover:text-blue-600"
-                      }`}
+                      }
+                    ${isMenuOpen ? "justify-center" : ""}
+                    `}
                   >
                     {item.icon}
-                    <p>{item.name}</p>
+                    {!isMenuOpen && <span>{item.name}</span>}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Bottom Section */}
-          <ul className="px-3 mb-4 space-y-1 border-t border-gray-100 pt-4">
+          {/* Bottom */}
+          <ul className="px-2 mb-4 space-y-1 border-t border-gray-100 pt-4">
             {bottomItems.map((item) => {
-              const isActive = pathname === item.href;
               const isLogout = item.name === "Logout";
 
               return (
                 <li key={item.name}>
                   {isLogout ? (
-                    // Logout Button
                     <button
                       onClick={item.action}
-                      className="flex items-center gap-3 w-full text-left rounded-xl py-2.5 px-3 transition-colors text-red-500 hover:text-red-700 hover:bg-red-100 cursor-pointer"
+                      className={`flex items-center gap-3 w-full px-4 py-2 rounded-xl transition-colors
+                      hover:bg-red-100 text-red-500
+                      ${isMenuOpen ? "justify-center" : ""}`}
                     >
                       {item.icon}
-                      {item.name}
+                      {!isMenuOpen && item.name}
                     </button>
                   ) : (
-                    // Normal Link Navigation
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-3 rounded-xl py-2.5 px-3 transition-colors 
-                ${isActive
-                          ? "bg-blue-100 text-blue-700 font-semibold"
-                          : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
-                        }`}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-colors
+                      ${pathname === item.href
+                          ? "bg-blue-100 text-blue-700"
+                          : "hover:bg-gray-100"
+                        }
+                      ${isMenuOpen ? "justify-center" : ""}`}
                     >
                       {item.icon}
-                      {item.name}
+                      {!isMenuOpen && item.name}
                     </Link>
                   )}
                 </li>
@@ -150,17 +164,20 @@ const ManagerLayout = ({ children }) => {
           </ul>
         </aside>
 
-        {/* Main Content - Offset by sidebar width */}
-        <main className="flex-1 flex flex-col overflow-hidden ml-64">
-          {/* Navbar */}
-          <Navbar />
+        {/* ================= MAIN ================= */}
+        <main
+          className={`flex-1 flex flex-col transition-all duration-300
+          ${isMenuOpen ? "ml-20" : "ml-64"}`}
+        >
+          <Navbar
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+          />
 
-          {/* Page Content */}
-          <div className="flex-1 overflow-y-auto relative">
+          <div className="flex-1 overflow-y-auto">
             {children}
           </div>
 
-          {/* Footer */}
           <Footer />
         </main>
       </div>

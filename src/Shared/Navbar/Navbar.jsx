@@ -2,7 +2,7 @@
 "use client";
 
 // React
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 // Next Auth
@@ -11,13 +11,17 @@ import { usePathname } from "next/navigation";
 
 // Hooks
 import useAxiosPublic from "@/hooks/useAxiosPublic";
+import { FiMaximize, FiMenu, FiMinimize, FiX } from "react-icons/fi";
 
-const Navbar = () => {
+const Navbar = ({
+  isMenuOpen,
+  setIsMenuOpen,
+}) => {
   const axiosPublic = useAxiosPublic();
   const { data: session } = useSession();
 
+  // Current path
   const pathname = usePathname();
-
 
   // Convert path to title: /admin/companySettings -> Company Settings
   const pageTitle = useMemo(() => {
@@ -76,14 +80,27 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-lg px-6 py-3">
       <div className="flex items-center justify-between">
-        {/* Left: Page Title */}
-        <h1 className="text-xl font-bold text-gray-800 Roboto-slab-display">
-          {pageTitle}
-        </h1>
+        {/* Left: Menu Toggle + Page Title */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            className="p-2 rounded hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+          </button>
 
-        {/* Right: User Info */}
+          <h1 className="text-xl font-bold text-gray-800 Roboto-slab-display">
+            {pageTitle}
+          </h1>
+        </div>
+
+        {/* Right: Controls */}
         <div className="flex items-center gap-4">
-          {/* Avatar */}
+          {/* Fullscreen Toggle */}
+          <FullscreenButton />
+
+          {/* Avatar & User Details */}
           {MyUserIsLoading ? (
             <div className="w-11 h-11 rounded-full bg-gray-200 animate-pulse" />
           ) : (
@@ -103,21 +120,16 @@ const Navbar = () => {
               <p className="text-sm text-red-500 font-medium">Failed to load user</p>
             ) : (
               <>
-                {/* Name */}
                 <p className="font-semibold leading-tight">
                   {MyUserData?.personal?.name || "Unknown User"}
                 </p>
-
-                {/* Email and Role */}
                 <p className="text-sm text-gray-600 font-medium truncate">
                   {MyUserData?.credentials?.email || "Unknown Email"}
                   <span className="text-gray-400"> · </span>
-                  {
-                    MyUserData?.employment?.position &&
-                      MyUserData.employment.position.toLowerCase() !== "unassigned"
-                      ? MyUserData.employment.position
-                      : MyUserData?.employment?.role || "-"
-                  }
+                  {MyUserData?.employment?.position &&
+                    MyUserData.employment.position.toLowerCase() !== "unassigned"
+                    ? MyUserData.employment.position
+                    : MyUserData?.employment?.role || "-"}
                 </p>
               </>
             )}
@@ -129,3 +141,32 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+// FullscreenButton component
+function FullscreenButton() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Failed to enter fullscreen:", err);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch((err) => {
+        console.error("Failed to exit fullscreen:", err);
+      });
+      setIsFullscreen(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggleFullscreen}
+      className="p-2 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+      title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+    >
+      {isFullscreen ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
+    </button>
+  );
+}
