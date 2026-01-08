@@ -1,39 +1,37 @@
-// layout.js
+// src/app/layout.jsx
 import "./globals.css";
 
 // Fonts
 import { Geist, Geist_Mono } from "next/font/google";
 
 // Providers
+import SessionWrapper from "./SessionWrapper";
 import QueryProvider from "@/Providers/QueryProvider";
 
-// Import the Geist Sans font
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-// Import the Geist Mono font
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-// Layout for the entire app
 export const metadata = {
   title: "Asset Tracker",
   description: "A simple asset tracker app",
 };
 
-// Layout for the entire app
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="light" className="scroll-smooth">
       <body
-        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <SessionWrapper>{children}</SessionWrapper>
+        </QueryProvider>
       </body>
     </html>
   );

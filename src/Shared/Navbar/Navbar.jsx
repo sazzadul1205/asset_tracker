@@ -1,25 +1,46 @@
-// React Components
-import React from "react";
+// Shared/Navbar/Navbar.jsx
+"use client";
 
-// Next Components
-import Image from "next/image";
+// React
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+// Next Auth
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
-// Packages
-import { useQuery } from "@tanstack/react-query";
-
-// Assets
-import User_Fallback from "../../../public/UserFallback.png";
-
 // Hooks
-import useAxiosPublic from "@/Hooks/useAxiosPublic";
+import useAxiosPublic from "@/hooks/useAxiosPublic";
+import { FiMaximize, FiMenu, FiMinimize, FiX } from "react-icons/fi";
 
-const Navbar = () => {
+const Navbar = ({
+  isMenuOpen,
+  setIsMenuOpen,
+}) => {
   const axiosPublic = useAxiosPublic();
   const { data: session } = useSession();
 
+  // Current path
   const pathname = usePathname();
+
+  // Convert path to title: /admin/companySettings -> Company Settings
+  const pageTitle = useMemo(() => {
+    if (!pathname) return "Dashboard";
+
+    // remove empty parts
+    const parts = pathname.split("/").filter(Boolean);
+
+    // get last part
+    const lastPart = parts[parts.length - 1];
+
+    // Convert camelCase or kebab-case to Title Case
+    const title = lastPart
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    return title || "Dashboard";
+  }, [pathname]);
 
   // Fetch current user data
   const {
@@ -27,103 +48,88 @@ const Navbar = () => {
     error: MyUserError,
     isLoading: MyUserIsLoading,
   } = useQuery({
-    queryKey: ["MyUserData", session?.user?.employee_id],
-    queryFn: () =>
-      axiosPublic
-        .get(`/Users/${session?.user?.employee_id}`)
-        .then((res) => res.data),
-    keepPreviousData: true,
-    enabled: !!session?.user?.employee_id,
+    queryKey: ["MyUserData", session?.user?.userId],
+    queryFn: async () => {
+      try {
+        const res = await axiosPublic.get(`/users/${session?.user?.userId}`);
+        return res.data.data;
+      } catch (err) {
+        console.error(
+          "[Axios Public] Error fetching user:",
+          err.response?.status,
+          err.response?.data
+        );
+        throw err;
+      }
+    },
+    enabled: !!session?.user?.userId,
   });
 
-  // Dynamic page title
-  let pageTitle = "Admin Dashboard";
-  switch (pathname) {
-    case "/Admin/AssetsCategory":
-      pageTitle = "Admin Assets Category";
-      break;
-    case "/Admin/MyAssets":
-      pageTitle = "Admin My Assets";
-      break;
-    case "/Admin/Employees":
-      pageTitle = "Admin Employees";
-      break;
-    case "/Admin/Departments":
-      pageTitle = "Admin Departments";
-      break;
-    case "/Admin/CompanySettings":
-      pageTitle = "Company Settings";
-      break;
-    case "/Admin/MyRequests":
-      pageTitle = "My Requests";
-      break;
-    case "/Admin/Assets":
-      pageTitle = "All Assets";
-      break;
-    case "/Admin/Transactions":
-      pageTitle = "Transactions";
-      break;
-    case "/Admin/Profile":
-      pageTitle = "Admin Profile";
-      break;
-    case "/Employee/Dashboard":
-      pageTitle = "Employee Dashboard";
-      break;
-    case "/Employee/MyRequests":
-      pageTitle = "My Requests";
-      break;
-    case "/Employee/MyAssets":
-      pageTitle = "My Assets";
-      break;
-    default:
-      pageTitle = "Unknown Page";
-  }
+  // Compute initials for avatar
+  const getUserInitials = (fullName) => {
+    if (!fullName) return "NA";
+    return fullName
+      .trim()
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  };
 
   return (
-    <nav className="navbar bg-white shadow-2xl px-6 py-3 sticky top-0 z-50">
-      {/* Left: Page Title */}
-      <div className="flex-1">
-        <p className="text-xl font-bold text-gray-800 Roboto-slab-display">{pageTitle}</p>
-      </div>
-
-      {/* Right: User Info */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3 text-black">
-          {/* User Avatar */}
-          <div
-            className="w-11 h-11 rounded-full ring ring-gray-200 ring-offset-2 flex 
-          items-center justify-center bg-gray-300 text-gray-800 font-bold"
+    <nav className="sticky top-0 z-50 bg-white shadow-lg px-6 py-3">
+      <div className="flex items-center justify-between">
+        {/* Left: Menu Toggle + Page Title */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            className="p-2 rounded hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
           >
-            {MyUserIsLoading
-              ? <div className="w-11 h-11 bg-gray-200 animate-pulse rounded-full" />
-              : (MyUserData?.identity?.full_name
-                ?.trim()
-                ?.split(" ")
-                ?.map((w) => w[0])
-                ?.join("")
-                ?.substring(0, 2)
-                ?.toUpperCase() || "NA")
-            }
-          </div>
+            {isMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+          </button>
 
+          <h1 className="text-xl font-bold text-gray-800 Roboto-slab-display">
+            {pageTitle}
+          </h1>
+        </div>
+
+        {/* Right: Controls */}
+        <div className="flex items-center gap-4">
+          {/* Fullscreen Toggle */}
+          <FullscreenButton />
+
+          {/* Avatar & User Details */}
+          {MyUserIsLoading ? (
+            <div className="w-11 h-11 rounded-full bg-gray-200 animate-pulse" />
+          ) : (
+            <div className="w-11 h-11 rounded-full ring ring-gray-200 ring-offset-2 flex items-center justify-center bg-gray-300 text-gray-800 font-bold select-none">
+              {getUserInitials(MyUserData?.personal?.name)}
+            </div>
+          )}
 
           {/* User Details */}
-          <div className="border-l-2 pl-3 border-gray-300">
+          <div className="border-l pl-4 border-gray-300 min-w-45">
             {MyUserIsLoading ? (
-              <div className="flex items-center animate-pulse">
-                <div className="w-11 h-11 rounded-full bg-gray-200" />
-                <div className="ml-3 space-y-1">
-                  <div className="h-4 w-24 bg-gray-200 rounded" />
-                  <div className="h-3 w-32 bg-gray-200 rounded" />
-                </div>
+              <div className="space-y-1 animate-pulse">
+                <div className="h-4 w-28 bg-gray-200 rounded" />
+                <div className="h-3 w-40 bg-gray-200 rounded" />
               </div>
             ) : MyUserError ? (
-              <p className="text-red-500 text-sm">Failed to load user</p>
+              <p className="text-sm text-red-500 font-medium">Failed to load user</p>
             ) : (
               <>
-                <h3 className="font-semibold">{MyUserData?.identity?.full_name || "Unknown User"}</h3>
-                <p className="text-sm text-gray-600 font-medium">
-                  {MyUserData?.identity?.email || "Unknown Email"} ({MyUserData?.contact?.position || "-"})
+                <p className="font-semibold leading-tight">
+                  {MyUserData?.personal?.name || "Unknown User"}
+                </p>
+                <p className="text-sm text-gray-600 font-medium truncate">
+                  {MyUserData?.credentials?.email || "Unknown Email"}
+                  <span className="text-gray-400"> · </span>
+                  {MyUserData?.employment?.position &&
+                    MyUserData.employment.position.toLowerCase() !== "unassigned"
+                    ? MyUserData.employment.position
+                    : MyUserData?.employment?.role || "-"}
                 </p>
               </>
             )}
@@ -135,3 +141,32 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
+// FullscreenButton component
+function FullscreenButton() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error("Failed to enter fullscreen:", err);
+      });
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch((err) => {
+        console.error("Failed to exit fullscreen:", err);
+      });
+      setIsFullscreen(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggleFullscreen}
+      className="p-2 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+      title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+    >
+      {isFullscreen ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
+    </button>
+  );
+}

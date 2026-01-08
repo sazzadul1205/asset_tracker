@@ -1,4 +1,3 @@
-// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -6,15 +5,9 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "i.ibb.co",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "ibb.co.com",
-        pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;  
+export default nextConfig;

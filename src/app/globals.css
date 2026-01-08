@@ -1,29 +1,42 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100..900&display=swap');
-
-/* Apply cursor-pointer to all buttons, but do not override existing cursor-* utilities */
-button {
-    cursor: pointer;
+html {
+  color-scheme: light;
 }
 
-/* Roboto Slab Display font utility */
-.roboto-slab-display {
-    font-family: "Roboto Slab", serif;
-    font-optical-sizing: auto;
-    font-style: normal;
+:root {
+  --theme: light !important;
 }
 
-/* hide scrollbar */
-.scrollbar-none::-webkit-scrollbar {
-    display: none;
+/* Bounce */
+/* Button bounce on click */
+.btn-bounce {
+  transition: transform 0.2s ease;
 }
 
-.scrollbar-none {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+.btn-bounce:active {
+  animation: click-bounce 0.3s ease forwards;
+}
+
+@keyframes click-bounce {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(0.95);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  70% {
+    transform: scale(0.98);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }

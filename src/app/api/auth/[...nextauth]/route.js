@@ -1,119 +1,180 @@
-// api/auth/[...nextauth]/route.js
+  // src/app/api/auth/[...nextauth]/route.js
 
-// MongoDB Connect
-import { connectDB } from "@/lib/connectDB";
+  /**
+   * NEXT-AUTH ROUTE (App Router)
+   * ---------------------------
+   * This file handles all authentication requests:
+   *  - /api/auth/signin
+   *  - /api/auth/signout
+   *  - /api/auth/session
+   *  - /api/auth/callback/credentials
+   *
+   * If this file fails or returns HTML instead of JSON,
+   * the frontend will throw:
+   *
+   *   Unexpected token '<', "<!DOCTYPE..." is not valid JSON
+   *
+   * That means this route is broken or unreachable.
+   */
 
-// Next Auth
-import NextAuth from "next-auth";
+  import NextAuth from "next-auth";
+  import CredentialsProvider from "next-auth/providers/credentials";
 
-// Credentials Provider
-import CredentialsProvider from "next-auth/providers/credentials";
+  // Custom MongoDB connector
+  import { connectDB } from "@/lib/connectDB";
 
-// Bcrypt for password hashing
-import bcrypt from "bcrypt";
+  // Bcrypt module for password verification
+  import bcrypt from "bcrypt";
 
-const handler = NextAuth({
-  // Secret key for JWT
-  secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
+  // ----------------------------------------------------
+  // AUTH HANDLER
+  // ----------------------------------------------------
+  export const authOptions = {
+    /**
+     * IMPORTANT:
+     * Never use NEXT_PUBLIC_ for secrets — it exposes them to the browser.
+     * Use:
+     *
+     *   AUTH_SECRET="your-random-secret"
+     *
+     * in your .env file.
+     */
+    secret: process.env.AUTH_SECRET,
 
-  // Auth Providers
-  providers: [
-    CredentialsProvider({
-      // Provider name
-      name: "Credentials",
+    // ----------------------------------------------------
+    // AUTH PROVIDERS
+    // ----------------------------------------------------
+    providers: [
+      CredentialsProvider({
+        name: "Credentials",
 
-      // Fields for login form
-      credentials: {
-        email: { label: "Email", type: "email", placeholder: "your@email.com" },
-        password: {
-          label: "Password",
-          type: "password",
-          placeholder: "Your Password",
+        // These fields appear in the default NextAuth login form
+        credentials: {
+          email: {
+            label: "Email",
+            type: "email",
+            placeholder: "you@example.com",
+          },
+          password: {
+            label: "Password",
+            type: "password",
+            placeholder: "Your Password",
+          },
         },
-      },
 
-      // Authorization function
-      async authorize(credentials) {
-        const { email, password } = credentials;
+        /**
+         * AUTHORIZE FUNCTION
+         * ------------------
+         * This runs when a user attempts to sign in.
+         * If you return a user object → login success.
+         * If you return null or throw → login fails.
+         */
+        async authorize(credentials) {
+          const { email, password } = credentials;
 
-        // Validate input
-        if (!email || !password) throw new Error("Email and password required");
+          if (!email || !password) throw new Error("Email and password required");
 
-        // Connect to DB
-        const db = await connectDB();
+          const db = await connectDB();
 
-        // Find user by email (nested field)
-        const user = await db
-          .collection("Users")
-          .findOne({ "identity.email": email });
+          // Find user using your real schema
+          const user = await db
+            .collection("users")
+            .findOne({ "credentials.email": email });
 
-        if (!user) throw new Error("User not found");
+          if (!user) throw new Error("User not found");
 
-        // Compare password
-        const isPasswordValid = await bcrypt.compare(
-          password,
-          user.security.password
-        );
-        if (!isPasswordValid) throw new Error("Invalid password");
-
-        // Update last_login timestamp
-        await db
-          .collection("Users")
-          .updateOne(
-            { "identity.email": email },
-            { $set: { last_login: new Date() } }
+          // Compare password with credentials.password
+          const passwordMatch = await bcrypt.compare(
+            password,
+            user.credentials.password
           );
 
-        // Return safe fields for session
-        return {
-          email: user.identity.email,
-          employee_id: user.identity.employee_id,
-          access_level: user.employment.access_level || "Employee",
-          full_name: user.identity.full_name,
-        };
-      },
-    }),
-  ],
+          if (!passwordMatch) throw new Error("Invalid password");
 
-  // Session settings
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
+          // Update last login
+          await db
+            .collection("users")
+            .updateOne(
+              { "credentials.email": email },
+              { $set: { "credentials.lastLogin": new Date() } }
+            );
 
-  // Custom pages
-  pages: {
-    signIn: "/Auth/Login",
-  },
-
-  // Callbacks
-  callbacks: {
-    // Store info in JWT
-    async jwt({ token, user }) {
-      if (user) {
-        token.email = user.email;
-        token.employee_id = user.employee_id;
-        token.role = user.access_level || "Employee";
-        token.full_name = user.full_name;
-      }
-      return token;
-    },
-
-    // Expose JWT info in session
-    async session({ session, token }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          email: token.email,
-          employee_id: token.employee_id,
-          role: token.role || "Employee",
-          full_name: token.full_name,
+          // Return safe info for JWT
+          return {
+            email: user.credentials.email,
+            userId: user.personal.userId,
+            name: user.personal.name,
+            role: user.employment.role,
+            position: user.employment.position,
+            departmentId: user.employment.departmentId,
+          };
         },
-      };
-    },
-  },
-});
+      }),
+    ],
 
-// Export handler for GET and POST
-export { handler as GET, handler as POST };
+    // ----------------------------------------------------
+    // SESSION CONFIG
+    // ----------------------------------------------------
+    session: {
+      strategy: "jwt", // use JWT session instead of database sessions
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
+
+    // ----------------------------------------------------
+    // CUSTOM PAGES
+    // ----------------------------------------------------
+    /**
+     * MUST MATCH YOUR REAL PATH:
+     *
+     * Your directory:
+     *   src/app/auth/login/page.jsx
+     *
+     * So the correct route is:
+     *   /auth/login
+     */
+    pages: {
+      signIn: "/auth/login",
+    },
+
+    // ----------------------------------------------------
+    // CALLBACKS
+    // ----------------------------------------------------
+    callbacks: {
+      /**
+       * JWT CALLBACK
+       * Runs whenever a token is created or updated.
+       */
+      async jwt({ token, user }) {
+        if (user) {
+          token.email = user.email;
+          token.userId = user.userId;
+          token.name = user.name;
+          token.role = user.role;
+          token.position = user.position;
+          token.departmentId = user.departmentId;
+        }
+        return token;
+      },
+
+      /**
+       * SESSION CALLBACK
+       * Controls what's returned to the client during getSession().
+       */
+      async session({ session, token }) {
+        session.user = {
+          email: token.email,
+          userId: token.userId,
+          name: token.name,
+          role: token.role,
+          position: token.position,
+          departmentId: token.departmentId,
+        };
+
+        return session;
+      },
+    },
+  };
+
+  // Export GET and POST handlers for the App Router
+  const handler = NextAuth(authOptions);
+  export { handler as GET, handler as POST };
