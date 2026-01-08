@@ -1,4 +1,5 @@
-// src/app//page.jsx
+// src/app/manager /dashboard/page.jsx
+
 "use client";
 
 // ==============================================================
@@ -22,6 +23,8 @@ import { FaBox } from "react-icons/fa";
 import { LuUsersRound } from "react-icons/lu";
 import { TbActivityHeartbeat } from "react-icons/tb";
 import { MdAccessTime, MdCheck, MdClose } from "react-icons/md";
+
+// Components
 import SystemLogs from "@/app/admin/dashboard/SystemLogs/SystemLogs";
 
 // ==============================================================
@@ -60,7 +63,11 @@ const COLOR_MAP = {
   },
 };
 
-// src/app/employee/dashboard/page.jsx
+// Function to get color class
+const getColorClass = (color, type) => {
+  return COLOR_MAP[color]?.[type] || "";
+};
+
 const DashboardPage = () => {
   // ==============================================================
   // STATE & HOOKS
@@ -91,9 +98,6 @@ const DashboardPage = () => {
     keepPreviousData: true,
     enabled: !!session?.user?.userId,
   });
-
-  console.log(allCountsData);
-
 
   /**
  * Build filter query parameters from selected options
@@ -167,19 +171,19 @@ const DashboardPage = () => {
     {
       label: "Pending Requests",
       value: allCountsData?.counts?.requests?.pending ?? 0,
-      icon: MdAccessTime, // clock icon
+      icon: MdAccessTime,
       color: "orange",
     },
     {
       label: "Rejected Requests",
       value: allCountsData?.counts?.requests?.rejected ?? 0,
-      icon: MdClose, // cross icon
+      icon: MdClose,
       color: "red",
     },
     {
       label: "Approved Requests",
       value: allCountsData?.counts?.requests?.accepted ?? 0,
-      icon: MdCheck, // tick icon
+      icon: MdCheck,
       color: "green",
     },
     {
@@ -200,11 +204,6 @@ const DashboardPage = () => {
   // Handle errors
   if (IsAllCountsError || isRequestLogsError) return <Error
     errors={allCountsData?.errors || requestLogsData?.errors || []} />;
-
-  // Function to get color class
-  const getColorClass = (color, type) => {
-    return COLOR_MAP[color]?.[type] || "";
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
