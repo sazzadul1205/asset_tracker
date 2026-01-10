@@ -24,12 +24,20 @@ const useAuth = (redirectIfAuthenticated = false) => {
 
   // Redirect if already authenticated based on role
   useEffect(() => {
-    if (redirectIfAuthenticated && status === "authenticated") {
-      const role = session?.user?.role || "Employee";
+    if (!redirectIfAuthenticated || status !== "authenticated") return;
 
-      if (role === "Admin") router.push("/admin/dashboard");
-      else if (role === "Manager") router.push("/manager/dashboard");
-      else router.push("/dashboard"); // Employee or default
+    const role = session?.user?.role;
+
+    const roleRedirectMap = {
+      admin: "/admin/dashboard",
+      manager: "/manager/dashboard",
+      employee: "employee/dashboard",
+    };
+
+    const redirectPath = roleRedirectMap[role];
+
+    if (redirectPath) {
+      router.push(redirectPath);
     }
   }, [status, redirectIfAuthenticated, router, session]);
 

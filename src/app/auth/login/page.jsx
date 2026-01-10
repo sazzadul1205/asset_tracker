@@ -1,3 +1,4 @@
+// app/auth/login/page.jsx
 "use client";
 
 // Next Components
@@ -91,37 +92,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen flex items-center justify-center p-4 relative">
+    <div className="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4 relative">
 
       {/* ===============================
-          Floating Demo Login Widget
-      ================================ */}
-      <div className="fixed top-4 left-4 z-50 w-72 space-y-3">
-        {demoAccounts.map((account, index) => (
-          <div
-            key={index}
-            onClick={() => handleDemoFill(account)}
-            className="cursor-pointer bg-white border border-gray-200 rounded-xl p-4 shadow-lg
-                       hover:border-blue-500 hover:shadow-xl transition-all active:scale-[0.98]"
-          >
-            <h4 className="text-sm font-extrabold text-gray-800 mb-1">
-              {account.role} Login
-            </h4>
-
-            <p className="text-xs text-gray-600 font-mono">
-              {account.email}
-            </p>
-
-            <p className="text-[11px] text-blue-600 mt-2 font-semibold">
-              Click to auto-fill
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* ===============================
-          Login Card
-      ================================ */}
+      Login Card
+  ================================ */}
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-6">
           <Image src={Logo} alt="SAT Logo" className="w-48 h-auto" priority />
@@ -140,8 +115,8 @@ const LoginPage = () => {
           {errorMessage && (
             <div
               className={`bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md text-sm text-center
-              transition-opacity duration-500
-              ${showError ? "opacity-100" : "opacity-0"}`}
+          transition-opacity duration-500
+          ${showError ? "opacity-100" : "opacity-0"}`}
             >
               {errorMessage}
             </div>
@@ -170,7 +145,7 @@ const LoginPage = () => {
               type="submit"
               disabled={loading}
               className={`w-full h-11 font-semibold rounded-lg
-                ${loading
+            ${loading
                   ? "bg-blue-400 cursor-not-allowed text-white"
                   : "bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95"
                 }`}
@@ -180,7 +155,34 @@ const LoginPage = () => {
           </form>
         </div>
       </div>
+
+      {/* ===============================
+      Demo Accounts → BELOW LOGIN CARD
+  ================================ */}
+      <div className="mt-6 w-full max-w-md space-y-3">
+        {demoAccounts.map((account, index) => (
+          <div
+            key={index}
+            onClick={() => handleDemoFill(account)}
+            className="cursor-pointer bg-white border border-gray-200 rounded-xl p-4 shadow-lg
+                   hover:border-blue-500 hover:shadow-xl transition-all active:scale-[0.98]"
+          >
+            <h4 className="text-sm font-extrabold text-gray-800 mb-1">
+              {account.role} Login
+            </h4>
+
+            <p className="text-xs text-gray-600 font-mono">
+              {account.email}
+            </p>
+
+            <p className="text-[11px] text-blue-600 mt-2 font-semibold">
+              Click to auto-fill
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
+
   );
 };
 
