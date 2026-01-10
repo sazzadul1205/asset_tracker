@@ -11,10 +11,12 @@ import { usePathname } from "next/navigation";
 
 // Hooks
 import useAxiosPublic from "@/hooks/useAxiosPublic";
-import { FiMaximize, FiMenu, FiMinimize, FiX } from "react-icons/fi";
+import { FiMaximize, FiMinimize } from "react-icons/fi";
+import { MdMenu } from "react-icons/md";
 
 const Navbar = ({
-  isMenuOpen,
+  isSidebarCollapsed,
+  toggleSidebarWidth,
   setIsMenuOpen,
 }) => {
   const axiosPublic = useAxiosPublic();
@@ -78,16 +80,26 @@ const Navbar = ({
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-lg px-6 py-3">
+    <nav className="sticky top-0 z-40 bg-white shadow-lg px-4 py-3 lg:px-6">
       <div className="flex items-center justify-between">
         {/* Left: Menu Toggle + Page Title */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="p-2 rounded hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
+          {/* Mobile Drawer Toggle */}
+          <label
+            htmlFor="admin-drawer"
+            className="btn btn-ghost drawer-button lg:hidden"
+            aria-label="Open sidebar"
           >
-            {isMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+            <MdMenu className="text-2xl" />
+          </label>
+
+          {/* Desktop Sidebar Width Toggle */}
+          <button
+            onClick={toggleSidebarWidth}
+            className="hidden lg:flex p-2 rounded hover:bg-gray-100 transition-colors"
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <MdMenu className="text-2xl" />
           </button>
 
           <h1 className="text-xl font-bold text-gray-800 Roboto-slab-display">
@@ -101,38 +113,35 @@ const Navbar = ({
           <FullscreenButton />
 
           {/* Avatar & User Details */}
-          {MyUserIsLoading ? (
-            <div className="w-11 h-11 rounded-full bg-gray-200 animate-pulse" />
-          ) : (
-            <div className="w-11 h-11 rounded-full ring ring-gray-200 ring-offset-2 flex items-center justify-center bg-gray-300 text-gray-800 font-bold select-none">
-              {getUserInitials(MyUserData?.personal?.name)}
-            </div>
-          )}
-
-          {/* User Details */}
-          <div className="border-l pl-4 border-gray-300 min-w-45">
+          <div className="flex items-center gap-3">
             {MyUserIsLoading ? (
-              <div className="space-y-1 animate-pulse">
-                <div className="h-4 w-28 bg-gray-200 rounded" />
-                <div className="h-3 w-40 bg-gray-200 rounded" />
-              </div>
-            ) : MyUserError ? (
-              <p className="text-sm text-red-500 font-medium">Failed to load user</p>
+              <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
             ) : (
-              <>
-                <p className="font-semibold leading-tight">
-                  {MyUserData?.personal?.name || "Unknown User"}
-                </p>
-                <p className="text-sm text-gray-600 font-medium truncate">
-                  {MyUserData?.credentials?.email || "Unknown Email"}
-                  <span className="text-gray-400"> · </span>
-                  {MyUserData?.employment?.position &&
-                    MyUserData.employment.position.toLowerCase() !== "unassigned"
-                    ? MyUserData.employment.position
-                    : MyUserData?.employment?.role || "-"}
-                </p>
-              </>
+              <div className="w-10 h-10 rounded-full ring ring-gray-200 ring-offset-2 flex items-center justify-center bg-gray-300 text-gray-800 font-bold select-none">
+                {getUserInitials(MyUserData?.personal?.name)}
+              </div>
             )}
+
+            {/* User Details - Hidden on mobile, visible on tablet and up */}
+            <div className="hidden md:block border-l pl-4 border-gray-300 min-w-[120px]">
+              {MyUserIsLoading ? (
+                <div className="space-y-1 animate-pulse">
+                  <div className="h-4 w-28 bg-gray-200 rounded" />
+                  <div className="h-3 w-40 bg-gray-200 rounded" />
+                </div>
+              ) : MyUserError ? (
+                <p className="text-sm text-red-500 font-medium">Failed to load user</p>
+              ) : (
+                <>
+                  <p className="font-semibold leading-tight text-sm">
+                    {MyUserData?.personal?.name || "Unknown User"}
+                  </p>
+                  <p className="text-xs text-gray-600 font-medium truncate max-w-[180px]">
+                    {MyUserData?.credentials?.email || "Unknown Email"}
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -163,8 +172,9 @@ function FullscreenButton() {
   return (
     <button
       onClick={toggleFullscreen}
-      className="p-2 rounded hover:bg-gray-100 transition-colors cursor-pointer"
+      className="p-2 rounded hover:bg-gray-100 transition-colors cursor-pointer hidden sm:block"
       title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+      aria-label={isFullscreen ? "Exit fullscreen mode" : "Enter fullscreen mode"}
     >
       {isFullscreen ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
     </button>
