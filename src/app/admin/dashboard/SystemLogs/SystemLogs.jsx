@@ -274,7 +274,8 @@ const SystemLogs = ({
   return (
     <div className="rounded-lg bg-white shadow-sm hover:shadow-lg transition-shadow duration-200 p-0">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3">
+
         {/* TITLE */}
         <h2 className="flex items-center gap-2 text-xl sm:text-2xl font-semibold tracking-tight text-gray-900">
           <TbActivityHeartbeat className="text-blue-500 text-2xl" />
@@ -282,14 +283,17 @@ const SystemLogs = ({
         </h2>
 
         {/* FILTER CONTROLS */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+
           {/* SELECTED FILTER PILLS */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-w-full">
             {selectedOptions.map((opt) => (
               <div
                 key={opt.value + opt.type}
                 onClick={() => removeOption(opt.value, opt.type)}
-                className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm text-white cursor-pointer transition hover:opacity-80 ${getColorClass(opt.color, 'bgDark')}`}
+                className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm text-white cursor-pointer
+                      transition hover:opacity-80 whitespace-nowrap
+                      ${getColorClass(opt.color, 'bgDark')}`}
                 title="Click to remove"
               >
                 {opt.icon && <span>{opt.icon}</span>}
@@ -300,20 +304,22 @@ const SystemLogs = ({
           </div>
 
           {/* FILTER DROPDOWN */}
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative mt-2 sm:mt-0 self-start sm:self-auto" ref={dropdownRef}>
             <button
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-300 cursor-pointer bg-white hover:bg-gray-50"
               onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-300 bg-white
+                   text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
               aria-label="Add filter"
             >
-              <span className="text-gray-700 text-sm font-medium">Add Filter</span>
+              Add Filter
               <BsChevronDown className="text-gray-500 text-sm" />
             </button>
 
             {/* DROPDOWN MENU */}
             {dropdownOpen && (
-              <div className="absolute right-0 z-20 w-80 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-h-80 overflow-y-auto">
-                {/* REQUEST TYPE SECTION */}
+              <div className="absolute right-0 z-20 mt-2 w-full sm:w-80 max-h-80 overflow-y-auto
+                        bg-white border border-gray-300 rounded-lg shadow-xl">
+                {/* REQUEST TYPE */}
                 <div className="px-4 pt-3 pb-2">
                   <h1 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Request Type
@@ -324,13 +330,12 @@ const SystemLogs = ({
                   const isSelected = selectedOptions.some(
                     (o) => o.value === option.value && o.type === option.type
                   );
-
                   return (
                     <div
                       key={option.value + option.type}
                       onClick={() => toggleOption(option)}
-                      className={`flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-100 ${isSelected ? "bg-gray-100" : ""
-                        }`}
+                      className={`flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-100
+                            ${isSelected ? "bg-gray-100" : ""}`}
                     >
                       {option.icon && <span className="text-lg">{option.icon}</span>}
                       <span className="text-sm font-medium">{option.label}</span>
@@ -338,10 +343,9 @@ const SystemLogs = ({
                   );
                 })}
 
-                {/* DIVIDER */}
                 <div className="my-2 border-t border-gray-200" />
 
-                {/* STATUS SECTION */}
+                {/* STATUS */}
                 <div className="px-4 pt-2 pb-2">
                   <h1 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Status
@@ -352,18 +356,15 @@ const SystemLogs = ({
                   const isSelected = selectedOptions.some(
                     (o) => o.value === option.value && o.type === option.type
                   );
-
                   return (
                     <div
                       key={option.value + option.type}
                       onClick={() => toggleOption(option)}
-                      className={`flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-100 ${isSelected ? "bg-gray-100" : ""
-                        }`}
+                      className={`flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-100
+                            ${isSelected ? "bg-gray-100" : ""}`}
                     >
                       {option.icon && <span className="text-lg">{option.icon}</span>}
                       <span className="text-sm font-medium">{option.label}</span>
-
-                      {/* STATUS COLOR INDICATOR */}
                       <span
                         className={`ml-auto h-2.5 w-2.5 rounded-full ${getColorClass(option.color, 'bgDark')}`}
                       />
@@ -373,8 +374,10 @@ const SystemLogs = ({
               </div>
             )}
           </div>
+
         </div>
       </div>
+
 
       {/* LOGS CONTENT */}
       <div className="p-4 pt-0 space-y-5">
