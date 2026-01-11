@@ -2,27 +2,23 @@
 import { formatDistanceToNow } from 'date-fns';
 
 // Icons
-import { ImCross } from 'react-icons/im';
+import { FiX, FiUser, FiMail, FiPhone, FiCalendar, FiBriefcase, FiUsers, FiUserCheck, FiClock, FiHome, FiActivity, FiShield } from 'react-icons/fi';
 import {
   FaIdBadge,
   FaBuilding,
   FaCalendarAlt,
-  FaHashtag,
   FaPhoneAlt,
-  FaUser,
   FaUserShield,
-  FaBriefcase,
-  FaUserCheck,
   FaSyncAlt,
   FaUserPlus,
+  FaInfoCircle
 } from "react-icons/fa";
-import { MdEmail } from 'react-icons/md';
 
 // Status Styles
 const statusStyles = {
-  active: "bg-green-100 text-green-700",
+  active: "bg-green-100 text-green-800",
   inactive: "bg-gray-200 text-gray-700",
-  on_leave: "bg-yellow-100 text-yellow-700",
+  on_leave: "bg-yellow-100 text-yellow-800",
   suspended: "bg-red-100 text-red-700",
   terminated: "bg-red-200 text-red-800",
 };
@@ -41,16 +37,57 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
     document.getElementById("View_User_Modal")?.close();
   }
 
+  // Handle backdrop click
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  // Format date function
+  const formatDateTime = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).replace(",", "").toUpperCase();
+  };
+
+  // Format date only
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // Get role color
+  const getRoleColor = (role) => {
+    const roleLower = role?.toLowerCase();
+    switch (roleLower) {
+      case "admin": return "bg-red-100 text-red-800";
+      case "manager": return "bg-blue-100 text-blue-800";
+      case "employee": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <div
       id="View_User_Modal"
-      className="modal-box w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
+      className="modal-box w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl p-4 md:p-6 text-gray-900"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {/* Icon container */}
-          <div className="shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-800 font-bold text-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3 md:gap-4 w-full">
+          {/* Avatar */}
+          <div className="shrink-0 w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full bg-linear-to-br from-blue-100 to-blue-200 text-blue-700 font-bold text-lg md:text-xl">
             <span>
               {selectedUser?.personal?.name
                 ?.trim()
@@ -62,23 +99,32 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
             </span>
           </div>
 
-
           {/* Text content */}
-          <div className="flex flex-col">
-            <h3 className="font-semibold text-gray-800 text-sm md:text-base">
-              {selectedUser?.personal?.name || "No Name"}
-            </h3>
-            <p className="text-gray-500 text-xs md:text-sm">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-1">
+              <h3 className="font-bold text-gray-800 text-lg md:text-xl truncate">
+                {selectedUser?.personal?.name || "No Name"}
+              </h3>
+              {selectedUser?.employment?.role && (
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleColor(selectedUser.employment.role)}`}>
+                  {selectedUser.employment.role}
+                </span>
+              )}
+            </div>
+
+            <p className="text-gray-500 text-sm md:text-base">
               {selectedUser?.credentials?.email || "N/A"}
             </p>
-            <p className="text-gray-400 text-xs md:text-sm">
-              Last Login:{" "}
-              {selectedUser?.credentials?.lastLogin
-                ? formatDistanceToNow(new Date(selectedUser?.credentials?.lastLogin), {
-                  addSuffix: true,
-                })
-                : "Never"}
-            </p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-gray-400 text-xs md:text-sm">
+                <span className="font-medium">Employee ID:</span> {selectedUser?.personal?.userId || "N/A"}
+              </p>
+              {selectedUser?.personal?.status && (
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusStyles[selectedUser.personal.status] || "bg-gray-100 text-gray-700"}`}>
+                  {formatStatus(selectedUser.personal.status)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -86,111 +132,174 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
         <button
           type="button"
           onClick={handleClose}
-          className="hover:text-red-500 transition-colors duration-300"
+          className="shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors duration-300 cursor-pointer self-start sm:self-center"
+          aria-label="Close modal"
         >
-          <ImCross className="text-xl" />
+          <FiX className="text-xl text-gray-600" />
         </button>
       </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      {/* User Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="bg-blue-50 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500">Last Login</p>
+              <p className="font-medium text-sm">
+                {selectedUser?.credentials?.lastLogin
+                  ? formatDistanceToNow(new Date(selectedUser?.credentials?.lastLogin), {
+                    addSuffix: true,
+                  })
+                  : "Never"}
+              </p>
+            </div>
+            <FiActivity className="text-blue-500" />
+          </div>
+        </div>
 
+        <div className="bg-green-50 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500">Hire Date</p>
+              <p className="font-medium text-sm">
+                {selectedUser?.personal?.hireDate
+                  ? formatDate(selectedUser.personal.hireDate)
+                  : "N/A"}
+              </p>
+            </div>
+            <FiCalendar className="text-green-500" />
+          </div>
+        </div>
+
+        <div className="bg-purple-50 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500">Account Created</p>
+              <p className="font-medium text-sm">
+                {selectedUser?.metadata?.createdAt
+                  ? formatDate(selectedUser.metadata.createdAt)
+                  : "N/A"}
+              </p>
+            </div>
+            <FiClock className="text-purple-500" />
+          </div>
+        </div>
+
+        <div className="bg-amber-50 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500">Last Updated</p>
+              <p className="font-medium text-sm">
+                {selectedUser?.metadata?.updatedAt
+                  ? formatDate(selectedUser.metadata.updatedAt)
+                  : "N/A"}
+              </p>
+            </div>
+            <FiClock className="text-amber-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Personal Information */}
-        <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">Personal Information</h3>
+        <div className="border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center gap-2">
+            <span className="bg-blue-100 text-blue-600 w-2 h-5 rounded-full"></span>
+            Personal Information
+          </h3>
 
-          {/* Details */}
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Full Name */}
-            <div className="flex items-center gap-3">
-              <FaUser className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Full Name</p>
-                <p className="font-medium">{selectedUser?.personal?.name || "N/A"}</p>
+            <div className="flex items-start gap-3">
+              <FiUser className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Full Name</p>
+                <p className='font-medium text-gray-800'>{selectedUser?.personal?.name || "N/A"}</p>
               </div>
             </div>
 
             {/* Email */}
-            <div className="flex items-center gap-3">
-              <MdEmail className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{selectedUser?.credentials?.email || "N/A"}</p>
+            <div className="flex items-start gap-3">
+              <FiMail className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Email</p>
+                <p className='font-medium text-gray-800 truncate'>{selectedUser?.credentials?.email || "N/A"}</p>
               </div>
             </div>
 
             {/* Phone */}
-            <div className="flex items-center gap-3">
-              <FaPhoneAlt className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium">{selectedUser?.personal?.phone || "N/A"}</p>
+            <div className="flex items-start gap-3">
+              <FiPhone className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Phone</p>
+                <p className='font-medium text-gray-800'>{selectedUser?.personal?.phone || "N/A"}</p>
               </div>
             </div>
 
             {/* Employee ID */}
-            <div className="flex items-center gap-3">
-              <FaHashtag className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Employee ID</p>
-                <p className="font-medium">{selectedUser?.personal?.userId || "N/A"}</p>
+            <div className="flex items-start gap-3">
+              <FaIdBadge className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Employee ID</p>
+                <p className='font-medium text-gray-800 font-mono'>{selectedUser?.personal?.userId || "N/A"}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Work Information */}
-        <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
+        <div className="border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center gap-2">
+            <span className="bg-green-100 text-green-600 w-2 h-5 rounded-full"></span>
+            Work Information
+          </h3>
 
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">Work Information</h3>
-
-          {/* Details */}
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Department */}
-            <div className="flex items-center gap-3">
-              <FaBuilding className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Department</p>
-                <p className="font-medium">
-                  {selectedUser?.employment?.departmentId}
+            <div className="flex items-start gap-3">
+              <FaBuilding className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Department</p>
+                <p className='font-medium text-gray-800'>
+                  {selectedUser?.employment?.departmentId || "Unassigned"}
                 </p>
               </div>
             </div>
 
             {/* Position */}
-            <div className="flex items-center gap-3">
-              <FaBriefcase className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Position</p>
-                <p className="font-medium">{selectedUser?.employment?.position || "N/A"}</p>
+            <div className="flex items-start gap-3">
+              <FiBriefcase className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Position</p>
+                <p className='font-medium text-gray-800'>{selectedUser?.employment?.position || "N/A"}</p>
               </div>
             </div>
 
-            {/* Role / Access Level */}
-            <div className="flex items-center gap-3">
-              <FaUserShield className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Role</p>
-                <p className="font-medium">
-                  {selectedUser?.employment?.role || "N/A"}
-                </p>
+            {/* Role */}
+            <div className="flex items-start gap-3">
+              <FiShield className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Role</p>
+                <div className="flex items-center gap-2">
+                  <p className='font-medium text-gray-800'>{selectedUser?.employment?.role || "N/A"}</p>
+                  {selectedUser?.employment?.role && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleColor(selectedUser.employment.role)}`}>
+                      {selectedUser.employment.role}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Hire Date */}
-            <div className="flex items-center gap-3">
-              <FaCalendarAlt className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Hire Date</p>
-                <p className="font-medium">
+            <div className="flex items-start gap-3">
+              <FiCalendar className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Hire Date</p>
+                <p className='font-medium text-gray-800'>
                   {selectedUser?.personal?.hireDate
-                    ? new Date(selectedUser.personal.hireDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
+                    ? formatDate(selectedUser.personal.hireDate)
                     : "N/A"}
                 </p>
               </div>
@@ -199,24 +308,21 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
         </div>
 
         {/* Account Status */}
-        <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
+        <div className="border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center gap-2">
+            <span className="bg-purple-100 text-purple-600 w-2 h-5 rounded-full"></span>
+            Account Status
+          </h3>
 
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">Account Status</h3>
-
-          {/* Details */}
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Status */}
-            <div className="flex items-center gap-3">
-              <FaUserCheck className="text-gray-500 w-5 h-5" />
-              <div>
-                {/* Label */}
+            <div className="flex items-start gap-3">
+              <FiUserCheck className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-500">Status</p>
-
-                {/* Status */}
                 {selectedUser?.personal?.status ? (
                   <span
-                    className={`inline-flex items-center justify-center min-w-24 px-3 py-1 rounded-xl text-sm font-semibold ${statusStyles[selectedUser.personal.status] || "bg-gray-200 text-gray-700"}`}>
+                    className={`inline-flex items-center justify-center min-w-24 px-3 py-1.5 rounded-xl text-sm font-semibold mt-1 ${statusStyles[selectedUser.personal.status] || "bg-gray-200 text-gray-700"}`}>
                     {formatStatus(selectedUser.personal.status)}
                   </span>
                 ) : (
@@ -225,41 +331,27 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
               </div>
             </div>
 
-            {/* User ID */}
-            <div className="flex items-center gap-3">
-              <FaIdBadge className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">User ID</p>
-                <p className="font-medium">
-                  {selectedUser?.personal?.userId || "N/A"}
-                </p>
-              </div>
-            </div>
-
             {/* Account Summary */}
-            <div className='bg-gray-50 p-4 rounded-lg' >
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className='text-sm font-medium text-gray-700 mb-3 flex items-center gap-2'>
+                <FaInfoCircle className="text-gray-400 w-4 h-4" />
+                Account Summary
+              </h4>
 
-              {/* Header */}
-              <h4 className='text-sm font-medium text-gray-700 mb-2' >Account Summary</h4>
-
-              {/* Details */}
-              <div className='space-y-2 text-sm' >
-                {/* Role */}
-                <div className='flex justify-between' >
-                  <span className='text-gray-600' >Role :</span>
-                  <span className='font-medium' >{selectedUser?.employment?.role || "N/A"}</span>
+              <div className='space-y-2 text-sm'>
+                <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                  <span className='text-gray-600'>Role</span>
+                  <span className='font-medium'>{selectedUser?.employment?.role || "N/A"}</span>
                 </div>
 
-                {/* Status */}
-                <div className='flex justify-between' >
-                  <span className='text-gray-600' >Status :</span>
-                  <span className='font-medium' >{formatStatus(selectedUser?.personal?.status)}</span>
+                <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                  <span className='text-gray-600'>Status</span>
+                  <span className='font-medium'>{formatStatus(selectedUser?.personal?.status)}</span>
                 </div>
 
-                {/* Department */}
-                <div className='flex justify-between' >
-                  <span className='text-gray-600' >Department :</span>
-                  <span className='font-medium' >{selectedUser?.employment?.departmentId}</span>
+                <div className='flex justify-between items-center py-2'>
+                  <span className='text-gray-600'>Department</span>
+                  <span className='font-medium'>{selectedUser?.employment?.departmentId || "Unassigned"}</span>
                 </div>
               </div>
             </div>
@@ -267,137 +359,145 @@ const View_User_Modal = ({ selectedUser, setSelectedUser }) => {
         </div>
 
         {/* Timeline */}
-        <div className="border border-gray-300 rounded-2xl shadow-lg p-6">
+        <div className="border border-gray-200 rounded-xl shadow-sm p-4 md:p-6">
+          <h3 className="font-semibold text-gray-800 text-lg mb-4 flex items-center gap-2">
+            <span className="bg-amber-100 text-amber-600 w-2 h-5 rounded-full"></span>
+            Timeline
+          </h3>
 
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">Timeline</h3>
-
-          {/* Details */}
-          <div className="space-y-5">
-
+          <div className="space-y-4">
             {/* Account Created */}
-            <div className="flex items-center gap-3">
-              <FaUserPlus className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Account Created</p>
-                <p className="font-medium">
-                  {selectedUser?.metadata?.createdAt
-                    ? new Date(selectedUser.metadata.createdAt).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })
-                    : "N/A"}
+            <div className="flex items-start gap-3">
+              <FaUserPlus className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Account Created</p>
+                <p className='font-medium text-gray-800 text-sm'>
+                  {formatDateTime(selectedUser?.metadata?.createdAt)}
                 </p>
               </div>
             </div>
 
             {/* Account Updated */}
-            <div className="flex items-center gap-3">
-              <FaSyncAlt className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Account Updated</p>
-                <p className="font-medium">
-                  {selectedUser?.metadata?.updatedAt
-                    ? new Date(selectedUser.metadata.updatedAt).toLocaleString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })
-                    : "N/A"}
-
+            <div className="flex items-start gap-3">
+              <FaSyncAlt className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Account Updated</p>
+                <p className='font-medium text-gray-800 text-sm'>
+                  {formatDateTime(selectedUser?.metadata?.updatedAt)}
                 </p>
               </div>
             </div>
 
             {/* Hire Date */}
-            <div className="flex items-center gap-3">
-              <FaBriefcase className="text-gray-500 w-5 h-5" />
-              <div>
-                <p className="text-sm text-gray-500">Hire Date</p>
-                <p className="font-medium">
+            <div className="flex items-start gap-3">
+              <FaCalendarAlt className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Hire Date</p>
+                <p className='font-medium text-gray-800 text-sm'>
                   {selectedUser?.personal?.hireDate
-                    ? new Date(selectedUser.personal.hireDate).toLocaleDateString(
-                      "en-GB",
-                      { day: "2-digit", month: "short", year: "numeric" }
-                    )
+                    ? formatDate(selectedUser.personal.hireDate)
                     : "N/A"}
                 </p>
               </div>
             </div>
 
+            {/* Last Login */}
+            <div className="flex items-start gap-3">
+              <FiActivity className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className='text-sm text-gray-500'>Last Login</p>
+                <p className='font-medium text-gray-800 text-sm'>
+                  {selectedUser?.credentials?.lastLogin
+                    ? formatDateTime(selectedUser.credentials.lastLogin)
+                    : "Never logged in"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Additional Information */}
-        <div className="col-span-2 border border-gray-300 rounded-2xl shadow-lg p-6 w-full mt-4">
-          {/* Header */}
-          <h3 className="font-semibold tracking-tight text-lg mb-4">Additional Information</h3>
+      {/* Additional Information - Full Width */}
+      <div className='border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 w-full mt-4 md:mt-6'>
+        <h3 className='font-semibold text-gray-800 text-lg mb-4 flex items-center gap-2'>
+          <span className="bg-indigo-100 text-indigo-600 w-2 h-5 rounded-full"></span>
+          Additional Information
+        </h3>
 
-          {/* Content */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            {/* Contact Details */}
-            <div>
-              {/* Header */}
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Contact Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mt-4">
+          {/* Contact Details */}
+          <div>
+            <h3 className='text-sm font-medium text-gray-700 mb-3 flex items-center gap-2'>
+              <FiUser className="text-gray-400 w-4 h-4" />
+              Contact Details
+            </h3>
 
-              {/* Details */}
-              <div className="space-y-2 text-sm">
-                {/* Email */}
-                <div className="flex items-center gap-2">
-                  <MdEmail className="text-gray-500 w-4 h-4" />
-                  <p className="text-gray-600">{selectedUser?.credentials?.email || "N/A"}</p>
-                </div>
-
-                {/* Phone */}
-                <div className="flex items-center gap-2">
-                  <FaPhoneAlt className="text-gray-500 w-4 h-4" />
-                  <p className="text-gray-600">{selectedUser?.personal?.phone || "N/A"}</p>
-                </div>
-
-                {/* Employee ID */}
-                <div className="flex items-center gap-2">
-                  <FaIdBadge className="text-gray-500 w-4 h-4" />
-                  <p className="text-gray-600">{selectedUser?.personal?.userId || "N/A"}</p>
-                </div>
+            <div className='space-y-3'>
+              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                <p className='text-sm text-gray-600'>Email</p>
+                <p className='font-medium text-gray-800 text-sm truncate max-w-50'>
+                  {selectedUser?.credentials?.email || "N/A"}
+                </p>
               </div>
-            </div>
 
-            {/* Work Details */}
-            <div>
-              {/* Header */}
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Work Details</h3>
+              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                <p className='text-sm text-gray-600'>Phone</p>
+                <p className='font-medium text-gray-800 text-sm'>
+                  {selectedUser?.personal?.phone || "N/A"}
+                </p>
+              </div>
 
-              {/* Details */}
-              <div className="space-y-2 text-sm">
-                {/* Department */}
-                <div className="flex items-center gap-2">
-                  <FaBuilding className="text-gray-500 w-4 h-4" />
-                  <p className="text-gray-600">
-                    {selectedUser?.employment?.departmentId || "-"}
-                  </p>
-                </div>
-
-                {/* Position */}
-                <div className="flex items-center gap-2">
-                  <FaBriefcase className="text-gray-500 w-4 h-4" />
-                  <p className="text-gray-600">{selectedUser?.employment?.position || "-"}</p>
-                </div>
-
-                {/* Access Level */}
-                <div className="flex items-center gap-2">
-                  <FaUserShield className="text-gray-500 w-4 h-4" />
-                  <p className="text-gray-600">{selectedUser?.employment?.role || "-"}</p>
-                </div>
+              <div className='flex justify-between items-center py-2'>
+                <p className='text-sm text-gray-600'>Employee ID</p>
+                <p className='font-medium text-gray-800 text-sm font-mono'>
+                  {selectedUser?.personal?.userId || "N/A"}
+                </p>
               </div>
             </div>
           </div>
+
+          {/* Work Details */}
+          <div>
+            <h3 className='text-sm font-medium text-gray-700 mb-3 flex items-center gap-2'>
+              <FiBriefcase className="text-gray-400 w-4 h-4" />
+              Work Details
+            </h3>
+
+            <div className='space-y-3'>
+              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                <p className='text-sm text-gray-600'>Department</p>
+                <p className='font-medium text-gray-800 text-sm'>
+                  {selectedUser?.employment?.departmentId || "Unassigned"}
+                </p>
+              </div>
+
+              <div className='flex justify-between items-center py-2 border-b border-gray-100'>
+                <p className='text-sm text-gray-600'>Position</p>
+                <p className='font-medium text-gray-800 text-sm'>
+                  {selectedUser?.employment?.position || "-"}
+                </p>
+              </div>
+
+              <div className='flex justify-between items-center py-2'>
+                <p className='text-sm text-gray-600'>Role</p>
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(selectedUser?.employment?.role)}`}>
+                  {selectedUser?.employment?.role || "-"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons - Mobile */}
+      <div className="md:hidden mt-6 pt-4 border-t border-gray-200">
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleClose}
+            className="w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition"
+          >
+            Close Details
+          </button>
         </div>
       </div>
     </div>
