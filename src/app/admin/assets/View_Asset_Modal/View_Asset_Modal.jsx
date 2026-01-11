@@ -61,7 +61,9 @@ const View_Asset_Modal = ({ selectedAsset, setSelectedAsset }) => {
       : "N/A";
 
   return (
-    <div className="modal-box w-full max-w-6xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl p-4 md:p-6 text-gray-900">
+    <div
+      id="View_Asset_Modal"
+      className="modal-box w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl p-4 md:p-6 text-gray-900">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 md:gap-4 w-full">

@@ -85,8 +85,8 @@ const Table_Pagination = ({
               disabled={isFirstPageDisabled}
               onClick={handleFirst}
               className={`p-3 rounded-lg border transition ${isFirstPageDisabled
-                  ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                  : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                 }`}
             >
               <FaAngleDoubleLeft className="w-4 h-4" />
@@ -99,8 +99,8 @@ const Table_Pagination = ({
               disabled={isPrevDisabled}
               onClick={handlePrev}
               className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition ${isPrevDisabled
-                  ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                  : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                 }`}
             >
               <FaAngleLeft className="w-4 h-4" />
@@ -119,8 +119,8 @@ const Table_Pagination = ({
               disabled={isNextDisabled}
               onClick={handleNext}
               className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition ${isNextDisabled
-                  ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                  : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                 }`}
             >
               <span className="hidden sm:inline">Next</span>
@@ -134,48 +134,13 @@ const Table_Pagination = ({
               disabled={isLastPageDisabled}
               onClick={handleLast}
               className={`p-3 rounded-lg border transition ${isLastPageDisabled
-                  ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                  : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                 }`}
             >
               <FaAngleDoubleRight className="w-4 h-4" />
             </button>
           </div>
-
-          {/* Page Numbers - Horizontal Scroll for Mobile */}
-          {totalPages > 1 && (
-            <div className="mt-2">
-              <div className="flex items-center justify-center gap-1 overflow-x-auto py-2 scrollbar-hide">
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 7) {
-                    pageNum = i + 1;
-                  } else if (safeCurrentPage <= 4) {
-                    pageNum = i + 1;
-                  } else if (safeCurrentPage >= totalPages - 3) {
-                    pageNum = totalPages - 6 + i;
-                  } else {
-                    pageNum = safeCurrentPage - 3 + i;
-                  }
-
-                  if (pageNum > totalPages || pageNum < 1) return null;
-
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`min-w-10 px-3 py-2 rounded-lg text-sm font-medium transition ${safeCurrentPage === pageNum
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -201,42 +166,6 @@ const Table_Pagination = ({
 
             {/* Controls */}
             <div className="flex flex-col sm:flex-row items-center gap-3">
-              {/* Quick Page Numbers */}
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (safeCurrentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (safeCurrentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = safeCurrentPage - 2 + i;
-                    }
-
-                    if (pageNum > totalPages || pageNum < 1) return null;
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`min-w-10 px-3 py-2 rounded-lg text-sm font-medium transition ${safeCurrentPage === pageNum
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  {totalPages > 5 && (
-                    <span className="px-2 text-gray-500">...</span>
-                  )}
-                </div>
-              )}
-
               {/* Navigation Buttons */}
               <div className="flex items-center gap-2">
                 {/* First Page */}
@@ -246,8 +175,8 @@ const Table_Pagination = ({
                   disabled={isFirstPageDisabled}
                   onClick={handleFirst}
                   className={`hidden sm:flex items-center justify-center p-3 rounded-lg border transition ${isFirstPageDisabled
-                      ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                      : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                    ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                    : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                     }`}
                 >
                   <FaAngleDoubleLeft className="w-4 h-4" />
@@ -260,8 +189,8 @@ const Table_Pagination = ({
                   disabled={isPrevDisabled}
                   onClick={handlePrev}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition ${isPrevDisabled
-                      ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                      : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                    ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                    : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                     }`}
                 >
                   <FaAngleLeft className="w-4 h-4" />
@@ -280,8 +209,8 @@ const Table_Pagination = ({
                   disabled={isNextDisabled}
                   onClick={handleNext}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition ${isNextDisabled
-                      ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                      : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                    ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                    : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                     }`}
                 >
                   <span className="hidden sm:inline">Next</span>
@@ -295,8 +224,8 @@ const Table_Pagination = ({
                   disabled={isLastPageDisabled}
                   onClick={handleLast}
                   className={`hidden sm:flex items-center justify-center p-3 rounded-lg border transition ${isLastPageDisabled
-                      ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
-                      : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
+                    ? "opacity-40 cursor-not-allowed bg-gray-100 border-gray-300"
+                    : "bg-white border-gray-300 hover:bg-gray-50 hover:shadow-sm cursor-pointer"
                     }`}
                 >
                   <FaAngleDoubleRight className="w-4 h-4" />
