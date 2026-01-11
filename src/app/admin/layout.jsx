@@ -13,7 +13,7 @@ import { SessionProvider } from 'next-auth/react';
 // Icons
 import {
   MdOutlineDashboard, MdLogout, MdPersonOutline,
-  MdClose, MdMenu, MdChevronLeft, MdChevronRight
+  MdClose, MdChevronLeft, MdChevronRight
 } from "react-icons/md";
 import { FaBox, FaInbox } from "react-icons/fa";
 import { GrTransaction } from "react-icons/gr";
@@ -28,22 +28,19 @@ import DepartmentIcon from "../../../public/Icons/Admin/DepartmentIcon";
 import MyRequestsIcon from "../../../public/Icons/Admin/MyRequestsIcon";
 import CompanySettingsIcon from "../../../public/Icons/Admin/CompanySettingsIcon";
 
-// Hooks
+// Hooks & Components
 import useAuth from '@/hooks/useAuth';
-
-// Components
 import Navbar from '@/Shared/Navbar/Navbar';
 import Footer from '@/Shared/Footer/Footer';
 
 const AdminLayout = ({ children }) => {
-  // Hooks
   const { logout } = useAuth();
   const pathname = usePathname();
 
   // Sidebar states
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // For mobile drawer
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // For desktop width toggle
   const [isMobile, setIsMobile] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Check if mobile on mount and resize
   useEffect(() => {

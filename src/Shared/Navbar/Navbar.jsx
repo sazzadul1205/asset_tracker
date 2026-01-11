@@ -17,7 +17,6 @@ import { MdMenu } from "react-icons/md";
 const Navbar = ({
   isSidebarCollapsed,
   toggleSidebarWidth,
-  setIsMenuOpen,
 }) => {
   const axiosPublic = useAxiosPublic();
   const { data: session } = useSession();
@@ -123,7 +122,7 @@ const Navbar = ({
             )}
 
             {/* User Details - Hidden on mobile, visible on tablet and up */}
-            <div className="hidden md:block border-l pl-4 border-gray-300 min-w-[120px]">
+            <div className="hidden md:block border-l pl-4 border-gray-300 min-w-30">
               {MyUserIsLoading ? (
                 <div className="space-y-1 animate-pulse">
                   <div className="h-4 w-28 bg-gray-200 rounded" />
@@ -136,7 +135,7 @@ const Navbar = ({
                   <p className="font-semibold leading-tight text-sm">
                     {MyUserData?.personal?.name || "Unknown User"}
                   </p>
-                  <p className="text-xs text-gray-600 font-medium truncate max-w-[180px]">
+                  <p className="text-xs text-gray-600 font-medium truncate max-w-45">
                     {MyUserData?.credentials?.email || "Unknown Email"}
                   </p>
                 </>
