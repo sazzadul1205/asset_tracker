@@ -40,10 +40,13 @@ const Shared_Input_Image = ({
   hideLabel = false,
 
   // Size preset for the drop area
-  size = "md", // "sm" | "md"
+  size = "md", // "sm" | "md" | "lg"
 
   // Extra container classes for layout control
   containerClass = "",
+
+  // Accept prop for file input
+  accept = "image/*",
 }) => {
   // Reference to hidden file input
   const inputRef = useRef(null);
@@ -56,9 +59,14 @@ const Shared_Input_Image = ({
    * Keeps layout consistent and predictable
    */
   const SIZE_MAP = {
-    sm: "w-20 h-20",
-    md: "w-64 h-64",
+    xs: "w-16 h-16",
+    sm: "w-24 h-24",
+    md: "w-40 h-40",
+    lg: "w-64 h-64",
   };
+
+  // State for local preview URL
+  const [localPreviewUrl, setLocalPreviewUrl] = useState(previewUrl || placeholderImage);
 
   /**
    * Handles a newly selected file
@@ -68,13 +76,24 @@ const Shared_Input_Image = ({
   const handleFile = (selectedFile) => {
     if (!selectedFile) return;
 
-    // Optional chaining keeps this backward-compatible
+    // Create blob URL for preview
+    const blobUrl = URL.createObjectURL(selectedFile);
+
+    // Update preview URL state
+    setLocalPreviewUrl(blobUrl);
+    setPreviewUrl?.(blobUrl);
+
+    // Update file state (if provided)
     setFile?.(selectedFile);
-    setPreviewUrl?.(URL.createObjectURL(selectedFile));
   };
 
   // File input change handler
-  const handleFileChange = (e) => handleFile(e.target.files[0]);
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      handleFile(selectedFile);
+    }
+  };
 
   // Drag handlers (purely for UX)
   const handleDragOver = (e) => {
@@ -88,8 +107,9 @@ const Shared_Input_Image = ({
     e.preventDefault();
     setIsDragging(false);
 
-    if (e.dataTransfer.files?.[0]) {
-      handleFile(e.dataTransfer.files[0]);
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile && droppedFile.type.startsWith('image/')) {
+      handleFile(droppedFile);
     }
   };
 
@@ -98,20 +118,29 @@ const Shared_Input_Image = ({
    * Prevents memory leaks
    */
   useEffect(() => {
-    return () => {
-      if (previewUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
+    // Update local preview when prop changes
+    if (previewUrl) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalPreviewUrl(previewUrl);
+    }
   }, [previewUrl]);
 
-  // Detect blob URL vs normal URL
-  const isBlob = previewUrl?.startsWith("blob:");
+  useEffect(() => {
+    return () => {
+      // Cleanup blob URLs
+      if (localPreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    };
+  }, [localPreviewUrl]);
+
+  // Get size class
+  const sizeClass = SIZE_MAP[size] || SIZE_MAP.md;
 
   return (
     <div className={`w-full ${containerClass}`}>
       {/* Optional label */}
-      {!hideLabel && (
+      {!hideLabel && label && (
         <label
           className={`block font-semibold pb-2 ${errors?.[name] ? "text-red-500" : "text-gray-700"
             }`}
@@ -124,51 +153,69 @@ const Shared_Input_Image = ({
       <div
         className={`
           border-2 border-dashed rounded-xl cursor-pointer
-          transition-colors flex items-center justify-center
-          overflow-hidden relative
-          ${SIZE_MAP[size]}
+          transition-all duration-200 flex items-center justify-center
+          overflow-hidden relative group
+          ${sizeClass}
           ${isDragging
             ? "border-blue-500 bg-blue-50"
             : "border-gray-200 hover:border-gray-400 bg-gray-50"
           }
         `}
-        onClick={() => inputRef.current.click()}
+        onClick={() => inputRef.current?.click()}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {/* Image preview */}
-        {previewUrl ? (
-          <Image
-            src={previewUrl}
-            alt="Preview"
-            fill
-            sizes="128px"
-            className="object-contain p-2"
-          />
-        ) : placeholderImage ? (
-          <Image
-            src={placeholderImage}
-            alt="Placeholder"
-            width={48}
-            height={48}
-            className="object-contain opacity-60"
-          />
+        {localPreviewUrl ? (
+          <div className="relative w-full h-full">
+            <Image
+              src={localPreviewUrl}
+              alt="Preview"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain p-2"
+              unoptimized={localPreviewUrl?.startsWith("blob:")}
+            />
+            {/* Overlay on hover */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+              <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full transition-opacity duration-200">
+                Change
+              </span>
+            </div>
+          </div>
         ) : (
-          <span className="text-gray-400 text-xs text-center">
-            Click or drop
-          </span>
+          <div className="flex flex-col items-center justify-center p-4">
+            <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-gray-500 text-xs text-center">
+              Click or drop image
+            </span>
+          </div>
         )}
 
         {/* Hidden native file input */}
         <input
           type="file"
-          accept="image/*"
+          accept={accept}
           ref={inputRef}
           onChange={handleFileChange}
           className="hidden"
         />
       </div>
+
+      {/* File info */}
+      {file && (
+        <div className="mt-2 text-xs text-gray-600">
+          <p className="truncate">
+            <span className="font-medium">Selected:</span> {file.name}
+          </p>
+          <p>
+            <span className="font-medium">Size:</span> {(file.size / 1024).toFixed(2)} KB
+          </p>
+        </div>
+      )}
 
       {/* Validation error message */}
       {errors?.[name] && (
