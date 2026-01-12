@@ -85,22 +85,23 @@ const ProfilePage = () => {
   if (MyUserError) return <Error errors={[MyUserError]} />;
 
   return (
-    <div>
+    <div className="px-2 sm:px-4">
       {/* Header */}
-      <div className="bg-white border border-gray-200 rounded-t flex items-center justify-between px-6 py-4 mx-2 mt-4">
+      <div className="bg-white border border-gray-200 rounded-t-lg flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 mt-4 gap-4 sm:gap-0">
 
         {/* Title */}
-        <h3 className="text-xl font-semibold text-gray-800">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
           Profile
         </h3>
 
         {/* Buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
           {/* Change Password */}
           <Shared_Button
             variant="ghost"
             onClick={() => document.getElementById("Change_Password_Modal")?.showModal()}
-            className="bg-gray-200 text-gray-800 hover:bg-gray-300"
+            className="bg-gray-200 text-gray-800 hover:bg-gray-300 w-full sm:w-auto justify-center"
+            size="sm"
           >
             <IoLockClosedOutline className="inline-block mr-2" />
             Change Password
@@ -110,7 +111,8 @@ const ProfilePage = () => {
           <Shared_Button
             variant="primary"
             onClick={() => document.getElementById("Edit_My_Profile_Modal")?.showModal()}
-            className="bg-blue-500 hover:bg-blue-600"
+            className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto justify-center"
+            size="sm"
           >
             <FaEdit className="inline-block mr-2" />
             Edit Profile
@@ -119,23 +121,23 @@ const ProfilePage = () => {
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-2 bg-white border border-gray-200 rounded-b gap-4 mx-2 p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 bg-white border border-gray-200 rounded-b-lg gap-4 sm:gap-6 p-4 sm:p-6">
 
         {/* Personal Information */}
         <div className="border border-gray-300 rounded-lg shadow-lg">
           {/* Header */}
-          <div className="flex text-black items-center p-6 pb-3 gap-3">
-            <FaRegUser className="text-xl" />
-            <h3 className="font-semibold text-lg">Personal Information</h3>
+          <div className="flex text-black items-center p-4 sm:p-6 pb-3 gap-3">
+            <FaRegUser className="text-lg sm:text-xl" />
+            <h3 className="font-semibold text-base sm:text-lg">Personal Information</h3>
           </div>
 
           {/* Content */}
-          <div className="text-black p-6 pt-0 grid grid-cols-2 gap-3 space-y-2">
+          <div className="text-black p-4 sm:p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3 space-y-0">
 
             {/* Full Name */}
-            <div className="flex items-center space-x-3">
-              <CiUser className="text-xl text-gray-500" />
-              <div className='min-w-0'  >
+            <div className="flex items-start sm:items-center space-x-3">
+              <CiUser className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Full Name</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.personal?.name ?? "John Doe"}
@@ -144,9 +146,9 @@ const ProfilePage = () => {
             </div>
 
             {/* Employee ID */}
-            <div className="flex items-center space-x-3">
-              <MdBadge className="text-xl text-gray-500" />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdBadge className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Employee ID</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.personal?.userId ?? "12345"}
@@ -155,9 +157,9 @@ const ProfilePage = () => {
             </div>
 
             {/* Email */}
-            <div className="flex items-center space-x-3">
-              <MdEmail className="text-xl text-gray-500" />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdEmail className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Email Address</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.credentials?.email ?? "johndoe@co.com"}
@@ -166,9 +168,9 @@ const ProfilePage = () => {
             </div>
 
             {/* Phone Number */}
-            <div className="flex items-center space-x-3">
-              <MdPhone className="text-xl text-gray-500" />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdPhone className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Phone Number</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.personal?.phone ?? "+880123456789"}
@@ -181,18 +183,18 @@ const ProfilePage = () => {
         {/* Work Information */}
         <div className="border border-gray-300 rounded-lg shadow-lg">
           {/* Header */}
-          <div className="flex text-black items-center p-6 pb-3 gap-3">
-            <MdApartment className="text-xl" />
-            <h3 className="font-semibold text-lg">Work Information</h3>
+          <div className="flex text-black items-center p-4 sm:p-6 pb-3 gap-3">
+            <MdApartment className="text-lg sm:text-xl" />
+            <h3 className="font-semibold text-base sm:text-lg">Work Information</h3>
           </div>
 
           {/* Content */}
-          <div className="text-black p-6 pt-0 grid grid-cols-2 gap-3 space-y-2">
+          <div className="text-black p-4 sm:p-6 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-3 space-y-0">
 
             {/* Department */}
-            <div className="flex items-center space-x-3">
-              <MdApartment className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdApartment className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Department</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.employment?.departmentId ?? "-"}
@@ -201,9 +203,9 @@ const ProfilePage = () => {
             </div>
 
             {/* Position */}
-            <div className="flex items-center space-x-3">
-              <MdWork className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdWork className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Position</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.employment?.position ?? "-"}
@@ -212,9 +214,9 @@ const ProfilePage = () => {
             </div>
 
             {/* Role */}
-            <div className="flex items-center space-x-3">
-              <MdAdminPanelSettings className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdAdminPanelSettings className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Role</h3>
                 <div className="flex gap-2 mt-1">
                   {(() => {
@@ -248,9 +250,9 @@ const ProfilePage = () => {
             </div>
 
             {/* Hire Date */}
-            <div className="flex items-center space-x-3">
-              <MdCalendarMonth className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdCalendarMonth className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Hire Date</h3>
                 <p className="text-sm text-gray-600 truncate">
                   {MyUserData?.personal?.hireDate
@@ -262,21 +264,21 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Account Information */}
-        <div className="border border-gray-300 rounded-lg shadow-lg">
+        {/* Account Information - Full width on mobile, spans two columns on desktop */}
+        <div className="border border-gray-300 rounded-lg shadow-lg lg:col-span-2">
           {/* Header */}
-          <div className="flex text-black items-center p-6 pb-3 gap-3">
-            <FaUserCheck className="text-xl" />
-            <h3 className="font-semibold text-lg">Account Information</h3>
+          <div className="flex text-black items-center p-4 sm:p-6 pb-3 gap-3">
+            <FaUserCheck className="text-lg sm:text-xl" />
+            <h3 className="font-semibold text-base sm:text-lg">Account Information</h3>
           </div>
 
           {/* Content */}
-          <div className="text-black p-6 pt-0 grid grid-cols-1 gap-3">
+          <div className="text-black p-4 sm:p-6 pt-0 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3">
 
             {/* Status */}
-            <div className="flex items-center space-x-3">
-              <MdCheckCircle className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdCheckCircle className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Status</h3>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {(() => {
@@ -299,7 +301,7 @@ const ProfilePage = () => {
                     }
 
                     return (
-                      <div className={`inline-flex items-center justify-center w-24 py-1 rounded-xl text-sm font-semibold ${badgeColor}`}>
+                      <div className={`inline-flex items-center justify-center w-20 sm:w-24 py-1 rounded-xl text-xs sm:text-sm font-semibold ${badgeColor}`}>
                         {status}
                       </div>
                     );
@@ -309,11 +311,11 @@ const ProfilePage = () => {
             </div>
 
             {/* Last Login */}
-            <div className="flex items-center space-x-3">
-              <MdLogin className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdLogin className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Last Login</h3>
-                <p className="text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   {MyUserData?.credentials?.lastLogin
                     ? format(parseISO(MyUserData.credentials.lastLogin), "dd MMM yyyy hh:mm a")
                     : "-"}
@@ -322,11 +324,11 @@ const ProfilePage = () => {
             </div>
 
             {/* Account Created */}
-            <div className="flex items-center space-x-3">
-              <MdAccessTime className="text-xl text-gray-500 " />
-              <div className='min-w-0' >
+            <div className="flex items-start sm:items-center space-x-3">
+              <MdAccessTime className="text-lg sm:text-xl text-gray-500 mt-0.5 sm:mt-0 shrink-0" />
+              <div className='min-w-0 flex-1'>
                 <h3 className="text-sm font-medium text-gray-900">Account Created</h3>
-                <p className="text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   {MyUserData?.metadata?.createdAt
                     ? format(parseISO(MyUserData.metadata?.createdAt), "dd MMM yyyy hh:mm a")
                     : "-"}

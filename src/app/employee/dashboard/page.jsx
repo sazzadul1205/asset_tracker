@@ -238,27 +238,32 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 bg-white">
+      <div className="flex flex-col gap-4 p-4 sm:p-5 bg-white sm:flex-row sm:items-center sm:justify-between">
         {/* LEFT: TITLE & DESCRIPTION */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <div className="text-center sm:text-left">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Employee Dashboard
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Welcome to your employee dashboard!
           </p>
         </div>
 
         {/* RIGHT: BADGE & DATE */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
           {/* ADMIN BADGE */}
-          <div className={`inline-flex items-center gap-2 rounded-full border font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-secondary/80 text-sm px-3 py-1 ${getColorClass('indigo', 'bgLight')} ${getColorClass('indigo', 'text')} border-indigo-200`}>
-            <TbActivityHeartbeat />
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 text-xs sm:text-sm font-semibold rounded-full
+            cursor-pointer bg-indigo-50 text-indigo-700 border border-indigo-200
+            transition-transform duration-200 ease-out
+            hover:-translate-y-1 hover:shadow-md"
+          >
+            <TbActivityHeartbeat className="text-sm sm:text-base" />
             Employee
           </div>
 
           {/* CURRENT DATE */}
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm font-medium text-gray-500">
             {new Date().toLocaleDateString("en-GB", {
               weekday: "long",
               day: "2-digit",

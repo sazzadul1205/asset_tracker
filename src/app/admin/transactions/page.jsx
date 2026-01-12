@@ -58,7 +58,7 @@ const TransactionPage = () => {
   const axiosPublic = useAxiosPublic();
 
   // State variables -> Requests
-  const [itemsPerPage] = useState(7);
+  const [itemsPerPage] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showMobileSearch, setShowMobileSearch] = useState(false);

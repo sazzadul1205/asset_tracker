@@ -190,30 +190,33 @@ const MyRequestsList = ({
         key={myRequests?._id}
         className="bg-white shadow-lg rounded-xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl transition-shadow duration-200"
       >
-        {/* Header Section */}
-        <div className="flex justify-between items-center gap-4 pb-4 border-b border-gray-100">
-          {/* Top row: Type, Priority, Status */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* Type with Icon */}
-            <div className="flex items-center gap-2 shrink-0">
-              {getRequestTypeIcon(myRequests?.type)}
-              <span className="font-bold text-gray-800 text-sm sm:text-base">
-                {getTypeLabel(myRequests?.type)}
-              </span>
+        {/* Header Section - Fixed to stack properly on mobile */}
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-3 sm:gap-4 pb-4 border-b border-gray-100">
+          {/* First Row: Type, Priority, Status - Mobile friendly */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Left side: Type and badges */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Type with Icon */}
+              <div className="flex items-center gap-2 shrink-0">
+                {getRequestTypeIcon(myRequests?.type)}
+                <span className="font-bold text-gray-800 text-sm sm:text-base">
+                  {getTypeLabel(myRequests?.type)}
+                </span>
+              </div>
+
+              {/* Priority Badge */}
+              <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full border ${getPriorityColor(myRequests?.priority)} text-xs sm:text-sm font-medium shrink-0`}>
+                {myRequests?.priority.charAt(0).toUpperCase() + myRequests?.priority.slice(1)}
+              </div>
+
+              {/* Status Badge */}
+              <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full border ${getStatusColor(myRequests?.metadata?.status)} text-xs sm:text-sm font-medium shrink-0`}>
+                {myRequests?.metadata?.status?.charAt(0).toUpperCase() + myRequests?.metadata?.status?.slice(1) || "Pending"}
+              </div>
             </div>
 
-            {/* Priority Badge */}
-            <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full border ${getPriorityColor(myRequests?.priority)} text-xs sm:text-sm font-medium shrink-0`}>
-              {myRequests?.priority.charAt(0).toUpperCase() + myRequests?.priority.slice(1)}
-            </div>
-
-            {/* Status Badge */}
-            <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full border ${getStatusColor(myRequests?.metadata?.status)} text-xs sm:text-sm font-medium shrink-0`}>
-              {myRequests?.metadata?.status?.charAt(0).toUpperCase() + myRequests?.metadata?.status?.slice(1) || "Pending"}
-            </div>
-
-            {/* Barcode for mobile */}
-            <div className="block sm:hidden ml-auto">
+            {/* Barcode - Only visible on mobile in header */}
+            <div className="block sm:hidden self-end">
               <SerialNumber_To_Barcode
                 serialNumber={myRequests?.assetInfo?.serialNumber || "N/A"}
                 size="small"
@@ -221,35 +224,28 @@ const MyRequestsList = ({
             </div>
           </div>
 
-          {/* Bottom row: Actions */}
+          {/* Second Row: Actions and Barcode (desktop) - Stack on mobile */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Barcode for desktop */}
-            <div className="hidden sm:block">
-              <SerialNumber_To_Barcode
-                serialNumber={myRequests?.assetInfo?.serialNumber || "N/A"}
-              />
-            </div>
-
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-cols lg:flex-wrap items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
               {/* Accept/Reject Buttons */}
               {myRequests?.metadata?.status === "pending" && (() => {
                 const isTransfer = myRequests?.type === "transfer";
                 const isRequestedTo = myRequests?.participants?.requestedToId === UserId;
                 const isManagerOrAdmin = UserRole === "manager" || UserRole === "admin";
 
-                // 🚫 Transfer: only requestedToId can act
+                // Transfer: only requestedToId can act
                 if (isTransfer && !isRequestedTo) return null;
 
-                // 🚫 Non-transfer: block if no permission
+                // Non-transfer: block if no permission
                 if (!isTransfer && !(isRequestedTo || isManagerOrAdmin)) return null;
 
                 return (
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     {/* Accept Button */}
                     <Shared_Button
                       onClick={() => handleRequestAction(myRequests, "approved", UserId)}
-                      className="bg-green-600 hover:bg-green-700 border-0 flex items-center justify-center text-sm sm:text-base"
+                      className="bg-green-600 hover:bg-green-700 border-0 flex items-center justify-center text-sm sm:text-base w-full sm:w-auto"
                       title="Accept Request"
                       disabled={loading}
                       size="sm"
@@ -269,6 +265,7 @@ const MyRequestsList = ({
                       variant="danger"
                       title="Reject Request"
                       disabled={loading}
+                      className="w-full sm:w-auto"
                       size="sm"
                     >
                       {loading ? (
@@ -288,7 +285,7 @@ const MyRequestsList = ({
                 myRequests?.metadata?.status === 'pending' && (
                   <Shared_Button
                     onClick={() => handleDeleteRequest(myRequests)}
-                    className="bg-gray-600 hover:bg-gray-700 border-0 text-sm sm:text-base"
+                    className="bg-gray-600 hover:bg-gray-700 border-0 text-sm sm:text-base w-full sm:w-auto"
                     title="Delete Request"
                     size="sm"
                   >
@@ -296,6 +293,16 @@ const MyRequestsList = ({
                   </Shared_Button>
                 )}
             </div>
+
+            {/* Barcode for desktop */}
+            <div className="hidden sm:block">
+              <SerialNumber_To_Barcode
+                showText={false}
+                serialNumber={myRequests?.assetInfo?.serialNumber || "N/A"}
+              />
+            </div>
+
+
           </div>
         </div>
 
