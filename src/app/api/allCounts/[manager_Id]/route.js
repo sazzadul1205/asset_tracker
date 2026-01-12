@@ -29,19 +29,20 @@ export async function GET(req, context) {
       );
     }
 
-    const isManager = user?.employment?.position
-      ?.toLowerCase()
-      .includes("manager");
+    // Check if user is a manager based on role, not position
+    const isManager = user?.employment?.role?.toLowerCase() === "manager";
+
     let userIds = [];
     let usersCount = 0;
 
     if (isManager) {
-      // 2️⃣ Manager → all users in the department
+      // 2️⃣ Manager → all users in the department (EXCLUDING THE MANAGER THEMSELVES)
       const departmentId = user?.employment?.departmentId;
 
       if (!departmentId || departmentId === "unassigned") {
         return NextResponse.json({
           success: true,
+          isManager: true,
           counts: {
             users: 0,
             assets: 0,
@@ -51,37 +52,54 @@ export async function GET(req, context) {
         });
       }
 
+      // Get all users in the department EXCEPT the manager themselves
       const departmentUsers = await usersCol
-        .find({ "employment.departmentId": departmentId })
-        .project({ "personal.userId": 1 })
+        .find({
+          "employment.departmentId": departmentId,
+          "personal.userId": { $ne: manager_Id }, // Exclude manager from count
+        })
+        .project({ "personal.userId": 1, "employment.role": 1 })
         .toArray();
 
       userIds = departmentUsers.map((u) => u.personal.userId);
       usersCount = userIds.length;
+
+      // Include manager's own ID for asset and request queries if needed
+      userIds = [...userIds, manager_Id];
     } else {
       // 2️⃣ Non-manager → only own ID
       userIds = [manager_Id];
-      usersCount = 1;
+      usersCount = 0; // For non-manager, they don't have "users" count
     }
 
     // 3️⃣ Count assets assigned to the user(s)
+    // For manager: count assets assigned to any department member (including themselves)
+    // For non-manager: count assets assigned only to themselves
     const assetsCount = await assetsCol.countDocuments({
       "assigned.assignedTo": { $in: userIds },
     });
 
     // 4️⃣ Count requests
-    const requests = await requestsCol
+    // Count requests where the user(s) are either requester OR requestedTo
+    const allRequests = await requestsCol
       .find({
-        "participants.requestedById": { $in: userIds },
+        $or: [
+          { "participants.requestedById": { $in: userIds } },
+          { "participants.requestedToId": { $in: userIds } },
+        ],
       })
-      .project({ "metadata.status": 1 })
+      .project({
+        "metadata.status": 1,
+        "participants.requestedById": 1,
+        "participants.requestedToId": 1,
+      })
       .toArray();
 
     let pending = 0,
       rejected = 0,
       accepted = 0;
 
-    for (const req of requests) {
+    for (const req of allRequests) {
       switch (req.metadata.status) {
         case "pending":
           pending++;
@@ -106,9 +124,10 @@ export async function GET(req, context) {
     // 6️⃣ Response
     return NextResponse.json({
       success: true,
+      isManager: isManager,
       departmentId: user?.employment?.departmentId || null,
       counts: {
-        users: usersCount,
+        users: usersCount, // This is the count of employees under manager (excluding manager)
         assets: assetsCount,
         requests: { pending, rejected, accepted },
         departments: departmentsCount,
