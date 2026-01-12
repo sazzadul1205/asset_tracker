@@ -400,12 +400,12 @@ const View_Request_Modal = ({
               <FaBuilding className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-500">Department</p>
-                <p className="font-medium text-gray-800">
+                <div className="font-medium text-gray-800">
                   <DeptId_To_Name
                     deptId={employeeData?.requestedBy?.departmentId}
                     compact={true}
                   />
-                </p>
+                </div>
               </div>
             </div>
           </div>
@@ -457,12 +457,12 @@ const View_Request_Modal = ({
               <FaBuilding className="text-gray-400 w-5 h-5 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-500">Department</p>
-                <p className="font-medium text-gray-800">
+                <div className="font-medium text-gray-800">
                   <DeptId_To_Name
                     deptId={employeeData?.requestedTo?.departmentId}
                     compact={true}
                   />
-                </p>
+                </div>
               </div>
             </div>
           </div>

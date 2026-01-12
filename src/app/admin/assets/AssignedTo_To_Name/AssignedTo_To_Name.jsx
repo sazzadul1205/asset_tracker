@@ -94,18 +94,6 @@ const AssignedTo_To_Name = ({
     );
   }
 
-
-
-  console.log("DEBUG AssignedTo_To_Name:", {
-    assignedTo,
-    MyUserData,
-    MyUserIsLoading,
-    MyUserError,
-    queryError,
-    userName,
-    userEmail
-  });
-
   // ---- COMPACT VIEW (for tables) ----
   if (compact) {
     return (
