@@ -71,47 +71,48 @@ const UpdateAssetForm = ({
 
       const result = await axiosPublic.post("/requests", payload);
 
-      success(result.data.message || "Asset return request created successfully!");
+      success(result.data.message || "Asset update request created successfully!");
       RefetchAll();
       handleClose();
     } catch (error) {
-      console.error("Error creating return request:", error);
-      setGlobalError(error.error || "Failed to create return request. Please try again.");
+      console.error("Error creating update request:", error);
+      setGlobalError(error.error || "Failed to create update request. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
 
       {/* Global Error */}
       {globalError && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mt-3 mb-1 text-sm font-medium text-center">
+        <div className="bg-red-100 text-red-700 p-2 sm:p-3 rounded text-xs sm:text-sm font-medium text-center">
           {globalError}
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
         {/* Asset ID */}
-        <Controller
-          name="assetId"
-          control={control}
-          rules={{ required: "Asset is required" }}
-          render={({ field }) => (
-            <Shared_Input
-              {...field}
-              type="searchable"
-              label="Asset"
-              options={assetOptions}
-              placeholder="Search & select asset"
-              errors={errors}
-            />
-          )}
-        />
+        <div className="md:col-span-2">
+          <Controller
+            name="assetId"
+            control={control}
+            rules={{ required: "Asset is required" }}
+            render={({ field }) => (
+              <Shared_Input
+                {...field}
+                type="searchable"
+                label="Asset"
+                options={assetOptions}
+                placeholder="Search & select asset"
+                errors={errors}
+              />
+            )}
+          />
+        </div>
 
         {/* Action Type */}
         <Shared_Input
@@ -119,7 +120,7 @@ const UpdateAssetForm = ({
           name="type"
           type="select"
           register={register}
-          placeholder="Retire Asset"
+          placeholder="Update Asset"
           readOnly
         />
 
@@ -136,23 +137,25 @@ const UpdateAssetForm = ({
         />
 
         {/* Expected Update Date */}
-        <Controller
-          name="expectedCompletion"
-          control={control}
-          rules={{ required: "Expected Update completion date is required" }}
-          render={({ field }) => (
-            <Shared_Input
-              {...field}
-              type="date"
-              label="Expected Update Date"
-              placeholder="Select expected completion date"
-              error={errors?.expectedCompletion}
-            />
-          )}
-        />
+        <div className="md:col-span-2">
+          <Controller
+            name="expectedCompletion"
+            control={control}
+            rules={{ required: "Expected Update completion date is required" }}
+            render={({ field }) => (
+              <Shared_Input
+                {...field}
+                type="date"
+                label="Expected Update Date"
+                placeholder="Select expected completion date"
+                error={errors?.expectedCompletion}
+              />
+            )}
+          />
+        </div>
 
         {/* Notes */}
-        <div className="col-span-2">
+        <div className="md:col-span-2">
           <Shared_Input
             label="Notes"
             name="description"
@@ -160,17 +163,18 @@ const UpdateAssetForm = ({
             register={register}
             placeholder="Enter notes (optional)"
             error={errors?.description}
-            rows={4}
+            rows="3"
           />
         </div>
 
         {/* Buttons */}
-        <div className='col-span-2 justify-end flex items-center gap-2 pt-2'>
+        <div className='md:col-span-2 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:gap-3 pt-2 sm:pt-4'>
           {/* Cancel */}
           <Shared_Button
             type="button"
             onClick={handleClose}
             variant="ghost"
+            className="w-full sm:w-auto"
             minWidth="100px"
           >
             Cancel
@@ -181,13 +185,13 @@ const UpdateAssetForm = ({
             type="submit"
             variant="primary"
             loading={loading}
+            className="w-full sm:w-auto"
             minWidth="100px"
           >
-            Make Update Asset Request
+            <span className="text-sm sm:text-base">Make Update Asset Request</span>
           </Shared_Button>
         </div>
       </form>
-
     </div>
   );
 };

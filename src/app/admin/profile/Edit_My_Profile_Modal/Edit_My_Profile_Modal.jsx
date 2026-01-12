@@ -122,13 +122,13 @@ const Edit_My_Profile_Modal = ({
 
   return (
     <div
-      id="Change_text_Modal"
-      className="modal-box w-full max-w-xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
+      id="Edit_My_Profile_Modal"
+      className="modal-box w-full max-w-xl mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-4 sm:px-6 py-4 sm:py-5 text-gray-900"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         {/* Title */}
-        <h3 className="tracking-tight text-xl font-semibold text-gray-900">
+        <h3 className="tracking-tight text-lg sm:text-xl font-semibold text-gray-900 truncate">
           Edit Profile
         </h3>
 
@@ -136,7 +136,7 @@ const Edit_My_Profile_Modal = ({
         <button
           type="button"
           onClick={handleClose}
-          className="hover:text-red-500 transition-colors duration-300 cursor-pointer"
+          className="hover:text-red-500 transition-colors duration-300 cursor-pointer shrink-0"
         >
           <ImCross className="text-lg" />
         </button>
@@ -144,78 +144,87 @@ const Edit_My_Profile_Modal = ({
 
       {/* Global Error */}
       {globalError && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mt-3 mb-1 text-sm font-medium text-center">
+        <div className="bg-red-100 text-red-700 p-2 sm:p-3 rounded text-xs sm:text-sm font-medium text-center mb-3 sm:mb-4">
           {globalError}
         </div>
       )}
 
-      {/* Form */}
-      <div className='pt-4' >
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <FaRegUser className="text-xl" />
-          <h3 className="font-semibold text-lg">Personal Information</h3>
+      {/* Form Container */}
+      <div className='pt-2 sm:pt-4' >
+        {/* Form Header */}
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <FaRegUser className="text-lg sm:text-xl" />
+          <h3 className="font-semibold text-base sm:text-lg">Personal Information</h3>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4 pt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
           {/* Full Name */}
-          <Shared_Input
-            label="Full Name"
-            name="personal.name"
-            defaultValue={MyUserData?.personal?.name || ""}
-            register={register}
-            placeholder="Enter your Full Name"
-            rules={{ required: "Full Name is required." }}
-            type="text"
-            errors={errors}
-          />
+          <div className="md:col-span-2">
+            <Shared_Input
+              label="Full Name"
+              name="personal.name"
+              defaultValue={MyUserData?.personal?.name || ""}
+              register={register}
+              placeholder="Enter your Full Name"
+              rules={{ required: "Full Name is required." }}
+              type="text"
+              errors={errors}
+            />
+          </div>
 
           {/* Employee ID */}
-          <Shared_Input
-            label="Employee ID"
-            name="personal.userId"
-            defaultValue={MyUserData?.personal?.userId || ""}
-            register={register}
-            placeholder="Enter your Employee ID"
-            rules={{ required: "Employee ID is required." }}
-            type="text"
-            errors={errors}
-            disabled
-          />
+          <div className="md:col-span-2">
+            <Shared_Input
+              label="Employee ID"
+              name="personal.userId"
+              defaultValue={MyUserData?.personal?.userId || ""}
+              register={register}
+              placeholder="Enter your Employee ID"
+              rules={{ required: "Employee ID is required." }}
+              type="text"
+              errors={errors}
+              disabled
+            />
+          </div>
 
           {/* Email */}
-          <Shared_Input
-            label="Email Address"
-            name="credentials.email"
-            defaultValue={MyUserData?.credentials?.email || ""}
-            register={register}
-            placeholder="Enter your Email Address"
-            rules={{ required: "Email Address is required." }}
-            type="email"
-            errors={errors}
-          />
+          <div className="md:col-span-2">
+            <Shared_Input
+              label="Email Address"
+              name="credentials.email"
+              defaultValue={MyUserData?.credentials?.email || ""}
+              register={register}
+              placeholder="Enter your Email Address"
+              rules={{ required: "Email Address is required." }}
+              type="email"
+              errors={errors}
+            />
+          </div>
 
           {/* Phone Number */}
-          <Shared_Input
-            label="Phone Number"
-            name="personal.phone"
-            defaultValue={MyUserData?.personal?.phone || ""}
-            register={register}
-            placeholder="Enter your Phone Number"
-            rules={{ required: "Phone Number is required." }}
-            type="text"
-            errors={errors}
-          />
+          <div className="md:col-span-2">
+            <Shared_Input
+              label="Phone Number"
+              name="personal.phone"
+              defaultValue={MyUserData?.personal?.phone || ""}
+              register={register}
+              placeholder="Enter your Phone Number"
+              rules={{ required: "Phone Number is required." }}
+              type="text"
+              errors={errors}
+            />
+          </div>
 
           {/* Buttons */}
-          <div className='col-span-2 justify-end flex items-center gap-2' >
+          <div className='md:col-span-2 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:gap-3 pt-3 sm:pt-4'>
             {/* Cancel */}
             <Shared_Button
               type="button"
               onClick={handleClose}
               variant="ghost"
+              className="w-full sm:w-auto"
               minWidth="100px"
             >
               Cancel
@@ -226,9 +235,10 @@ const Edit_My_Profile_Modal = ({
               type="submit"
               variant="primary"
               loading={isSubmitting || loading}
+              className="w-full sm:w-auto"
               minWidth="100px"
             >
-              Update Profile
+              <span className="text-sm sm:text-base">Update Profile</span>
             </Shared_Button>
           </div>
         </form>

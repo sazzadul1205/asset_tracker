@@ -294,9 +294,9 @@ const View_Department_Modal = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className='text-sm text-gray-500'>Manager</p>
-                <p className='font-medium text-gray-800 py-1'>
+                <div className='font-medium text-gray-800 py-1'>
                   <UserId_To_Name userId={selectedDepartment?.manager?.userId} />
-                </p>
+                </div>
                 <p className='text-xs text-gray-400'>Department head responsible</p>
               </div>
             </div>
@@ -467,9 +467,9 @@ const View_Department_Modal = ({
               <div className='flex justify-between items-center py-2 border-b border-gray-100'>
                 <p className='text-sm text-gray-600'>Manager</p>
                 <div className='text-right'>
-                  <p className='font-medium text-gray-800 text-sm'>
+                  <div className='font-medium text-gray-800 text-sm'>
                     <UserId_To_Name userId={selectedDepartment?.manager?.userId} />
-                  </p>
+                  </div>
                 </div>
               </div>
 

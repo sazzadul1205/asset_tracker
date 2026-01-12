@@ -163,8 +163,6 @@ const MyRequestsList = ({
       return;
     }
 
-    
-
     setLoading(true); // start loading
     const payload = { UserId };
 
@@ -190,143 +188,150 @@ const MyRequestsList = ({
     <div className='space-y-4 mb-2'>
       <div
         key={myRequests?._id}
-        className="bg-white shadow-lg rounded-xl border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-200"
+        className="bg-white shadow-lg rounded-xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl transition-shadow duration-200"
       >
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-100">
-          {/* Left side: Type, Asset, Priority */}
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex justify-between items-center gap-4 pb-4 border-b border-gray-100">
+          {/* Top row: Type, Priority, Status */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {/* Type with Icon */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {getRequestTypeIcon(myRequests?.type)}
-              <span className="font-bold text-gray-800">
+              <span className="font-bold text-gray-800 text-sm sm:text-base">
                 {getTypeLabel(myRequests?.type)}
               </span>
             </div>
 
             {/* Priority Badge */}
-            <div className={`px-3 py-1 rounded-full border ${getPriorityColor(myRequests?.priority)} text-sm font-medium`}>
+            <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full border ${getPriorityColor(myRequests?.priority)} text-xs sm:text-sm font-medium shrink-0`}>
               {myRequests?.priority.charAt(0).toUpperCase() + myRequests?.priority.slice(1)}
             </div>
 
             {/* Status Badge */}
-            <div className={`px-3 py-1 rounded-full border ${getStatusColor(myRequests?.metadata?.status)} text-sm font-medium`}>
+            <div className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full border ${getStatusColor(myRequests?.metadata?.status)} text-xs sm:text-sm font-medium shrink-0`}>
               {myRequests?.metadata?.status?.charAt(0).toUpperCase() + myRequests?.metadata?.status?.slice(1) || "Pending"}
+            </div>
+
+            {/* Barcode for mobile */}
+            <div className="block sm:hidden ml-auto">
+              <SerialNumber_To_Barcode
+                serialNumber={myRequests?.assetInfo?.serialNumber || "N/A"}
+                size="small"
+              />
             </div>
           </div>
 
-          {/* Right side: Actions */}
-          <div className="flex items-center gap-2">
-            {/* Barcode */}
-            <div className="hidden md:block">
+          {/* Bottom row: Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Barcode for desktop */}
+            <div className="hidden sm:block">
               <SerialNumber_To_Barcode
                 serialNumber={myRequests?.assetInfo?.serialNumber || "N/A"}
               />
             </div>
 
-            {/* Accept/Reject Buttons: Show if:
-            1. I'm the requestedToId AND status is pending
-            2. I'm a manager OR admin
-            */}
-            {myRequests?.metadata?.status === "pending" && (() => {
-              const isTransfer = myRequests?.type === "transfer";
-              const isRequestedTo = myRequests?.participants?.requestedToId === UserId;
-              const isManagerOrAdmin = UserRole === "manager" || UserRole === "admin";
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              {/* Accept/Reject Buttons */}
+              {myRequests?.metadata?.status === "pending" && (() => {
+                const isTransfer = myRequests?.type === "transfer";
+                const isRequestedTo = myRequests?.participants?.requestedToId === UserId;
+                const isManagerOrAdmin = UserRole === "manager" || UserRole === "admin";
 
-              // 🚫 Transfer: only requestedToId can act
-              if (isTransfer && !isRequestedTo) return null;
+                // 🚫 Transfer: only requestedToId can act
+                if (isTransfer && !isRequestedTo) return null;
 
-              // 🚫 Non-transfer: block if no permission
-              if (!isTransfer && !(isRequestedTo || isManagerOrAdmin)) return null;
+                // 🚫 Non-transfer: block if no permission
+                if (!isTransfer && !(isRequestedTo || isManagerOrAdmin)) return null;
 
-              return (
-                <div className="flex items-center gap-2">
-                  {/* Accept Button */}
+                return (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Accept Button */}
+                    <Shared_Button
+                      onClick={() => handleRequestAction(myRequests, "approved", UserId)}
+                      className="bg-green-600 hover:bg-green-700 border-0 flex items-center justify-center text-sm sm:text-base"
+                      title="Accept Request"
+                      disabled={loading}
+                      size="sm"
+                    >
+                      {loading ? (
+                        <span className="text-xs sm:text-sm">Processing…</span>
+                      ) : (
+                        <>
+                          <IoCheckmark className="text-base sm:text-lg mr-1 sm:mr-2" /> Accept
+                        </>
+                      )}
+                    </Shared_Button>
+
+                    {/* Reject Button */}
+                    <Shared_Button
+                      onClick={() => handleRequestAction(myRequests, "rejected", UserId)}
+                      variant="danger"
+                      title="Reject Request"
+                      disabled={loading}
+                      size="sm"
+                    >
+                      {loading ? (
+                        <span className="text-xs sm:text-sm">Processing…</span>
+                      ) : (
+                        <>
+                          <IoClose className="text-base sm:text-lg mr-1 sm:mr-2" /> Reject
+                        </>
+                      )}
+                    </Shared_Button>
+                  </div>
+                );
+              })()}
+
+              {/* Delete Button */}
+              {myRequests?.participants?.requestedById === UserId &&
+                myRequests?.metadata?.status === 'pending' && (
                   <Shared_Button
-                    onClick={() => handleRequestAction(myRequests, "approved", UserId)}
-                    className="bg-green-600 hover:bg-green-700 border-0 flex items-center justify-center"
-                    title="Accept Request"
-                    disabled={loading}
+                    onClick={() => handleDeleteRequest(myRequests)}
+                    className="bg-gray-600 hover:bg-gray-700 border-0 text-sm sm:text-base"
+                    title="Delete Request"
+                    size="sm"
                   >
-                    {loading ? (
-                      <span className="text-sm">Processing…</span>
-                    ) : (
-                      <>
-                        <IoCheckmark className="text-lg mr-2" /> Accept
-                      </>
-                    )}
+                    <IoTrashOutline className="text-base sm:text-lg mr-1 sm:mr-2" /> Delete
                   </Shared_Button>
-
-                  {/* Reject Button */}
-                  <Shared_Button
-                    onClick={() => handleRequestAction(myRequests, "rejected", UserId)}
-                    variant="danger"
-                    title="Reject Request"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="text-sm">Processing…</span>
-                    ) : (
-                      <>
-                        <IoClose className="text-lg mr-2" /> Reject
-                      </>
-                    )}
-                  </Shared_Button>
-                </div>
-              );
-            })()}
-
-
-            {/* Delete Button: Show if I'm the requestedById AND status is pending */}
-            {myRequests?.participants?.requestedById === UserId &&
-              myRequests?.metadata?.status === 'pending' && (
-                <Shared_Button
-                  onClick={() => handleDeleteRequest(myRequests)}
-                  className="bg-gray-600 hover:bg-gray-700 border-0"
-                  title="Delete Request"
-                >
-                  <IoTrashOutline className="text-lg mr-2" /> Delete
-                </Shared_Button>
-              )}
-
+                )}
+            </div>
           </div>
         </div>
 
         {/* Description */}
-        <div className="py-2">
-          <h4 className="text-gray-800 font-medium">Request Details:</h4>
-          <p className="text-gray-600 text-sm">{myRequests?.description || "No description provided."}</p>
+        <div className="py-3 sm:py-4">
+          <h4 className="text-gray-800 font-medium text-sm sm:text-base">Request Details:</h4>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">
+            {myRequests?.description || "No description provided."}
+          </p>
 
           {/* Additional Messages */}
-          <div>
-            {/* Conditional messages based on user role */}
-            <div className='bg-blue-100 p-3 my-2 rounded-lg'>
+          <div className="mt-3">
+            <div className='bg-blue-100 p-2 sm:p-3 rounded-lg'>
               {UserId === myRequests?.participants?.requestedById ? (
-                // Message for the person who created the request (requestedById)
-                <span className='text-sm text-gray-600'>
-                  Waiting for   {(() => {
+                <span className='text-xs sm:text-sm text-gray-600'>
+                  Waiting for {(() => {
                     const requestedToId = myRequests?.participants?.requestedToId;
 
                     if (requestedToId === '-' || !requestedToId) {
-                      return <span className='font-semibold' >Manager</span>;
+                      return <span className='font-semibold'>Manager</span>;
                     }
 
                     return <UserId_To_Name userId={requestedToId} />;
                   })()} to respond to your request
                 </span>
               ) : UserId === myRequests?.participants?.requestedToId ? (
-                // Message for the person the request is addressed to (requestedToId)
-                <span className='text-sm text-gray-600'>
+                <span className='text-xs sm:text-sm text-gray-600'>
                   If you accept this request, the asset will be assigned to you
                 </span>
               ) : (
-                // Message for other users (managers/admins viewing)
-                <span className='text-sm text-gray-600'>
-                  Request is pending action from   {(() => {
+                <span className='text-xs sm:text-sm text-gray-600'>
+                  Request is pending action from {(() => {
                     const requestedToId = myRequests?.participants?.requestedToId;
 
                     if (requestedToId === '-' || !requestedToId) {
-                      return <span className='font-bold' >Manager</span>;
+                      return <span className='font-bold'>Manager</span>;
                     }
 
                     return <UserId_To_Name userId={requestedToId} />;
@@ -337,50 +342,58 @@ const MyRequestsList = ({
           </div>
         </div>
 
-        {/* Additional Information */}
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100'>
+        {/* Additional Information - Responsive Grid */}
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-gray-100'>
           {/* Asset Name */}
-          <div className='flex items-center gap-2' >
-            <BsBoxSeam className="text-xl text-blue-600" />
-            <span className='font-semibold pl-1' >Asset Name :</span>
-            <h4 className=" text-gray-500 pl-1">
-              {myRequests?.assetInfo?.name || "N/A"}
-            </h4>
+          <div className='flex items-start sm:items-center gap-2'>
+            <BsBoxSeam className="text-lg sm:text-xl text-blue-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <span className='font-semibold text-xs sm:text-sm pl-1'>Asset Name:</span>
+              <h4 className="text-gray-500 text-xs sm:text-sm pl-0 sm:pl-1 truncate">
+                {myRequests?.assetInfo?.name || "N/A"}
+              </h4>
+            </div>
           </div>
 
           {/* Created At */}
-          <div className='flex items-center gap-2' >
-            <BsCalendarEvent className="text-xl text-green-600" />
-            <span className='font-semibold pl-1' >Requested At :</span>
-            <h4 className=" text-gray-500 pl-1">
-              {formatDate(myRequests?.metadata?.createdAt)}
-            </h4>
+          <div className='flex items-start sm:items-center gap-2'>
+            <BsCalendarEvent className="text-lg sm:text-xl text-green-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <span className='font-semibold text-xs sm:text-sm pl-1'>Requested At:</span>
+              <h4 className="text-gray-500 text-xs sm:text-sm pl-0 sm:pl-1">
+                {formatDate(myRequests?.metadata?.createdAt)}
+              </h4>
+            </div>
           </div>
 
           {/* Requested By */}
-          <div className='flex items-center gap-2' >
-            <BsPersonCircle className="text-xl text-indigo-600" />
-            <span className='font-semibold pl-1' >Requested By :</span>
-            <h4 className=" text-gray-500 pl-1">
-              <UserId_To_Name userId={myRequests?.participants?.requestedById} />
-            </h4>
+          <div className='flex items-start sm:items-center gap-2'>
+            <BsPersonCircle className="text-lg sm:text-xl text-indigo-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <span className='font-semibold text-xs sm:text-sm pl-1'>Requested By:</span>
+              <h4 className="text-gray-500 text-xs sm:text-sm pl-0 sm:pl-1">
+                <UserId_To_Name userId={myRequests?.participants?.requestedById} />
+              </h4>
+            </div>
           </div>
 
           {/* Requested To */}
-          <div className='flex items-center gap-2'>
-            <BsPersonBadge className="text-xl text-purple-600" />
-            <span className='font-semibold pl-1'>Requested To :</span>
-            <h4>
-              {(() => {
-                const requestedToId = myRequests?.participants?.requestedToId;
+          <div className='flex items-start sm:items-center gap-2'>
+            <BsPersonBadge className="text-lg sm:text-xl text-purple-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <span className='font-semibold text-xs sm:text-sm pl-1'>Requested To:</span>
+              <h4 className="text-xs sm:text-sm pl-0 sm:pl-1">
+                {(() => {
+                  const requestedToId = myRequests?.participants?.requestedToId;
 
-                if (requestedToId === '-' || !requestedToId) {
-                  return <p className='font-semibold' >Manager</p>;
-                }
+                  if (requestedToId === '-' || !requestedToId) {
+                    return <p className='font-semibold text-gray-500'>Manager</p>;
+                  }
 
-                return <UserId_To_Name userId={requestedToId} />;
-              })()}
-            </h4>
+                  return <UserId_To_Name userId={requestedToId} />;
+                })()}
+              </h4>
+            </div>
           </div>
         </div>
       </div>
@@ -389,4 +402,3 @@ const MyRequestsList = ({
 };
 
 export default MyRequestsList;
-

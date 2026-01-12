@@ -15,6 +15,7 @@ const UserId_To_Name = ({
   showIcon = false,
   showRole = false,
   showStatus = false,
+  showUserId = false,
   className = "",
   compact = false,
   showNameOnly = false
@@ -79,7 +80,7 @@ const UserId_To_Name = ({
     },
   });
 
-    // If unassigned, show it immediately
+  // If unassigned, show it immediately
   if (isUnassigned) {
     return (
       <div className={`inline-flex items-center gap-1.5 ${className}`}>
@@ -248,7 +249,7 @@ const UserId_To_Name = ({
       </div>
 
       {/* Additional details if needed */}
-      {!showRole && normalizedUserId && (
+      {showUserId && normalizedUserId && (
         <div className="text-xs text-gray-500 mt-0.5">
           User ID: {normalizedUserId}
         </div>
@@ -257,4 +258,4 @@ const UserId_To_Name = ({
   );
 };
 
-export default React.memo(UserId_To_Name);
+export default UserId_To_Name;

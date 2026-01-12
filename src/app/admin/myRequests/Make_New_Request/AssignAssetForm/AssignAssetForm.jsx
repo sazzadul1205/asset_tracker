@@ -90,34 +90,36 @@ const AssignAssetForm = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
 
       {/* Global Error */}
       {globalError && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mt-3 mb-1 text-sm font-medium text-center">
+        <div className="bg-red-100 text-red-700 p-2 sm:p-3 rounded text-xs sm:text-sm font-medium text-center">
           {globalError}
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 
         {/* Asset ID */}
-        <Controller
-          name="assetId"
-          control={control}
-          rules={{ required: "Asset is required" }}
-          render={({ field }) => (
-            <Shared_Input
-              {...field}
-              type="searchable"
-              label="Asset"
-              options={assetOptions}
-              placeholder="Search & select asset"
-              errors={errors}
-            />
-          )}
-        />
+        <div className="md:col-span-2">
+          <Controller
+            name="assetId"
+            control={control}
+            rules={{ required: "Asset is required" }}
+            render={({ field }) => (
+              <Shared_Input
+                {...field}
+                type="searchable"
+                label="Asset"
+                options={assetOptions}
+                placeholder="Search & select asset"
+                errors={errors}
+              />
+            )}
+          />
+        </div>
 
         {/* Action Type */}
         <Shared_Input
@@ -156,10 +158,8 @@ const AssignAssetForm = ({
           options={priorities}
         />
 
-        {/* Notes & Expected Date */}
-        <div className="col-span-2 space-y-4">
-
-          {/* Expected Date */}
+        {/* Expected Date */}
+        <div className="md:col-span-2">
           <Controller
             name="expectedCompletion"
             control={control}
@@ -174,24 +174,28 @@ const AssignAssetForm = ({
               />
             )}
           />
+        </div>
 
-          {/* Notes */}
+        {/* Notes */}
+        <div className="md:col-span-2">
           <Shared_Input
             label="Notes"
             name="description"
             type="textarea"
             register={register}
             placeholder="Enter any additional notes"
+            rows="3"
           />
         </div>
 
         {/* Buttons */}
-        <div className='col-span-2 justify-end flex items-center gap-2 pt-2'>
+        <div className='md:col-span-2 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:gap-3 pt-2 sm:pt-4'>
           {/* Cancel */}
           <Shared_Button
             type="button"
             onClick={handleClose}
             variant="ghost"
+            className="w-full sm:w-auto"
             minWidth="100px"
           >
             Cancel
@@ -202,9 +206,10 @@ const AssignAssetForm = ({
             type="submit"
             variant="primary"
             loading={loading}
+            className="w-full sm:w-auto"
             minWidth="100px"
           >
-            Make Assign Asset Request
+            <span className="text-sm sm:text-base">Make Assign Asset Request</span>
           </Shared_Button>
         </div>
       </form>

@@ -88,21 +88,21 @@ const Change_Password_Modal = ({ session }) => {
   return (
     <div
       id="Change_Password_Modal"
-      className="modal-box w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-6 py-5 text-gray-900"
+      className="modal-box w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl px-4 sm:px-6 py-4 sm:py-5 text-gray-900"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         {/* Title */}
-        <h3 className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
-          <IoLockClosedOutline className="inline-block mr-2" />
-          Change Password
+        <h3 className="text-base sm:text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
+          <IoLockClosedOutline className="inline-block mr-1 sm:mr-2 text-lg sm:text-xl" />
+          <span className="truncate">Change Password</span>
         </h3>
 
         {/* Close Button */}
         <button
           type="button"
           onClick={handleClose}
-          className="hover:text-red-500 transition-colors duration-300 cursor-pointer"
+          className="hover:text-red-500 transition-colors duration-300 cursor-pointer shrink-0"
         >
           <ImCross className="text-lg" />
         </button>
@@ -110,13 +110,13 @@ const Change_Password_Modal = ({ session }) => {
 
       {/* Global Error */}
       {globalError && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mt-3 mb-1 text-sm font-medium text-center">
+        <div className="bg-red-100 text-red-700 p-2 sm:p-3 rounded text-xs sm:text-sm font-medium text-center mb-3 sm:mb-4">
           {globalError}
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 pt-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4 pt-3 sm:pt-5">
         {/* Hidden username field for browser password managers */}
         <input
           type="text"
@@ -177,12 +177,13 @@ const Change_Password_Modal = ({ session }) => {
         />
 
         {/* Buttons */}
-        <div className="justify-end flex items-center gap-2 py-2">
+        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:gap-3 py-2 sm:py-4 pt-4 sm:pt-6">
           {/* Cancel */}
           <Shared_Button
             type="button"
             onClick={handleClose}
             variant="ghost"
+            className="w-full sm:w-auto"
             minWidth="100px"
           >
             Cancel
@@ -193,9 +194,10 @@ const Change_Password_Modal = ({ session }) => {
             type="submit"
             variant="primary"
             loading={isSubmitting || loading}
+            className="w-full sm:w-auto"
             minWidth="100px"
           >
-            Update Password
+            <span className="text-sm sm:text-base">Update Password</span>
           </Shared_Button>
         </div>
       </form>
