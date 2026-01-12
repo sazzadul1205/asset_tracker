@@ -2,9 +2,27 @@
 
 A comprehensive asset tracking and management system built with Next.js 14, featuring role-based access control, real-time tracking, and complete asset lifecycle management.
 
-
 ## LIVE DEMO: [https://asset-tracker-gules.vercel.app/](https://asset-tracker-gules.vercel.app/)
 
+# 🚀 What's New in V1.1
+
+Welcome to the latest update of our Asset Management System! Version 1.1 brings significant improvements, new features, and enhanced user experience. Here's what you can expect:
+
+## ✨ **Major New Features**
+
+### 📱 **Complete Mobile Responsiveness**
+
+- **All pages now fully responsive** - Works seamlessly on mobile, tablet, and desktop
+- **Mobile-optimized navigation** - Touch-friendly buttons and menus
+- **Responsive tables** that transform into cards on mobile devices
+- **Adaptive layouts** that adjust based on screen size
+
+### 🎨 **Enhanced User Interface**
+
+- **Modern dashboard design** with improved card layouts
+- **Consistent color scheme** across all components
+- **Better visual hierarchy** and spacing
+- **Smooth animations** and transitions
 
 ## 🌟 Features
 
