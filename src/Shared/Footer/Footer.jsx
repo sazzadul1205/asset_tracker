@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Version Badge */}
           <div className="flex items-center gap-2">
             <SiNextdotjs className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-700">v1.0</span>
+            <span className="text-sm font-medium text-gray-700">v1.1</span>
             <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
               Alpha
             </span>
